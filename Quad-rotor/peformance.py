@@ -75,9 +75,6 @@ class PerformanceAnalysis:
     def calculate_P_p(self):
         P_p = self.calculate_P_p_hov() * (1 + 4.65 * self.adv_ratio_fl ** 2)
         return P_p
-
-
-      
     
     
     def display_results(self):
