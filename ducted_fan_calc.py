@@ -4,6 +4,14 @@ import scipy
 import matplotlib.pyplot as plt 
 
 
+#def calc_p_idd_kappa(self):
+#    self.calc_power_ideal_hover()
+#    self.calc_kappa_d()
+#    self.p_idd_kappa = self.p_idh * self.kappa_d
+#    return self.p_idd_kappa
+    
+
+
 class Ducted_Fan:
     def __init__(self, mtow, radius=0.3, T_W_R= 1 , V_c=None, density=1.225, P_a =410000): 
         # Required Inputs
@@ -33,6 +41,8 @@ class Ducted_Fan:
         self.V_c_kappa = None 
         self.p_idd = None 
         self.kappa_d = None 
+        self.p_idd_kappa = None 
+        self.V_d_kappa_d = None 
 
         
 
@@ -120,26 +130,36 @@ class Ducted_Fan:
         self.V_c_kappa = V_c_kappa_nd * self.v_h
         return self.V_c_kappa
 
-    # |V_d / v_d| < 1.0 case 
-    #  
+
+    def calc_kappa_d(self):
+        self.calc_V_c_kappa()
+        self.calc_v_d()
+        if np.abs(self.V_c_kappa/self.v_d)>=2 :
+            self.kappa_d = 0.5 * (self.V_c_kappa) + np.sqrt(0.25 * self.V_c_kappa**2 - 1)
+        elif np.abs(self.V_c_kappa/self.v_d)<1 :
+            self.kappa_d = 0.5 * (self.V_c_kappa) + np.sqrt(0.25 * self.V_c_kappa**2 + 1)
+        return self.kappa_d
+
+
     def calc_p_idd(self):
         self.calc_V_c_kappa()
         self.calc_v_d()
-        T = self.mtow * 9.81 * (self.v_d + self.V_c_kappa)
-        self.p_idd = T 
+        if np.abs(self.V_c_kappa/self.v_d)>=2 :
+            self.p_idd = - self.mtow * 9.81 * (self.v_d + self.V_c_kappa)
+        elif np.abs(self.V_c_kappa/self.v_d)<1 :
+            self.p_idd = self.mtow * 9.81 * (self.v_d + self.V_c_kappa)
         return self.p_idd
-    
-    def calc_kappa_d(self):
-        kappa_d = 0.5 * (self.V_c_kappa) + np.sqrt(0.25 * self.V_c_kappa**2 + 1)
-        self.kappa_d = kappa_d
-        return self.kappa_d
 
-    def calc_p_idd_kappa(self):
-        self.calc_power_ideal_hover()
-        self.calc_kappa_d()
-        self.p_idd_kappa = self.p_idh * self.kappa_d
-        return self.p_idd_kappa
-    
+    def calc_V_d_kappa_d(self):
+        self.calc_V_c_kappa()
+        self.calc_v_d()
+        if np.abs(self.V_c_kappa/self.v_d)>=2 :
+            V_d_kappa_nd = - (self.kappa_d + (1/self.kappa_d))
+            self.V_d_kappa_d = V_d_kappa_nd * self.v_h  
+        elif np.abs(self.V_c_kappa/self.v_d)<1 :
+            V_d_kappa_nd = - self.kappa_d + (1/self.kappa_d)
+            self.V_d_kappa_d = V_d_kappa_nd * self.v_h
+        return self.V_d_kappa_d
 
     
 
@@ -160,3 +180,6 @@ print(f"Rate of Climb rate: {fan_1.calc_V_c_kappa()}")
 print(f"calc_power_ideal_hover: {fan_1.calc_power_ideal_hover()}")
 
 print(f"calc_disc_loading: {fan_1.calc_disc_loading()}")
+
+print(f"calc_pidd: {fan_1.calc_p_idd()}")
+

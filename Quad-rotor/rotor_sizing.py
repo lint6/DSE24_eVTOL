@@ -108,7 +108,7 @@ if __name__ == "__main__":
     analysis = RotorAnalysis()
 
     # Perform analysis with default coefficients to get advance ratio first
-    results = analysis.perform_analysis(c_t_o_fl=0.1, c_t_o_turn=0.2, c_t_o_turb=0.3)
+    results = analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
 
     # Unpack results
     rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results
