@@ -63,7 +63,11 @@ class PerformanceAnalysis:
     
     #average_C_D_p
     def calculate_average_C_D_p(self):
-        average_C_D_p = 0.0087 - 0.0216 * self.calculate_alpha_m() + 0.4 * self.calculate_alpha_m() ** 2
+        average_C_D_p_1 = 0.0087 - 0.0216 * self.calculate_alpha_m() + 0.4 * self.calculate_alpha_m() ** 2 #bailey
+        average_C_D_p_2 = 0.011 + 0.4 * (self.calculate_alpha_m() **2) #marinescu
+        average_C_D_p_3 = 0.009 + 0.73 * (self.calculate_alpha_m() **2) #talbot
+        # pick the highest
+        average_C_D_p = max(average_C_D_p_1, average_C_D_p_2, average_C_D_p_3)
         return average_C_D_p
 
     #Profile drag power for hover
@@ -80,12 +84,6 @@ class PerformanceAnalysis:
     #k_dl between 0.03 - 0.05 
     #def calculate_average_v_i():
 
-
-   
-        
-        
-    
-    
     def display_results(self):
         """Display power requirements and induced velocities."""
         v_i_hover = self.calculate_hover_induced_velocity()
