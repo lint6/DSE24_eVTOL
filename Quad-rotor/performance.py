@@ -47,8 +47,8 @@ class PerformanceAnalysis:
     #In order to find Forward Flight P_req, we need to calculate some new values:
     #Thrust coefficient
     def calculate_C_T(self): 
-        self.T = self.mtow
-        C_T = (self.T*self.g) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
+        self.T = self.mtow *self.g
+        C_T = (self.T) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
         return C_T
     
     #Average C_l
@@ -75,6 +75,15 @@ class PerformanceAnalysis:
     def calculate_P_p(self):
         P_p = self.calculate_P_p_hov() * (1 + 4.65 * self.adv_ratio_fl ** 2)
         return P_p
+
+    #induced power P_i
+    #k_dl between 0.03 - 0.05 
+    #def calculate_average_v_i():
+
+
+   
+        
+        
     
     
     def display_results(self):
@@ -85,14 +94,15 @@ class PerformanceAnalysis:
         power_requirements = self.calculate_power_req_hover()
         power_loading_hover = self.calculate_power_loading_hover()
         profile_power_fl = self.calculate_P_p()       
+        
 
         #print(f'Hover induced velocity: {v_i_hover:.2f} m/s')
         #print(f'Climb induced velocity: {v_i_climb:.2f} m/s')
         print(f'Disk Area: {disk_area:.2f} m2')
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
-        print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
-
+        #print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
+        
 
 # Main Execution
 if __name__ == "__main__":
