@@ -4,6 +4,14 @@ import scipy
 import matplotlib.pyplot as plt 
 
 
+#def calc_p_idd_kappa(self):
+#    self.calc_power_ideal_hover()
+#    self.calc_kappa_d()
+#    self.p_idd_kappa = self.p_idh * self.kappa_d
+#    return self.p_idd_kappa
+    
+
+
 class Ducted_Fan:
     def __init__(self, mtow, radius=0.3, T_W_R= 1 , V_c=None, density=1.225, P_a =410000): 
         # Required Inputs
@@ -122,16 +130,6 @@ class Ducted_Fan:
         self.V_c_kappa = V_c_kappa_nd * self.v_h
         return self.V_c_kappa
 
-    # |V_d / v_d| < 1.0 case 
-    #  
-    #def calc_p_idd(self):
-    #    self.calc_V_c_kappa()
-    #    self.calc_v_d()
-    #    T = self.mtow * 9.81 * (self.v_d + self.V_c_kappa)
-    #    self.p_idd = T 
-    #    return self.p_idd
-    
-    #kappa_d must be between 0 and 1 
 
     def calc_kappa_d(self):
         self.calc_V_c_kappa()
@@ -143,7 +141,7 @@ class Ducted_Fan:
         return self.kappa_d
 
 
-    def calc_p_idd_(self):
+    def calc_p_idd(self):
         self.calc_V_c_kappa()
         self.calc_v_d()
         if np.abs(self.V_c_kappa/self.v_d)>=2 :
@@ -165,22 +163,6 @@ class Ducted_Fan:
 
     
 
-    #def calc_p_idd_kappa(self):
-    #    self.calc_power_ideal_hover()
-    #    self.calc_kappa_d()
-    #   self.p_idd_kappa = self.p_idh * self.kappa_d
-    #    return self.p_idd_kappa
-
-
-
-
-    # |V_d / v_d| > 2 
-    # |V_d / v_d| < 1.0 case 
-
-
-
-    
-
     
 fan_1 = Ducted_Fan(mtow=float(718/4))
 
@@ -199,5 +181,5 @@ print(f"calc_power_ideal_hover: {fan_1.calc_power_ideal_hover()}")
 
 print(f"calc_disc_loading: {fan_1.calc_disc_loading()}")
 
-print(f"calc_pidd: {fan_1.calc_p_idd_()}")
+print(f"calc_pidd: {fan_1.calc_p_idd()}")
 
