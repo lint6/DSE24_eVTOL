@@ -11,21 +11,8 @@ import matplotlib.pyplot as plt
 #    return self.p_idd_kappa
 
 def find_roots(coefficients):
-    """
-    Finds the roots of a 4th order polynomial equation.
-
-    Parameters:
-        coefficients (list): List of coefficients [a, b, c, d, e]
-                             for the polynomial ax^4 + bx^3 + cx^2 + dx + e = 0.
-
-    Returns:
-        list: Roots of the polynomial.
-    """
-    # Ensure the coefficients are valid
     if len(coefficients) != 5:
         raise ValueError("You must provide exactly 5 coefficients for a 4th order polynomial.")
-    
-    # Use numpy's roots function to find the roots
     roots = np.roots(coefficients)
     return roots
 
@@ -52,9 +39,6 @@ class Ducted_Fan_2:
 
         self.related_fan = related_fan
 
-
-
-
     def calc_weight(self):
         self.mto_weight = self.mtow * 9.81
         return self.mto_weight
@@ -64,7 +48,6 @@ class Ducted_Fan_2:
         self.T = self.mto_weight * np.sqrt(self.k_v_f**2 + (self.D_h0 / self.mto_weight)**2 )
         return self.T
     
-
     def calc_rotor_alpha(self):
         self.calc_T()
         self.rotor_alpha = - np.arctan(int(self.D_h0) / int(self.T))
@@ -76,7 +59,6 @@ class Ducted_Fan_2:
         self.roots = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
         #write an algorithm to chosee THE root you want
         return self.roots 
-
 
 
 class Ducted_Fan_1:
