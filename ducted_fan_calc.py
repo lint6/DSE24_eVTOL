@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 #    return self.p_idd_kappa
 
 
-
 def find_roots(coefficients):
     if len(coefficients) != 5:
         raise ValueError("You must provide exactly 5 coefficients for a 4th order polynomial.")
@@ -23,11 +22,8 @@ def find_roots(coefficients):
 
 
 
-
-
-
 class Ducted_Fan_1:
-    def __init__(self, mtow, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, P_a =410000): 
+    def __init__(self, mtow, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, P_a =45000): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -178,7 +174,7 @@ class Ducted_Fan_1:
 
     
 class Ducted_Fan_2:
-    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 5, k_v_f = 1, V = 2, related_fan = None): 
+    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 2, related_fan = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -233,7 +229,7 @@ class Ducted_Fan_2:
 
 
 class Ducted_Fan_3:
-    def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 5, k_v_f = 1, V = 100, P_a =410000,  related_fan1 = None, related_fan2 = None): 
+    def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 3, P_a =45000,  related_fan1 = None, related_fan2 = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -259,15 +255,10 @@ class Ducted_Fan_3:
         self.related_fan2 = related_fan2
 
     def calc_V_c_slow(self):
-        V_c_slow = (self.P_a / (self.k_v_f * self.mto_weight)) - (self.V) * (self.rotor_alpha) + self.related_fan2.v_f_root
+        V_c_slow = (self.P_a / (self.k_v_f * self.mto_weight)) - ((self.V) * (self.rotor_alpha) + self.related_fan2.v_f_root)
         self.V_c_slow = V_c_slow
         return self.V_c_slow
     
-
-        
-
-
-
 
     
 fan_1 = Ducted_Fan_1(mtow=float(718/4))
@@ -296,5 +287,3 @@ print(f"v from frotor alphhhaaaaa: {fan_2.calc_rotor_alpha()}")
 
 fan_3 = Ducted_Fan_3(mtow=float(718/4), gamma=2, related_fan1=fan_1, related_fan2 = fan_2 )
 print(f"V_c_slow: {fan_3.calc_V_c_slow()}")
-
-
