@@ -216,9 +216,10 @@ class PerformanceAnalysis:
     
     def calculate_hoge_ceiling(self):
         #altitude conversion needs to be implemented properly!!!
-        P_max = 100000 #placeholder
+        P_max = self.calculate_power_req_hover() + 10000 #placeholder
         rho_max = (self.T)**3 / (2 * P_max**2 * self.FM**2 * self.calculate_disk_area())
-        altitude_this_is_wrong = (self.T_0 / self.lapse_rate) * (math.pow((self.rho / rho_max), (self.gas_const * self.lapse_rate) / (self.g * self.molar_mass)) - 1)
+
+        altitude_this_is_wrong = (self.T_0 * (1 - ((rho_max / self.rho)**(1/((self.g/(self.gas_const*self.lapse_rate)) - 1))))) / self.lapse_rate
         return altitude_this_is_wrong
     
     #In order to find Forward Flight P_req, we need to calculate some new values:
