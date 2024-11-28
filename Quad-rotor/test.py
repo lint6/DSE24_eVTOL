@@ -1,6 +1,8 @@
 import unittest
 from rotor_sizing import RotorAnalysis
 import numpy as np
+from performance import PerformanceAnalysis  
+from unittest.mock import MagicMock
 
 class TestRotorAnalysis(unittest.TestCase):
 
@@ -129,6 +131,77 @@ class TestRotorAnalysis(unittest.TestCase):
 
             expected_AR_bl = rotor_radius_m**2 / (rotor_diameter_m * chord)
             self.assertAlmostEqual(AR_bl, expected_AR_bl, places=2)
+
+
+class TestPerformanceAnalysis(unittest.TestCase):
+
+    def setUp(self):
+        """Set up a mocked instance of PerformanceAnalysis."""
+        # Mock RotorAnalysis and its attributes
+        mock_rotor_analysis = MagicMock()
+        mock_rotor_analysis.MTOW_KG = 1000  # MTOW in kg
+        mock_rotor_analysis.N_rotors = 4  # Number of rotors
+        mock_rotor_analysis.rho = 1.225  # Air density at sea level (kg/m^3)
+        mock_rotor_analysis.g = 9.81  # Gravity (m/s^2)
+        mock_rotor_analysis.C_lalpha = 5.7  # Typical value for Cl_alpha
+        mock_rotor_analysis.perform_analysis.return_value = (
+            2.5, 5.0, 200, 0.6, 300, 0.1, 0.1, 0.1, 0.1, 0.05, [10], 1.5
+        )  # Mocked rotor analysis results
+
+        self.performance_analysis = PerformanceAnalysis(mock_rotor_analysis)
+        self.performance_analysis.mtow = 1000
+        self.performance_analysis.g = 9.81
+        self.performance_analysis.rho = 1.225
+        self.performance_analysis.rotor_radius = 2.5
+        self.performance_analysis.omega = 300
+        self.performance_analysis.solidity = 0.05
+        self.performance_analysis.Cl_alpha = 5.7
+        self.performance_analysis.adv_ratio_fl = 0.1
+
+    def test_calculate_C_T(self):
+        """Test thrust coefficient calculation."""
+        expected_C_T = (
+            self.performance_analysis.mtow * self.performance_analysis.g /
+            (self.performance_analysis.rho * np.pi * self.performance_analysis.rotor_radius ** 2 *
+             (self.performance_analysis.omega * self.performance_analysis.rotor_radius) ** 2)
+        )
+        self.assertAlmostEqual(self.performance_analysis.calculate_C_T(), expected_C_T, places=6)
+
+    def test_calculate_average_C_l(self):
+        """Test average lift coefficient calculation."""
+        C_T = self.performance_analysis.calculate_C_T()
+        expected_C_l = 6.6 * C_T / self.performance_analysis.solidity
+        self.assertAlmostEqual(self.performance_analysis.calculate_average_C_l(), expected_C_l, places=6)
+
+    def test_calculate_alpha_m(self):
+        """Test mean angle of attack calculation."""
+        average_C_l = self.performance_analysis.calculate_average_C_l()
+        expected_alpha_m = average_C_l / self.performance_analysis.Cl_alpha
+        self.assertAlmostEqual(self.performance_analysis.calculate_alpha_m(), expected_alpha_m, places=6)
+
+    def test_calculate_average_C_D_p(self):
+        """Test average profile drag coefficient calculation."""
+        alpha_m = self.performance_analysis.calculate_alpha_m()
+        expected_C_D_p = 0.0087 - 0.0216 * alpha_m + 0.4 * alpha_m ** 2
+        self.assertAlmostEqual(self.performance_analysis.calculate_average_C_D_p(), expected_C_D_p, places=6)
+
+    def test_calculate_P_p_hov(self):
+        """Test profile drag power in hover calculation."""
+        C_D_p = self.performance_analysis.calculate_average_C_D_p()
+        expected_P_p_hov = (
+            self.performance_analysis.solidity * C_D_p / 8 * self.performance_analysis.rho *
+            (self.performance_analysis.omega * self.performance_analysis.rotor_radius) ** 3 *
+            np.pi * self.performance_analysis.rotor_radius ** 2
+        )
+        self.assertAlmostEqual(self.performance_analysis.calculate_P_p_hov(), expected_P_p_hov, places=6)
+
+    def test_calculate_P_p(self):
+        """Test profile drag power in forward flight calculation."""
+        P_p_hov = self.performance_analysis.calculate_P_p_hov()
+        expected_P_p = P_p_hov * (1 + 4.65 * self.performance_analysis.adv_ratio_fl ** 2)
+        self.assertAlmostEqual(self.performance_analysis.calculate_P_p(), expected_P_p, places=6)
+
+
 
 
 if __name__ == "__main__":
