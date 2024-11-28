@@ -11,22 +11,19 @@ import matplotlib.pyplot as plt
 #    return self.p_idd_kappa
 
 
-
 def find_roots(coefficients):
     if len(coefficients) != 5:
         raise ValueError("You must provide exactly 5 coefficients for a 4th order polynomial.")
     roots = np.roots(coefficients)  
     real_roots = roots[np.isreal(roots)]
-    real_root = min(real_roots[real_roots>0])
+    real_roott = min(real_roots[real_roots>0])
+    real_root = real_roott.real
     return real_root
 
 
 
-
-
-
 class Ducted_Fan_1:
-    def __init__(self, mtow, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, P_a =410000): 
+    def __init__(self, mtow, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, P_a =45000): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -177,7 +174,7 @@ class Ducted_Fan_1:
 
     
 class Ducted_Fan_2:
-    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 5, k_v_f = 1, V = 2, related_fan = None): 
+    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 2, related_fan = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -194,7 +191,7 @@ class Ducted_Fan_2:
         self.T = None 
         self.mto_weight = None 
         self.rotor_alpha = None
-        self.roots = None 
+        self.v_f_root = None 
         self.V_hor = None 
 
         self.related_fan = related_fan
@@ -218,11 +215,11 @@ class Ducted_Fan_2:
         self.calc_rotor_alpha()
         my_coefficient = [1, float(-2 * self.V * np.sin(self.rotor_alpha)), (self.V **2), 0, -1 ]
         print(my_coefficient)
-        self.roots = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
+        self.v_f_root = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
 
         #write an algorithm to chosee THE root you want
-        print(self.roots)
-        return self.roots 
+        print ("the fkcin root is", self.v_f_root)
+        return self.v_f_root
     
     def calc_V_horizontal(self):
         V_hor = self.V * np.cos(self.gamma)
@@ -232,7 +229,7 @@ class Ducted_Fan_2:
 
 
 class Ducted_Fan_3:
-    def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 5, k_v_f = 1, V = 100, P_a =410000,  related_fan1 = None, related_fan2 = None): 
+    def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 3, P_a =45000,  related_fan1 = None, related_fan2 = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -248,20 +245,20 @@ class Ducted_Fan_3:
         self.density = density  # Air density (kg/m^3)
         
         self.T = None 
-        self.mto_weight = None 
-        self.rotor_alpha = None
+        self.mto_weight = fan_2.mto_weight
+        self.rotor_alpha = fan_2.rotor_alpha
         self.roots = None 
         self.V_hor = None 
+        self.V_c_slow = None 
 
         self.related_fan1 = related_fan1
         self.related_fan2 = related_fan2
 
-    #def calc_V_c_slow(self):
-    #    V_c_slow = (self.P_a / (self.k_v_f * self.mto_weight)) - self.V * self.rotor_alpha + self.related_fan2.ROOOOOOT
-        
-
-
-
+    def calc_V_c_slow(self):
+        V_c_slow = (self.P_a / (self.k_v_f * self.mto_weight)) - ((self.V) * (self.rotor_alpha) + self.related_fan2.v_f_root)
+        self.V_c_slow = V_c_slow
+        return self.V_c_slow
+    
 
     
 fan_1 = Ducted_Fan_1(mtow=float(718/4))
@@ -285,5 +282,8 @@ print(f"calc_pidd: {fan_1.calc_p_idd()}")
 
 fan_2 = Ducted_Fan_2(mtow=float(718/4), related_fan=fan_1)
 print(f"v from fan 2 from fan 1: {fan_2.calc_v_f()}")
+print(f"v from frotor alphhhaaaaa: {fan_2.calc_rotor_alpha()}")
 
-#fan_3 = Ducted_Fan_2(mtow=float(718/4), related_fan1=fan_1, related_fan2=fan_2)
+
+fan_3 = Ducted_Fan_3(mtow=float(718/4), gamma=2, related_fan1=fan_1, related_fan2 = fan_2 )
+print(f"V_c_slow: {fan_3.calc_V_c_slow()}")

@@ -1,22 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 
 class RotorAnalysis:
-    def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=3, bank_angle=30, v_max_kmh=150, T_0=288.15, molar_mass=0.0289644, gas_const=8.31432, lapse_rate=0.0065):
+    def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=3, bank_angle=30, v_max_kmh=150):
         # Constants
         self.MTOW_KG = mtow_kg  # Maximum Takeoff Weight in kg
         self.N_rotors = n_rotors  # Number of rotors
         self.DL_IMPERIAL = dl_imperial  # Disc loading in lb/ft²
         self.bank_angle = bank_angle  # Bank angle during turn [deg]
         self.V_MAX_KMH = v_max_kmh  # Maximum forward speed in km/h
-
-        # Define ISA
-        self.T_0 = T_0   # K (sea level standard temperature)
-        self.molar_mass = molar_mass  # kg/mol (molar mass of Earth's air)
-        self.gas_const = gas_const    # J/(mol·K) (universal gas constant)
-        self.lapse_rate = lapse_rate     # K/m (temperature lapse rate)
-
 
         # Physical constants
         self.POUNDS_PER_KG = 2.205  # Conversion factor from kg to pounds
@@ -178,12 +170,6 @@ class PerformanceAnalysis:
         self.g = rotor_analysis.g
         self.Cl_alpha = rotor_analysis.C_lalpha
 
-        # ISA
-        self.T_0 = rotor_analysis.T_0
-        self.molar_mass = rotor_analysis.molar_mass  
-        self.gas_const = rotor_analysis.gas_const    
-        self.lapse_rate = rotor_analysis.lapse_rate     
-
         # Perform rotor sizing
         self.results = rotor_analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
         self.rotor_radius, self.rotor_diameter, self.v_tip, self.mach_number, self.omega, self.adv_ratio_fl, self.o_fl, self.o_turn, self.o_turb, self.solidity, self.aspect_ratios, self.n_z  = self.results
@@ -225,8 +211,8 @@ class PerformanceAnalysis:
     #In order to find Forward Flight P_req, we need to calculate some new values:
     #Thrust coefficient
     def calculate_C_T(self): 
-        self.T = self.mtow *self.g
-        C_T = (self.T) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
+        self.T = self.mtow
+        C_T = (self.T*self.g) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
         return C_T
     
     #Average C_l
@@ -262,8 +248,7 @@ class PerformanceAnalysis:
         disk_area = self.calculate_disk_area()
         power_requirements = self.calculate_power_req_hover()
         power_loading_hover = self.calculate_power_loading_hover()
-        profile_power_fl = self.calculate_P_p()
-        HOGE_ceiling = self.calculate_hoge_ceiling()       
+        profile_power_fl = self.calculate_P_p()       
 
         #print(f'Hover induced velocity: {v_i_hover:.2f} m/s')
         #print(f'Climb induced velocity: {v_i_climb:.2f} m/s')
@@ -271,7 +256,6 @@ class PerformanceAnalysis:
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
         print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
-        print(f'HOGE ceiling: {HOGE_ceiling:.5f} m')
 
 
 class PowerAnalysis:
@@ -282,30 +266,66 @@ class PowerAnalysis:
         self.P_req_hover = PerformanceAnalysis.calculate_power_req_hover()     # get the required power for hover
         #add power required for take off, climb, cruise, descent, loiter, land
         self.t4 = None
-        #import the V_climb1!!
+        #NEED TO BE ADDED - import the V_climb1 FROM PERFORMANCE!! - Ask Yunjae!
+        #V_climb1 = 36.0       #[m/s] test value
 
 
     
     def calculate_missionphase_time(self):
         # HIGE 1
-        t1 = 15
+        t1 = 15                #[s] - Given
         # Vertical Climb
-        delta_h1 = 60.0     #[m]
-        Vroc = 0.76         #[m/s]
+        delta_h1 = 60.0     #[m] - Given
+        Vroc = 0.76         #[m/s] - Given
         t2 = delta_h1 / Vroc
         # HOGE 1  
-        t3 = 10             #[s]
+        t3 = 10             #[s] - Given
         # Steady Climb 1
-        delta_h2 = 300-delta_h1
-        gamma_1 = 9         #[deg]
-        ddistance_h2 = delta_h2 / np.sin(9*np.pi/180)      #Diagonal distance after converting deg to rad
-        hdistance_h2 = delta_h2 / np.tan(9*np.pi/180)      #Horizontal distance after converting deg to rad
-        #t4 = hdistance_h2 / V_climb1        #time of climb 1 with horizontal climb speed V_climb1
+        h2 = 300        #[m] - Given
+        delta_h2 = h2-delta_h1      #[m] height between Hoge1 and cruise 1
+        gamma_1 = 9         #[deg] flight path angle
+        d_cl1 = delta_h2 / np.tan(gamma_1*np.pi/180)      #Horizontal distance after converting deg to rad
+        t4 = d_cl1 / V_climb1        #time of climb 1 with horizontal climb speed V_climb1
+        # Descent 1
+        h3 = 30         #[m]       Hoge 2 altitude 
+        roc_descent = 7.6      #[m/s]   -    given
+        delta_h3 = h2 - h3      #[m] height between cruise 1 and Hoge2
+        t6 = delta_h3 / roc_descent     #[s]
+        d_ds1 = V_climb1 * t6    # horizontal distance covered during descent
         # Cruise 1
+        d_tothalf = 30000       #[m] - Given distance from wright memorial to alligators
+        d_cr1 = d_tothalf - d_cl1 - d_ds1       #[m] Horizontal cruise1 distance
+        t5 = d_cr1 / V_cruise       #[s] time needed for cruise1, depending on the cruise speed that has to be implimented!
+        # HOGE 2
+        t7 = 30     #[s]
+        # Loitering
+        t8 = t8     #DEPENDS ON MAX ENDURENCE!!-> to be designed for
+        d_loiter = V_loiter * t8
+        # Steady Climb 2
+        delta_h4 = h2 - h3
+        gamma_2 = 9     #[deg] flight path angle
+        d_cl2 = delta_h4 / np.tan(gamma_2*np.pi/180)        #[m] horizontal distance of climb 2
+        t9 = d_cl2 / V_climb2       #[s] 
+        # Descent 2
+        delta_h5 = h2-delta_h1
+        gamma_3 = 5     #[deg] flight path angle down
+        d_ds2 = delta_h5 / np.tan(gamma_3*np.pi/180)        # horizontal distance covered during descent 2
+        t11 = d_ds2 / V_descent     #[s] time to cover horizontal distance according to horizontal descent speed
+        # Cruise 2
+        d_cr2 = d_tothalf - d_cl2 - d_ds2       #[m] Horizontal cruise2 distance
+        t10 = d_cr2 / V_cruise       #[s] time needed for cruise2, depending on the cruise speed that has to be implimented!
+        # HOGE 3
+        t12 = 10        #[s]
+        # Vertical Descent
+        Vrod = 0.5      #[m/s]  Vertical rate of descent
+        t13 = delta_h1 / Vrod       #[s] Vertical descent time
+        # HIGE 2
+        t14 = 15        #[s]
 
+        t_total = t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14
+        d_total = 2 * d_tothalf + d_loiter
 
-        self.t1 = t1 
-        return self.t1 
+        return t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t_total, d_total
     
 
 # Main Execution
