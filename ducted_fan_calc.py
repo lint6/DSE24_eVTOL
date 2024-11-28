@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 class Ducted_Fan:
-    def __init__(self, mtow, radius=1.25, T_W_R=1, V_c=None, density=1.225, P_a =410000): 
+    def __init__(self, mtow, radius=0.3, T_W_R= 1 , V_c=None, density=1.225, P_a =410000): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -18,17 +18,23 @@ class Ducted_Fan:
 
         # Calculated Attributes (initialized as None)
         self.disc_loading = None
+        self.thrust_loading = None 
         self.v_h = None  # Hover induced velocity
-        self.hover_induced_velocity = None
         self.thrust = None
+        #self.hover_induced_velocity = None
         self.v_d = None
         self.v_d_nd = None
         self.v_c = None
         self.v_c_nd = None
-        self.kappa = None
+        self.kappa_c = None
         self.p_idc = None
+        self.p_idh = None 
+        self.kappa_p = None 
         self.V_c_kappa = None 
-        self.thrust_loading = None 
+        self.p_idd = None 
+        self.kappa_d = None 
+
+        
 
     def calc_mtow(self, new_mtow):
         if new_mtow > self.mtow:
@@ -114,8 +120,31 @@ class Ducted_Fan:
         self.V_c_kappa = V_c_kappa_nd * self.v_h
         return self.V_c_kappa
 
+    # |V_d / v_d| < 1.0 case 
+    #  
+    def calc_p_idd(self):
+        self.calc_V_c_kappa()
+        self.calc_v_d()
+        T = self.mtow * 9.81 * (self.v_d + self.V_c_kappa)
+        self.p_idd = T 
+        return self.p_idd
     
-fan_1 = Ducted_Fan(mtow=float(2177/2))
+    def calc_kappa_d(self):
+        kappa_d = 0.5 * (self.V_c_kappa) + np.sqrt(0.25 * self.V_c_kappa**2 + 1)
+        self.kappa_d = kappa_d
+        return self.kappa_d
+
+    def calc_p_idd_kappa(self):
+        self.calc_power_ideal_hover()
+        self.calc_kappa_d()
+        self.p_idd_kappa = self.p_idh * self.kappa_d
+        return self.p_idd_kappa
+    
+
+    
+
+    
+fan_1 = Ducted_Fan(mtow=float(718/4))
 
 # Calculate hover induced velocity
 print(f"Hover Induced Velocity: {fan_1.calc_hover_induced_velovity()}")
