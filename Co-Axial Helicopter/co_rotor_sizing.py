@@ -1,6 +1,6 @@
 import math
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 class RotorSizing:
 
@@ -80,13 +80,36 @@ class RotorSizing:
         print(f"Max Forward Velocity: {self.max_forward_velocity:.2f} m/s")
         print(f"Never Exceed Velocity: {self.never_exceed_velocity:.2f} m/s")
 
-
     def iterate_design(self, new_MTOW=None, new_n_blades=None):
         if new_MTOW:
             self.MTOW = new_MTOW 
         if new_n_blades:
             self.n_blades = new_n_blades 
         self.update_parameters()
+
+    def visual_blade_vs_aspect_ratio(self):
+        blade_numbers = [2, 3, 4, 5, 6, 7, 8]
+        aspect_ratios = []
+        for blades in blade_numbers:
+            self.iterate_design(new_n_blades=blades)
+            aspect_ratios.append(self.aspect_ratio)
+        plt.figure(figsize=(10, 6))
+        plt.plot(blade_numbers, aspect_ratios, marker='o', label='Aspect Ratio')
+        plt.title('Effect of Blade Number on Aspect Ratio')
+        plt.xlabel('Number of Blades')
+        plt.ylabel('Aspect Ratio')
+
+        plt.axhline(y=14, color='black', linestyle = 'dotted')
+        plt.axhline(y=20, color = 'black', linestyle = 'dotted')
+
+        plt.axhspan(14, 20, color='green', alpha=0.2, label='Acceptable Range')
+        plt.axhspan(0, 14, color = 'red', alpha=0.2, label = 'Unacceptable Range')
+        plt.axhspan(20, 100, color = 'red', alpha = 0.2)
+
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
 
 
 if __name__ == '__main__':
@@ -116,3 +139,5 @@ if __name__ == '__main__':
     rotor.iterate_design(new_MTOW=718.89, new_n_blades=6)
     print('----------------------------------------')
     rotor.display_parameters()
+    ### visualizations ###
+    rotor.visual_blade_vs_aspect_ratio()
