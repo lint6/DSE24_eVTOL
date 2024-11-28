@@ -10,55 +10,22 @@ import matplotlib.pyplot as plt
 #    self.p_idd_kappa = self.p_idh * self.kappa_d
 #    return self.p_idd_kappa
 
+
+
 def find_roots(coefficients):
     if len(coefficients) != 5:
         raise ValueError("You must provide exactly 5 coefficients for a 4th order polynomial.")
     roots = np.roots(coefficients)
-    return roots
+    print (roots)
+    for r in roots:
+        rr_root = []
+        if isinstance(r, (float)):
+            rr_root.append(r)
+    r_root = min(rr_root)            
+    return r_root
 
 
 
-class Ducted_Fan_2:
-    def __init__(self, mtow, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 5, k_v_f = 1, V = 100, related_fan = None): 
-        # Required Inputs
-        self.mtow = mtow  # Maximum takeoff weight
-        self.radius = radius  # Fan radius (m)
-        self.D_h0 = D_h0
-        self.k_v_f = k_v_f 
-        self.V = V
-
-        # Optional Inputs with Defaults
-        self.T_W_R = T_W_R  # Thrust-to-weight ratio
-        self.V_c = V_c  # Climb freestream velocity (m/s)
-        self.density = density  # Air density (kg/m^3)
-        
-        self.T = None 
-        self.mto_weight = None 
-        self.rotor_alpha = None
-        self.roots = None 
-
-        self.related_fan = related_fan
-
-    def calc_weight(self):
-        self.mto_weight = self.mtow * 9.81
-        return self.mto_weight
-    
-    def calc_T(self):
-        self.calc_weight()
-        self.T = self.mto_weight * np.sqrt(self.k_v_f**2 + (self.D_h0 / self.mto_weight)**2 )
-        return self.T
-    
-    def calc_rotor_alpha(self):
-        self.calc_T()
-        self.rotor_alpha = - np.arctan(int(self.D_h0) / int(self.T))
-        return self.rotor_alpha
-    
-    def calc_v_f(self):
-        self.calc_rotor_alpha()
-        my_coefficient = [1, float(-2 * self.V * np.sin(self.rotor_alpha)), (self.V **2), 0, -1 ]
-        self.roots = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
-        #write an algorithm to chosee THE root you want
-        return self.roots 
 
 
 class Ducted_Fan_1:
@@ -212,6 +179,90 @@ class Ducted_Fan_1:
         return self.V_d_kappa_d
 
     
+class Ducted_Fan_2:
+    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 5, k_v_f = 1, V = 100, related_fan = None): 
+        # Required Inputs
+        self.mtow = mtow  # Maximum takeoff weight
+        self.radius = radius  # Fan radius (m)
+        self.D_h0 = D_h0
+        self.k_v_f = k_v_f 
+        self.V = V
+        self.gamma = gamma
+
+        # Optional Inputs with Defaults
+        self.T_W_R = T_W_R  # Thrust-to-weight ratio
+        self.V_c = V_c  # Climb freestream velocity (m/s)
+        self.density = density  # Air density (kg/m^3)
+        
+        self.T = None 
+        self.mto_weight = None 
+        self.rotor_alpha = None
+        self.roots = None 
+        self.V_hor = None 
+
+        self.related_fan = related_fan
+
+    def calc_weight(self):
+        self.mto_weight = self.mtow * 9.81
+        return self.mto_weight
+    
+    def calc_T(self):
+        self.calc_weight()
+        self.T = self.mto_weight * np.sqrt(self.k_v_f**2 + (self.D_h0 / self.mto_weight)**2 )
+        return self.T
+    
+    def calc_rotor_alpha(self):
+        self.calc_T()
+        self.rotor_alpha = - np.arctan(int(self.D_h0) / int(self.T))
+        return self.rotor_alpha
+    
+    def calc_v_f(self):
+        self.calc_rotor_alpha()
+        my_coefficient = [1, float(-2 * self.V * np.sin(self.rotor_alpha)), (self.V **2), 0, -1 ]
+        self.roots = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
+
+        #write an algorithm to chosee THE root you want
+        print(self.roots)
+        return self.roots 
+    
+    def calc_V_horizontal(self):
+        V_hor = self.V * np.cos(self.gamma)
+        self.V_hor = V_hor
+        return self.V_hor
+  
+
+
+class Ducted_Fan_3:
+    def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 5, k_v_f = 1, V = 100, P_a =410000,  related_fan1 = None, related_fan2 = None): 
+        # Required Inputs
+        self.mtow = mtow  # Maximum takeoff weight
+        self.radius = radius  # Fan radius (m)
+        self.D_h0 = D_h0
+        self.k_v_f = k_v_f 
+        self.V = V
+        self.gamma = gamma
+        self.P_a = P_a
+
+        # Optional Inputs with Defaults
+        self.T_W_R = T_W_R  # Thrust-to-weight ratio
+        self.V_c = V_c  # Climb freestream velocity (m/s)
+        self.density = density  # Air density (kg/m^3)
+        
+        self.T = None 
+        self.mto_weight = None 
+        self.rotor_alpha = None
+        self.roots = None 
+        self.V_hor = None 
+
+        self.related_fan1 = related_fan1
+        self.related_fan2 = related_fan2
+
+    #def calc_V_c_slow(self):
+    #    V_c_slow = (self.P_a / (self.k_v_f * self.mto_weight)) - self.V * self.rotor_alpha + self.related_fan2.ROOOOOOT
+        
+
+
+
 
     
 fan_1 = Ducted_Fan_1(mtow=float(718/4))
@@ -236,4 +287,4 @@ print(f"calc_pidd: {fan_1.calc_p_idd()}")
 fan_2 = Ducted_Fan_2(mtow=float(718/4), related_fan=fan_1)
 print(f"v from fan 2 from fan 1: {fan_2.calc_v_f()}")
 
-
+#fan_3 = Ducted_Fan_2(mtow=float(718/4), related_fan1=fan_1, related_fan2=fan_2)
