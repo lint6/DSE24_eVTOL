@@ -14,7 +14,7 @@ class PerformanceAnalysis:
         self.g = rotor_analysis.g
 
         # Perform rotor sizing
-        self.results = rotor_analysis.perform_analysis(c_t_o_fl=0.1, c_t_o_turn=0.2, c_t_o_turb=0.3)
+        self.results = rotor_analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
         self.rotor_radius, self.rotor_diameter, self.v_tip, self.mach_number, self.omega, self.adv_ratio_fl, self.o_fl, self.o_turn, self.o_turb, self.solidity, self.aspect_ratios, self.n_z  = self.results
 
         # Derived parameters
@@ -57,6 +57,7 @@ class PerformanceAnalysis:
         print(f'Disk Area: {disk_area:.2f} m2')
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
+        print(self.solidity)
 
 
 # Main Execution
