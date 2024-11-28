@@ -63,7 +63,7 @@ class RotorAnalysis:
 
         # Solidity during turbulence
         delta_n = (0.25 * self.C_lalpha * (self.V_gust / (omega * rotor_radius_m))) / c_t_o_turb
-        n_z_turb = 2 + delta_n
+        n_z_turb = 2 + delta_n # 2g pull up (FAA requirement) -> ask marilena
         T_turb = n_z_turb * self.k_dl * self.MTOW_KG * self.g
         c_t_turb = T_turb / (self.N_rotors * (self.rho * np.pi * rotor_radius_m ** 2 * (omega * rotor_radius_m) ** 2))
         o_turb = c_t_turb / c_t_o_turb
