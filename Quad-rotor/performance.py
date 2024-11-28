@@ -48,7 +48,7 @@ class PerformanceAnalysis:
     #Thrust coefficient
     def calculate_C_T(self): 
         self.T = self.mtow
-        C_T = self.T / (self.rho * np.pi * self.rotor_radius ** 2 *(self.omega * self.rotor_radius)**2 )
+        C_T = (self.T*self.g) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
         return C_T
     
     #Average C_l
