@@ -94,6 +94,7 @@ class PerformanceAnalysis:
         print(f'Disk Area: {disk_area:.2f} m2')
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
+        print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
 
 
 # Main Execution
