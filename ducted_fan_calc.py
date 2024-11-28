@@ -15,14 +15,11 @@ import matplotlib.pyplot as plt
 def find_roots(coefficients):
     if len(coefficients) != 5:
         raise ValueError("You must provide exactly 5 coefficients for a 4th order polynomial.")
-    roots = np.roots(coefficients)
-    print (roots)
-    for r in roots:
-        rr_root = []
-        if isinstance(r, (float)):
-            rr_root.append(r)
-    r_root = min(rr_root)            
-    return r_root
+    roots = np.roots(coefficients)  
+    real_roots = roots[np.isreal(roots)]
+    real_root = min(real_roots[real_roots>0])
+    return real_root
+
 
 
 
@@ -180,7 +177,7 @@ class Ducted_Fan_1:
 
     
 class Ducted_Fan_2:
-    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 5, k_v_f = 1, V = 100, related_fan = None): 
+    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 5, k_v_f = 1, V = 2, related_fan = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -214,11 +211,13 @@ class Ducted_Fan_2:
     def calc_rotor_alpha(self):
         self.calc_T()
         self.rotor_alpha = - np.arctan(int(self.D_h0) / int(self.T))
+        print( "rotor alpha is", self.rotor_alpha)
         return self.rotor_alpha
     
     def calc_v_f(self):
         self.calc_rotor_alpha()
         my_coefficient = [1, float(-2 * self.V * np.sin(self.rotor_alpha)), (self.V **2), 0, -1 ]
+        print(my_coefficient)
         self.roots = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
 
         #write an algorithm to chosee THE root you want
