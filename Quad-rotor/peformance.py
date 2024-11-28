@@ -30,18 +30,28 @@ class PerformanceAnalysis:
         """Calculate climb induced velocity (m/s)."""
         return (-self.V_vertical_climb / 2) + np.sqrt((self.V_vertical_climb / 2)**2 + (self.weight_per_rotor / (2 * self.rho * self.rotor_area)))
 
+    def calculate_disk_area(self):
+        """Calculate total disk area of the quadcopter"""
+        S_disk = self.rotor_area*4
+        return S_disk
+    
     def calculate_power_req_hover(self):
-        P_req_hover = ((self.mtow*self.g)**(3/2))/(np.sqrt(2*self.rho*self.rotor_area*4)*self.FM)
+        P_req_hover = ((self.mtow*self.g)**(3/2))/(np.sqrt(2*self.rho*self.calculate_disk_area())*self.FM)
         return P_req_hover
+    
+    #def calculate_power_loading_hover(self):
+        #P_load_hover = 
     
     def display_results(self):
         """Display power requirements and induced velocities."""
         v_i_hover = self.calculate_hover_induced_velocity()
         v_i_climb = self.calculate_climb_induced_velocity()
+        disk_area = self.calculate_disk_area()
         power_requirements = self.calculate_power_req_hover()
 
         print(f'Hover induced velocity: {v_i_hover:.2f} m/s')
         print(f'Climb induced velocity: {v_i_climb:.2f} m/s')
+        print(f'Disk Area: {disk_area:.2f} m2')
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
 
 
