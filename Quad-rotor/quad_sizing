@@ -1,14 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 class RotorAnalysis:
-    def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=3, bank_angle=30, v_max_kmh=150):
+    def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=3, bank_angle=30, v_max_kmh=150, T_0=288.15, molar_mass=0.0289644, gas_const=8.31432, lapse_rate=0.0065):
         # Constants
         self.MTOW_KG = mtow_kg  # Maximum Takeoff Weight in kg
         self.N_rotors = n_rotors  # Number of rotors
         self.DL_IMPERIAL = dl_imperial  # Disc loading in lb/ft²
         self.bank_angle = bank_angle  # Bank angle during turn [deg]
         self.V_MAX_KMH = v_max_kmh  # Maximum forward speed in km/h
+
+        # Define ISA
+        self.T_0 = T_0   # K (sea level standard temperature)
+        self.molar_mass = molar_mass  # kg/mol (molar mass of Earth's air)
+        self.gas_const = gas_const    # J/(mol·K) (universal gas constant)
+        self.lapse_rate = lapse_rate     # K/m (temperature lapse rate)
+
 
         # Physical constants
         self.POUNDS_PER_KG = 2.205  # Conversion factor from kg to pounds
@@ -170,6 +178,12 @@ class PerformanceAnalysis:
         self.g = rotor_analysis.g
         self.Cl_alpha = rotor_analysis.C_lalpha
 
+        # ISA
+        self.T_0 = rotor_analysis.T_0
+        self.molar_mass = rotor_analysis.molar_mass  
+        self.gas_const = rotor_analysis.gas_const    
+        self.lapse_rate = rotor_analysis.lapse_rate     
+
         # Perform rotor sizing
         self.results = rotor_analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
         self.rotor_radius, self.rotor_diameter, self.v_tip, self.mach_number, self.omega, self.adv_ratio_fl, self.o_fl, self.o_turn, self.o_turb, self.solidity, self.aspect_ratios, self.n_z  = self.results
@@ -199,6 +213,13 @@ class PerformanceAnalysis:
     def calculate_power_loading_hover(self):
         P_load_hover = (self.mtow) / (self.calculate_power_req_hover()/1000)
         return P_load_hover
+    
+    def calculate_hoge_ceiling(self):
+        #altitude conversion needs to be implemented properly!!!
+        P_max = 100000 #placeholder
+        rho_max = (self.T)**3 / (2 * P_max**2 * self.FM**2 * self.calculate_disk_area())
+        altitude_this_is_wrong = (self.T_0 / self.lapse_rate) * (math.pow((self.rho / rho_max), (self.gas_const * self.lapse_rate) / (self.g * self.molar_mass)) - 1)
+        return altitude_this_is_wrong
     
     #In order to find Forward Flight P_req, we need to calculate some new values:
     #Thrust coefficient
@@ -240,7 +261,8 @@ class PerformanceAnalysis:
         disk_area = self.calculate_disk_area()
         power_requirements = self.calculate_power_req_hover()
         power_loading_hover = self.calculate_power_loading_hover()
-        profile_power_fl = self.calculate_P_p()       
+        profile_power_fl = self.calculate_P_p()
+        HOGE_ceiling = self.calculate_hoge_ceiling()       
 
         #print(f'Hover induced velocity: {v_i_hover:.2f} m/s')
         #print(f'Climb induced velocity: {v_i_climb:.2f} m/s')
@@ -248,6 +270,7 @@ class PerformanceAnalysis:
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
         print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
+        print(f'HOGE ceiling: {HOGE_ceiling:.5f} m')
 
 
 class PowerAnalysis:
