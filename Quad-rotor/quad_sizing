@@ -249,6 +249,41 @@ class PerformanceAnalysis:
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
         print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
 
+
+class PowerAnalysis:
+    def __init__(self):
+        #values from rotor sizing
+        self.N_rotors = RotorAnalysis.N_rotors     # get the amount of rotors    
+        #values from performance
+        self.P_req_hover = PerformanceAnalysis.calculate_power_req_hover()     # get the required power for hover
+        #add power required for take off, climb, cruise, descent, loiter, land
+        self.t4 = None
+        #import the V_climb1!!
+
+
+    
+    def calculate_missionphase_time(self):
+        # HIGE 1
+        t1 = 15
+        # Vertical Climb
+        delta_h1 = 60.0     #[m]
+        Vroc = 0.76         #[m/s]
+        t2 = delta_h1 / Vroc
+        # HOGE 1  
+        t3 = 10             #[s]
+        # Steady Climb 1
+        delta_h2 = 300-delta_h1
+        gamma_1 = 9         #[deg]
+        ddistance_h2 = delta_h2 / np.sin(9*np.pi/180)      #Diagonal distance after converting deg to rad
+        hdistance_h2 = delta_h2 / np.tan(9*np.pi/180)      #Horizontal distance after converting deg to rad
+        #t4 = hdistance_h2 / V_climb1        #time of climb 1 with horizontal climb speed V_climb1
+        # Cruise 1
+
+
+        self.t1 = t1 
+        return self.t1 
+    
+
 # Main Execution
 if __name__ == "__main__":
     # Initialize the analysis with default values
@@ -262,3 +297,5 @@ if __name__ == "__main__":
 
     # Display results
     performance_analysis.display_results()
+
+    
