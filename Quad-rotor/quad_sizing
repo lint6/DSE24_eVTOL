@@ -21,6 +21,7 @@ class RotorAnalysis:
         self.D_v = 0.05 * self.MTOW_KG  # Drag penalty [kg]
         self.k_dl = (1 + (self.D_v / self.MTOW_KG))  # Drag load factor
         self.V_ne = (self.V_MAX_KMH / 3.6) * 1.1  # Never exceed speed [m/s]
+
         self.V_gust = 30 / self.FT_TO_M
         self.C_lalpha = 5.73  # 1/rad; NACA0012
 
@@ -63,7 +64,7 @@ class RotorAnalysis:
 
         # Solidity during turbulence
         delta_n = (0.25 * self.C_lalpha * (self.V_gust / (omega * rotor_radius_m))) / c_t_o_turb
-        n_z_turb = 2 + delta_n # 2g pull up (FAA requirement)
+        n_z_turb = 2 + delta_n  # 2g pull up (FAA requirement)
         T_turb = n_z_turb * self.k_dl * self.MTOW_KG * self.g
         c_t_turb = T_turb / (self.N_rotors * (self.rho * np.pi * rotor_radius_m ** 2 * (omega * rotor_radius_m) ** 2))
         o_turb = c_t_turb / c_t_o_turb
@@ -101,66 +102,60 @@ class RotorAnalysis:
         chord = (solidity * np.pi * rotor_radius_m) / N_bl
         return chord
 
+    def interact(self):
+        # Perform analysis with default coefficients to get advance ratio first
+        results = self.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
 
-# Main Execution
-if __name__ == "__main__":
-    # Initialize the analysis with default values
-    analysis = RotorAnalysis()
+        # Unpack results
+        rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results
 
-    # Perform analysis with default coefficients to get advance ratio first
-    results = analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
+        # Print advance ratio and other results
+        print(f"Advance Ratio in forward flight = {adv_ratio_fl:.2f}")
+        print(f"Rotor Radius [m]: {rotor_radius:.2f}")
+        print(f"Rotor Diameter [m]: {rotor_diameter:.2f}")
+        print(f"Tip Speed [m/s]: {v_tip:.2f}")
+        print(f"Mach Number: {mach_number:.2f}")
+        print(f"Rotational Speed (Omega) [rad/s]: {omega:.2f}")
+        print(f"RPMs : {omega*(60/(2*np.pi)): .2f}")
 
-    # Unpack results
-    rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results
+        # Now ask for user input for thrust coefficients
+        print("Please enter the thrust coefficients:")
+        c_t_o_fl = float(input("Enter thrust coefficient for forward flight (c_t_o_fl): "))
+        c_t_o_turn = float(input("Enter thrust coefficient for turning flight (c_t_o_turn): "))
+        c_t_o_turb = float(input("Enter thrust coefficient for turbulence (c_t_o_turb): "))
 
-    # Print advance ratio and other results
-    print(f"Advance Ratio in forward flight = {adv_ratio_fl:.2f}")
-    print(f"Rotor Radius [m]: {rotor_radius:.2f}")
-    print(f"Rotor Diameter [m]: {rotor_diameter:.2f}")
-    print(f"Tip Speed [m/s]: {v_tip:.2f}")
-    print(f"Mach Number: {mach_number:.2f}")
-    print(f"Rotational Speed (Omega) [rad/s]: {omega:.2f}")
-    print(f"RPMs : {omega*(60/(2*np.pi)): .2f}")
+        # Perform analysis with user-provided coefficients
+        results_with_input = self.perform_analysis(c_t_o_fl, c_t_o_turn, c_t_o_turb)
 
-    # Now ask for user input for thrust coefficients
-    print("Please enter the thrust coefficients:")
-    c_t_o_fl = float(input("Enter thrust coefficient for forward flight (c_t_o_fl): "))
-    c_t_o_turn = float(input("Enter thrust coefficient for turning flight (c_t_o_turn): "))
-    c_t_o_turb = float(input("Enter thrust coefficient for turbulence (c_t_o_turb): "))
+        # Unpack new results
+        rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results_with_input
 
-    # Perform analysis with user-provided coefficients
-    results_with_input = analysis.perform_analysis(c_t_o_fl, c_t_o_turn, c_t_o_turb)
+        # Print key results with user inputs
+        print(f"Solidity in Forward Flight: {o_fl:.4f}")
+        print(f"Solidity during Turn: {o_turn:.4f}")
+        print(f"Solidity during Turbulence: {o_turb:.4f}")
+        print(f"Solidity used: {solidity:.4f}")
 
-    # Unpack new results
-    rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results_with_input
+        # Plot results
+        self.plot_aspect_ratios(aspect_ratios)
 
-    # Print key results with user inputs
-    print(f"Solidity in Forward Flight: {o_fl:.4f}")
-    print(f"Solidity during Turn: {o_turn:.4f}")
-    print(f"Solidity during Turbulence: {o_turb:.4f}")
-    print(f"Solidity used: {solidity:.4f}")
+        # Ask user for the number of blades they want and calculate the corresponding chord
+        selected_blades = int(input("Enter the number of blades you want (between 2 and 6): "))
+        if selected_blades not in range(2, 7):
+            print("Invalid number of blades selected. Please choose between 2 and 6 blades.")
+        else:
+            # Get the selected aspect ratio and chord
+            selected_aspect_ratio = None
+            selected_chord = None
+            for N_bl, chord, AR_bl in aspect_ratios:
+                if N_bl == selected_blades:
+                    selected_aspect_ratio = AR_bl
+                    selected_chord = chord
 
-    # Plot results
-    analysis.plot_aspect_ratios(aspect_ratios)
-
-    # Ask user for the number of blades they want and calculate the corresponding chord
-    selected_blades = int(input("Enter the number of blades you want (between 2 and 6): "))
-    if selected_blades not in range(2, 7):
-        print("Invalid number of blades selected. Please choose between 2 and 6 blades.")
-    else:
-        # Get the selected aspect ratio and chord
-        selected_aspect_ratio = None
-        selected_chord = None
-        for N_bl, chord, AR_bl in aspect_ratios:
-            if N_bl == selected_blades:
-                selected_aspect_ratio = AR_bl
-                selected_chord = chord
-
-        # Print the results
-        print(f"Selected number of blades: {selected_blades}")
-        print(f"Corresponding blade chord length: {selected_chord:.4f} meters")
-        print(f"Corresponding aspect ratio: {selected_aspect_ratio:.4f}")
-
+            # Print the results
+            print(f"Selected number of blades: {selected_blades}")
+            print(f"Corresponding blade chord length: {selected_chord:.4f} meters")
+            print(f"Corresponding aspect ratio: {selected_aspect_ratio:.4f}")
 
 
 class PerformanceAnalysis:
@@ -208,8 +203,8 @@ class PerformanceAnalysis:
     #In order to find Forward Flight P_req, we need to calculate some new values:
     #Thrust coefficient
     def calculate_C_T(self): 
-        self.T = self.mtow
-        C_T = (self.T*self.g) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
+        self.T = self.mtow *self.g
+        C_T = (self.T) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
         return C_T
     
     #Average C_l
@@ -255,13 +250,52 @@ class PerformanceAnalysis:
         print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
 
 
+class PowerAnalysis:
+    def __init__(self):
+        #values from rotor sizing
+        self.N_rotors = RotorAnalysis.N_rotors     # get the amount of rotors    
+        #values from performance
+        self.P_req_hover = PerformanceAnalysis.calculate_power_req_hover()     # get the required power for hover
+        #add power required for take off, climb, cruise, descent, loiter, land
+        self.t4 = None
+        #import the V_climb1!!
+
+
+    
+    def calculate_missionphase_time(self):
+        # HIGE 1
+        t1 = 15
+        # Vertical Climb
+        delta_h1 = 60.0     #[m]
+        Vroc = 0.76         #[m/s]
+        t2 = delta_h1 / Vroc
+        # HOGE 1  
+        t3 = 10             #[s]
+        # Steady Climb 1
+        delta_h2 = 300-delta_h1
+        gamma_1 = 9         #[deg]
+        ddistance_h2 = delta_h2 / np.sin(9*np.pi/180)      #Diagonal distance after converting deg to rad
+        hdistance_h2 = delta_h2 / np.tan(9*np.pi/180)      #Horizontal distance after converting deg to rad
+        #t4 = hdistance_h2 / V_climb1        #time of climb 1 with horizontal climb speed V_climb1
+        # Cruise 1
+
+
+        self.t1 = t1 
+        return self.t1 
+    
+
 # Main Execution
 if __name__ == "__main__":
-    # Initialize RotorAnalysis
+    # Initialize the analysis with default values
     rotor_analysis = RotorAnalysis()
+
+    # Start the interaction method that handles all the user input and analysis
+    rotor_analysis.interact()
 
     # Initialize PerformanceAnalysis with the rotor analysis instance
     performance_analysis = PerformanceAnalysis(rotor_analysis)
 
     # Display results
     performance_analysis.display_results()
+
+    
