@@ -222,8 +222,11 @@ class Ducted_Fan_2:
         return self.v_f_root
     
     def calc_V_horizontal(self):
+        print("v", self.V)
+        print("gamma", self.gamma)
         V_hor = self.V * np.cos(self.gamma)
         self.V_hor = V_hor
+        print(V_hor)
         return self.V_hor
   
 
@@ -244,21 +247,28 @@ class Ducted_Fan_3:
         self.V_c = V_c  # Climb freestream velocity (m/s)
         self.density = density  # Air density (kg/m^3)
         
-        self.T = None 
+        self.T = fan_2.T
         self.mto_weight = fan_2.mto_weight
         self.rotor_alpha = fan_2.rotor_alpha
-        self.roots = None 
-        self.V_hor = None 
+        self.v_f_root = fan_2.v_f_root 
+        self.V_hor = fan_2.V_hor 
         self.V_c_slow = None 
+        self.V_c_fast = None 
 
         self.related_fan1 = related_fan1
         self.related_fan2 = related_fan2
 
     def calc_V_c_slow(self):
-        V_c_slow = (self.P_a / (self.k_v_f * self.mto_weight)) - ((self.V) * (self.rotor_alpha) + self.related_fan2.v_f_root)
+        V_c_slow = (self.P_a / (self.k_v_f * self.mto_weight)) - ((self.V) * (self.rotor_alpha) + self.v_f_root)
         self.V_c_slow = V_c_slow
         return self.V_c_slow
-    
+  
+    def calc_V_c_fast(self):
+        print("sdcsdcsdcsdc",self.V_hor)
+        print("scdsdcscdsdcsdcsc" ,self.D_h0)
+        V_c_fast = (self.P_a - (self.V_hor * self.D_h0 + self.T * self.v_f_root)) / (self.k_v_f * self.mto_weight)
+        self.V_c_fast = V_c_fast
+        return V_c_fast
 
     
 fan_1 = Ducted_Fan_1(mtow=float(718/4))
@@ -283,7 +293,12 @@ print(f"calc_pidd: {fan_1.calc_p_idd()}")
 fan_2 = Ducted_Fan_2(mtow=float(718/4), related_fan=fan_1)
 print(f"v from fan 2 from fan 1: {fan_2.calc_v_f()}")
 print(f"v from frotor alphhhaaaaa: {fan_2.calc_rotor_alpha()}")
+print(f"v horrrrrrr: {fan_2.V()}")
+
+print(f"v horrrrrrr: {fan_2.V_hor()}")
 
 
-fan_3 = Ducted_Fan_3(mtow=float(718/4), gamma=2, related_fan1=fan_1, related_fan2 = fan_2 )
+
+fan_3 = Ducted_Fan_3(mtow=float(718/4), gamma=3, related_fan1=fan_1, related_fan2 = fan_2 )
 print(f"V_c_slow: {fan_3.calc_V_c_slow()}")
+print(f"V_c_slow: {fan_3.calc_V_c_fast()}")
