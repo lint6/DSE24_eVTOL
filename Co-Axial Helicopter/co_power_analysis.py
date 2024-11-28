@@ -26,6 +26,7 @@ class PowerAnalysis:
         self.AV = self.V_point/(self.omega*self.rotor_radius)
 
         self.forward_flight()
+        self.climbing_flight()
 
 
     def forward_flight(self):
@@ -64,16 +65,28 @@ class PowerAnalysis:
         self.P_par = 0.5*self.A_eq*self.rho*(self.V_point**3)
 
         ## total power calculation
-        self.P_total_loss = self.P_p + self.P_i + self.P_par
+        self.P_total_level_loss = self.P_p + self.P_i + self.P_par
 
         #account for losses
-        self.P_total = 1.045*self.P_total_loss
+        self.P_total_level = 1.045*self.P_total_level_loss
+
+    def climbing_flight(self):
+        # compute climb power
+        self.ROC = 2 #[m/s]
+        self.P_C = self.mtow_N * self.ROC
+
+        #total power
+        self.P_total_climb = self.P_total_level + self.P_C
+
+
 
     def display_parameters(self):
         print(f"P_p = {self.P_p}")
         print(f"P_i = {self.P_i}")
         print(f"P_par = {self.P_par}")
-        print(f"P_total = {self.P_total}")
+        print(f"P_total_level = {self.P_total_level}")
+        print(f"P_C = {self.P_C}")
+        print(f"P_total_climb = {self.P_total_climb}")
 
 
 if __name__ == '__main__':
