@@ -20,7 +20,7 @@ class PowerAnalysis:
         self.mtow_N = self.mtow * self.g
         self.k = 1.15
         self.k_dl = 1.04
-        self.V_point = 30
+        self.V_point = 13
 
         #advance ratio
         self.AV = self.V_point/(self.omega*self.rotor_radius)
@@ -70,7 +70,11 @@ class PowerAnalysis:
         self.P_total = 1.045*self.P_total_loss
 
     def display_parameters(self):
-        print(f"P_total{self.P_total}")
+        print(f"P_p = {self.P_p}")
+        print(f"P_i = {self.P_i}")
+        print(f"P_par = {self.P_par}")
+        print(f"P_total = {self.P_total}")
+
 
 if __name__ == '__main__':
     power = PowerAnalysis()
