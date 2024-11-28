@@ -102,67 +102,6 @@ class RotorAnalysis:
         return chord
 
 
-# Main Execution
-if __name__ == "__main__":
-    # Initialize the analysis with default values
-    analysis = RotorAnalysis()
-
-    # Perform analysis with default coefficients to get advance ratio first
-    results = analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
-
-    # Unpack results
-    rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results
-
-    # Print advance ratio and other results
-    print(f"Advance Ratio in forward flight = {adv_ratio_fl:.2f}")
-    print(f"Rotor Radius [m]: {rotor_radius:.2f}")
-    print(f"Rotor Diameter [m]: {rotor_diameter:.2f}")
-    print(f"Tip Speed [m/s]: {v_tip:.2f}")
-    print(f"Mach Number: {mach_number:.2f}")
-    print(f"Rotational Speed (Omega) [rad/s]: {omega:.2f}")
-    print(f"RPMs : {omega*(60/(2*np.pi)): .2f}")
-
-    # Now ask for user input for thrust coefficients
-    print("Please enter the thrust coefficients:")
-    c_t_o_fl = float(input("Enter thrust coefficient for forward flight (c_t_o_fl): "))
-    c_t_o_turn = float(input("Enter thrust coefficient for turning flight (c_t_o_turn): "))
-    c_t_o_turb = float(input("Enter thrust coefficient for turbulence (c_t_o_turb): "))
-
-    # Perform analysis with user-provided coefficients
-    results_with_input = analysis.perform_analysis(c_t_o_fl, c_t_o_turn, c_t_o_turb)
-
-    # Unpack new results
-    rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results_with_input
-
-    # Print key results with user inputs
-    print(f"Solidity in Forward Flight: {o_fl:.4f}")
-    print(f"Solidity during Turn: {o_turn:.4f}")
-    print(f"Solidity during Turbulence: {o_turb:.4f}")
-    print(f"Solidity used: {solidity:.4f}")
-
-    # Plot results
-    analysis.plot_aspect_ratios(aspect_ratios)
-
-    # Ask user for the number of blades they want and calculate the corresponding chord
-    selected_blades = int(input("Enter the number of blades you want (between 2 and 6): "))
-    if selected_blades not in range(2, 7):
-        print("Invalid number of blades selected. Please choose between 2 and 6 blades.")
-    else:
-        # Get the selected aspect ratio and chord
-        selected_aspect_ratio = None
-        selected_chord = None
-        for N_bl, chord, AR_bl in aspect_ratios:
-            if N_bl == selected_blades:
-                selected_aspect_ratio = AR_bl
-                selected_chord = chord
-
-        # Print the results
-        print(f"Selected number of blades: {selected_blades}")
-        print(f"Corresponding blade chord length: {selected_chord:.4f} meters")
-        print(f"Corresponding aspect ratio: {selected_aspect_ratio:.4f}")
-
-
-
 class PerformanceAnalysis:
     def __init__(self, rotor_analysis: RotorAnalysis, vertical_climb_speed: float = 0.76):
         self.rotor_analysis = rotor_analysis
@@ -254,14 +193,67 @@ class PerformanceAnalysis:
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
         print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
 
-
 # Main Execution
 if __name__ == "__main__":
-    # Initialize RotorAnalysis
+    # Initialize the analysis with default values
     rotor_analysis = RotorAnalysis()
 
-    # Initialize PerformanceAnalysis with the rotor analysis instance
-    performance_analysis = PerformanceAnalysis(rotor_analysis)
+    # Perform analysis with default coefficients to get advance ratio first
+    results = rotor_analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
 
-    # Display results
-    performance_analysis.display_results()
+    # Unpack results
+    rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results
+
+    # Print advance ratio and other results
+    print(f"Advance Ratio in forward flight = {adv_ratio_fl:.2f}")
+    print(f"Rotor Radius [m]: {rotor_radius:.2f}")
+    print(f"Rotor Diameter [m]: {rotor_diameter:.2f}")
+    print(f"Tip Speed [m/s]: {v_tip:.2f}")
+    print(f"Mach Number: {mach_number:.2f}")
+    print(f"Rotational Speed (Omega) [rad/s]: {omega:.2f}")
+    print(f"RPMs : {omega*(60/(2*np.pi)): .2f}")
+
+    # Now ask for user input for thrust coefficients
+    print("Please enter the thrust coefficients:")
+    c_t_o_fl = float(input("Enter thrust coefficient for forward flight (c_t_o_fl): "))
+    c_t_o_turn = float(input("Enter thrust coefficient for turning flight (c_t_o_turn): "))
+    c_t_o_turb = float(input("Enter thrust coefficient for turbulence (c_t_o_turb): "))
+
+    # Perform analysis with user-provided coefficients
+    results_with_input = rotor_analysis.perform_analysis(c_t_o_fl, c_t_o_turn, c_t_o_turb)
+
+    # Unpack new results
+    rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results_with_input
+
+    # Print key results with user inputs
+    print(f"Solidity in Forward Flight: {o_fl:.4f}")
+    print(f"Solidity during Turn: {o_turn:.4f}")
+    print(f"Solidity during Turbulence: {o_turb:.4f}")
+    print(f"Solidity used: {solidity:.4f}")
+
+    # Plot results
+    rotor_analysis.plot_aspect_ratios(aspect_ratios)
+
+    # Ask user for the number of blades they want and calculate the corresponding chord
+    selected_blades = int(input("Enter the number of blades you want (between 2 and 6): "))
+    if selected_blades not in range(2, 7):
+        print("Invalid number of blades selected. Please choose between 2 and 6 blades.")
+    else:
+        # Get the selected aspect ratio and chord
+        selected_aspect_ratio = None
+        selected_chord = None
+        for N_bl, chord, AR_bl in aspect_ratios:
+            if N_bl == selected_blades:
+                selected_aspect_ratio = AR_bl
+                selected_chord = chord
+
+        # Print the results
+        print(f"Selected number of blades: {selected_blades}")
+        print(f"Corresponding blade chord length: {selected_chord:.4f} meters")
+        print(f"Corresponding aspect ratio: {selected_aspect_ratio:.4f}")
+
+        # Initialize PerformanceAnalysis with the rotor analysis instance
+        performance_analysis = PerformanceAnalysis(rotor_analysis)
+
+        # Display results
+        performance_analysis.display_results()
