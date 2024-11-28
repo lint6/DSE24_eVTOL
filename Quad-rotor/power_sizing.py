@@ -10,4 +10,15 @@ class PowerAnalysis:
         #values from performance
         self.P_req_hover = performance.calculate_power_req_hover()     # get the required power for hover
         #add power required for take off, climb, cruise, descent, loiter, land
+        self.t1 = None 
+        self.t2
     
+    def calculate_missionphase_time(self):
+        t1 = 15 
+        self.t_1 = t_1 
+        return self.t_1 
+    
+    def calcualte thurst(self):
+        self.calculate_pahere()
+        E = P*t
+
