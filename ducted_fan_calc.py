@@ -240,10 +240,10 @@ class Ducted_Fan_2: #pure horizontal
         self.calc_rotor_alpha()
         self.calc_v_f()
         self.p_idf = self.V_hor * self.D_h0 + self.T * self.v_f_root
-        print("v_horis ", self.V_hor)
-        print("drag is", self.D_h0)
-        print("thrust is", self.T)
-        print("horizontal induced velocity is", self.v_f_root)
+        #print("v_horis ", self.V_hor)
+        #print("drag is", self.D_h0)
+        #print("thrust is", self.T)
+        #print("horizontal induced velocity is", self.v_f_root)
         return self.p_idf
   
 
