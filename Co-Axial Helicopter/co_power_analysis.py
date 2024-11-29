@@ -13,7 +13,7 @@ class PowerAnalysis:
 
         #input
         self.rotorsizing = RotorSizing()
-        self.solidity = 0.03
+        self.solidity = self.rotorsizing.maximum_solidity
         self.rho = 1.225
         self.omega = self.rotorsizing.omega
         self.rotor_radius = self.rotorsizing.rotor_radius
