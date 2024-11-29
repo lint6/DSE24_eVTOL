@@ -21,15 +21,14 @@ class PowerAnalysis:
         self.k = 1.15
         self.k_dl = 1.04
         self.V_point = 13
+        self.k_int = 1.28
 
         # basic gamma values
-        self.gamma_C = 0
-        self.gamma_D = 0
+        self.gamma_CD = 0
 
         #advance ratio
         self.forward_flight()
-        self.climbing_flight()
-        self.descending_flight()
+        self.hover()
         self.iterate_design()
 
 
@@ -56,19 +55,27 @@ class PowerAnalysis:
         # compute forward flight profile power
         self.P_p = self.P_p_hov*(1 + 4.65*(self.AV**2))
 
+        ## parasitic power calculation
+        self.A_eq = 0.75
+        self.P_par = 0.5*self.A_eq*self.rho*(self.V_point**3)
+        self.D_par = self.P_par / self.V_point
+
         ## induced power calculation
         self.T = self.k_dl * self.mtow_N
         self.v_i_hov = math.sqrt((self.mtow_N)/(2*self.rho*self.pi*(self.rotor_radius**2)))
         self.V_bar = self.V_point / self.v_i_hov
-        self.v_i_bar = 1/self.V_bar
-        self.v_i = self.v_i_hov * self.v_i_bar
+        self.alpha = math.asin((self.D_par/self.mtow_N) + math.sin(math.radians(self.gamma_CD)))
+        array = np.array([0,0,0,0,0])
+        array[0] = 1
+        array[1] = 2*self.V_bar*math.sin(self.alpha)
+        array[2] = (self.V_bar**2)
+        array[3] = 0
+        array[4] = -1
+        self.v_i_bar = np.real(np.roots(array)[3]) #aanname
+        self.v_i = self.v_i_bar*self.v_i_hov
 
         #compute induced power
-        self.P_i = self.k * self.T * self.v_i
-
-        ## parasite power calculation
-        self.A_eq = 0.75
-        self.P_par = 0.5*self.A_eq*self.rho*(self.V_point**3)
+        self.P_i = self.k_int * self.k * self.T * self.v_i
 
         ## total power calculation
         self.P_total_level_loss = self.P_p + self.P_i + self.P_par
@@ -76,65 +83,58 @@ class PowerAnalysis:
         #account for losses
         self.P_total_level = 1.045*self.P_total_level_loss
 
-    def climbing_flight(self):
-        # compute climb power
-        self.ROC_C = self.V_point * math.sin(math.radians(self.gamma_C))
-        self.P_C = self.mtow_N * self.ROC_C
+        ## compute climb/descent power
+        self.ROC_CD = self.V_point * math.sin(math.radians(self.gamma_CD))
+        self.P_CD_loss = self.mtow_N * self.ROC_CD
+        self.P_CD = self.P_CD_loss * 1.045
 
-        #total power
-        self.P_total_climb = self.P_total_level + self.P_C
+        ##total power
+        self.P_total_CD = self.P_total_level + self.P_CD
 
-    def descending_flight(self):
-        # compute climb power
-        self.ROC_D = self.V_point * math.sin(math.radians(self.gamma_D))
-        self.P_D = self.mtow_N * self.ROC_D
+    def hover(self):
+        self.P_hoge = self.k_int * self.k * self.T * self.v_i_hov + self.P_p_hov
 
-        #total power
-        self.P_total_descent = self.P_total_level + self.P_D
 
-    def iterate_design(self, new_mtow_N=None, new_V_point=None, new_solidity=None, new_gamma_C=None, new_gamma_D=None):
+    def iterate_design(self, new_mtow_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None):
         if new_mtow_N:
             self.mtow_N = new_mtow_N
         if new_V_point:
             self.V_point = new_V_point
         if new_solidity:
             self.solidity = new_solidity
-        if new_gamma_C:
-            self.gamma_C = new_gamma_C
-        if new_gamma_D:
-            self.gamma_D = new_gamma_D
+        if new_gamma_CD:
+            self.gamma_CD = new_gamma_CD
 
         self.forward_flight()
-        self.climbing_flight()
-        self.descending_flight()
 
 
     def display_parameters(self):
         # print(f"P_p = {self.P_p}")
         # print(f"P_i = {self.P_i}")
         # print(f"P_par = {self.P_par}")
-        print(f"P_total_level = {self.P_total_level}")
-        print(f"P_C = {self.P_C}")
-        # print(f"P_total_climb = {self.P_total_climb}")
-        print(f"P_D = {self.P_D}")
+        # print(f"P_total_level = {self.P_total_level}")
+        # print(f"P_C = {self.P_CD}")
+        # # print(f"P_total_climb = {self.P_total_climb}")
+        # print(f"P_D = {self.P_CD}")
+
+        # print(self.v_i_bar)
+        print(self.P_hoge)
 
 
 if __name__ == '__main__':
     power = PowerAnalysis()
-    #power.display_parameters()
+    power.display_parameters()
 
-    power.iterate_design(new_gamma_C=0)
-    power.iterate_design(new_gamma_D=-9)
+    power.iterate_design(new_gamma_CD=9)
 
     V = np.linspace(5,100, 300)
     P_p = []
     P_i = []
     P_par = []
     P_total_level = []
-    P_C = []
-    P_total_climb = []
-    P_D = []
-    P_total_descent = []
+    P_CD = []
+    P_total_CD = []
+
 
     for velocity in V:
         power.iterate_design(new_V_point=velocity)
@@ -142,14 +142,8 @@ if __name__ == '__main__':
         P_i.append(power.P_i)
         P_par.append(power.P_par)
         P_total_level.append(power.P_total_level)
-        P_C.append(power.P_C)
-        P_total_climb.append(power.P_total_climb)
-        P_D.append(power.P_D)
-        P_total_descent.append(power.P_total_descent)
-
-    climb = False
-    descent = True
-
+        P_CD.append(power.P_CD)
+        P_total_CD.append(power.P_total_CD)
 
     plt.plot(V, P_p, linestyle='-', color='b')
     plt.plot(V, P_i, linestyle='--', color='c')
@@ -162,18 +156,14 @@ if __name__ == '__main__':
     plt.text(V[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
     plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
 
-    if climb:
-        plt.plot(V, P_C, linestyle='-', color='m')
-        plt.plot(V, P_total_climb, linestyle=':', color='k')
+    #climb descent
+    plt.plot(V, P_CD, linestyle='-', color='m')
+    plt.plot(V, P_total_CD, linestyle=':', color='k')
 
-        plt.text(V[-1], P_C[-1], 'P_C', color='black', va='center', ha='left')
-        plt.text(V[-1], P_total_climb[-1], 'P_total_climb', color='black', va='center', ha='left')
-    if descent:
-        plt.plot(V, P_D, linestyle='-', color='g')
-        plt.plot(V, P_total_descent, linestyle='--', color='k')
+    #add textual labels
+    plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
+    plt.text(V[-1], P_total_CD[-1], 'P_total_CD', color='black', va='center', ha='left')
 
-        plt.text(V[-1], P_D[-1], 'P_D', color='black', va='center', ha='left')
-        plt.text(V[-1], P_total_descent[-1], 'P_total_descent', color='black', va='center', ha='left')
 
     plt.title("Power Components vs. Velocity")
     plt.xlabel("Velocity (V) [m/s]")
