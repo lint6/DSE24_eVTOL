@@ -87,16 +87,16 @@ class PerformanceAnalysis:
         self.P_p = self.P_p_hov*(1 + 4.65*(self.adv_ratio_fl**2))
 
         ## induced power calculation
-        self.V_point = 13 #assumption for now
+        self.V_point = 13                    #assumption for now
         self.mtow_N = self.mtow * 9.8
-        self.k_dl = 1.04
+        self.k_dl = 1.04                     #assumption: should be between 1.03 and 1.05
         self.T = self.k_dl * self.mtow_N
         self.v_i_hov = np.sqrt((self.mtow_N)/(2*self.rho*np.pi*(self.rotor_radius**2)))
         self.V_bar = self.V_point / self.v_i_hov
         self.v_i_bar = 1/self.V_bar
         self.v_i = self.v_i_hov * self.v_i_bar 
 
-        self.k = 1.15
+        self.k = 1.15                         #assumption: should be between 1.1 and 1.2
         P_i = self.k * self.T * self.v_i
         return P_i
 
@@ -107,8 +107,10 @@ class PerformanceAnalysis:
         return P_par
     
     #Power required forward flight
+
+    
     def calculate_P_req(self):
-        P_req = self.calculate_P_p() + self.calculate_P_i() + self.calculate_P_par() 
+        P_req = (self.calculate_P_p() + self.calculate_P_i() + self.calculate_P_par())*1.045 #to accound for 3% to 6% losses
         return P_req
 
 
