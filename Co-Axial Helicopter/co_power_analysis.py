@@ -23,6 +23,7 @@ class PowerAnalysis:
         self.k_dl = 1.04
         self.V_point = 13
         self.k_int = 1.28
+        self.ROC_VCD = 0
 
         # basic gamma values
         self.gamma_CD = 0
@@ -75,10 +76,10 @@ class PowerAnalysis:
         #compute induced power
         self.P_i = self.k_int * self.k * self.T * self.v_i
 
-        ## total power calculation
+        ## total power
         self.P_total_level_loss = self.P_p + self.P_i + self.P_par
 
-        #account for losses
+        # account for losses
         self.P_total_level = 1.045*self.P_total_level_loss
 
         ## compute climb/descent power
@@ -86,14 +87,17 @@ class PowerAnalysis:
         self.P_CD_loss = self.mtow_N * self.ROC_CD
         self.P_CD = self.P_CD_loss * 1.045
 
-        ##total power
+        ## total power (including climb/descent)
         self.P_total_CD = self.P_total_level + self.P_CD
 
-        ##hover power
+        ## hover power
         self.P_hoge = self.k_int * self.k * self.T * self.v_i_hov + self.P_p_hov
 
+        ## vertical climb/descent power
+        self.P_VCD = self.P_hoge + self.ROC_VCD*self.mtow_N
 
-    def iterate_design(self, new_mtow_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None, new_rho=None):
+
+    def iterate_design(self, new_mtow_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None, new_rho=None, new_ROC_VCD=None):
         if new_mtow_N:
             self.mtow_N = new_mtow_N
         if new_V_point:
@@ -104,6 +108,9 @@ class PowerAnalysis:
             self.gamma_CD = new_gamma_CD
         if new_rho:
             self.rho = new_rho
+        if new_ROC_VCD:
+            self.ROC_VCD = new_ROC_VCD
+
 
         self.forward_flight()
 
@@ -115,9 +122,18 @@ if __name__ == '__main__':
     power = PowerAnalysis()
     power.display_parameters()
 
-    # specify flight condition (through gamma)
-    power.iterate_design(new_gamma_CD=0)
+    #specify athmospheric condition
     power.iterate_design(new_rho=1.21796)
+
+    ## Compute hover specifics
+    # specify hover flight conditions
+    power.iterate_design(new_ROC_VCD=-0.5)
+    print(f"HOGE power = {power.P_hoge} [W]")
+    print(f"Vertical climb/descent power = {power.P_VCD} [W]")
+
+    ## Compute forward flight specifics
+    # specify forward flight condition (through gamma)
+    power.iterate_design(new_gamma_CD=0)
 
     # initiate
     V = np.linspace(0.01, 100, 1000)
@@ -142,8 +158,6 @@ if __name__ == '__main__':
 
     # compute power required at Vbe
     power.iterate_design(new_V_point=V_be)
-
-    print(f"Hover power = {power.P_hoge} [W]")
 
     # print(f"Maximum endurance velocity = {V_be} [m/s] = {3.6 * V_be} [km/h]")
     # print(f"Maximum endurance power = {power.P_total_CD} [W]")
