@@ -113,34 +113,51 @@ class PowerAnalysis:
 
 
     def display_parameters(self):
-        print("Hello")
+        print("----------------")
 
 
 if __name__ == '__main__':
     power = PowerAnalysis()
     power.display_parameters()
 
-    ## Power plots
+    # specify flight condition (through gamma)
+    power.iterate_design(new_gamma_CD=0)
+    power.iterate_design(new_rho=1.22148)
+
+    # initiate
+    V = np.linspace(0.01, 100, 1000)
+    P_p = []
+    P_i = []
+    P_par = []
+    P_total_level = []
+    P_CD = []
+    P_total_CD = []
+
+    for velocity in V:
+        power.iterate_design(new_V_point=velocity)
+        P_p.append(power.P_p)
+        P_i.append(power.P_i)
+        P_par.append(power.P_par)
+        P_total_level.append(power.P_total_level)
+        P_CD.append(power.P_CD)
+        P_total_CD.append(power.P_total_CD)
+
+    # compute velocity at minimum power required
+    V_be = V[P_total_CD.index(min(P_total_CD))]
+
+    # compute power required at Vbe
+    power.iterate_design(new_V_point=V_be)
+
+    print(f"Hover power = {power.P_hoge} [W]")
+
+    # print(f"Maximum endurance velocity = {V_be} [m/s] = {3.6 * V_be} [km/h]")
+    # print(f"Maximum endurance power = {power.P_total_CD} [W]")
+
+    print("----------------")
+
+    ## power plots
     print = False
     if print == True:
-        power.iterate_design(new_gamma_CD=0)
-        V = np.linspace(0.01, 100, 1000)
-        P_p = []
-        P_i = []
-        P_par = []
-        P_total_level = []
-        P_CD = []
-        P_total_CD = []
-
-        for velocity in V:
-            power.iterate_design(new_V_point=velocity)
-            P_p.append(power.P_p)
-            P_i.append(power.P_i)
-            P_par.append(power.P_par)
-            P_total_level.append(power.P_total_level)
-            P_CD.append(power.P_CD)
-            P_total_CD.append(power.P_total_CD)
-
         plt.plot(V, P_p, linestyle='-', color='b')
         plt.plot(V, P_i, linestyle='--', color='c')
         plt.plot(V, P_par, linestyle='-.', color='r')
@@ -164,10 +181,8 @@ if __name__ == '__main__':
         plt.title("Power Components vs. Velocity")
         plt.xlabel("Velocity (V) [m/s]")
         plt.ylabel("Power [W]")
-
-        print(f"Maximum endurance velocity = {V[P_total_CD.index(min(P_total_CD))]} [m/s] = {3.6*V[P_total_CD.index(min(P_total_CD))]} [km/h]")
-        print(f"Maximum endurance power = {P_total_CD[P_total_CD.index(min(P_total_CD))]} [W]")
-        print(f"Hover power = {power.P_hoge} [W]")
         plt.show()
+
+
 
 
