@@ -31,7 +31,7 @@ x = np.arange(1,100)
 y = []
 for i in x :
     print(i)
-    fan_2 = ducted_fan_calc.Ducted_Fan_2(mtow=float(718/4), V= i, related_fan=fan_1)
+    fan_2 = ducted_fan_calc.Ducted_Fan_2(mtow=float(718/4), Cd0=1, V= i, related_fan=fan_1)
     # append my y list 
     #temp1 =  fan_2.calc_v_f()
     #temp2 = fan_2.calc_rotor_alpha()

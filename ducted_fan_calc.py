@@ -174,11 +174,11 @@ class Ducted_Fan_1: #vertical flight
 
     
 class Ducted_Fan_2: #pure horizontal
-    def __init__(self, mtow, V, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 5000, k_v_f = 1, related_fan = None): 
+    def __init__(self, mtow, Cd0, V, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, k_v_f = 1, related_fan = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
-        self.D_h0 = D_h0
+        self.Cd0 = Cd0
         self.k_v_f = k_v_f 
         self.V = V # we need to know this somehow first .... 
         self.gamma = gamma
@@ -188,6 +188,8 @@ class Ducted_Fan_2: #pure horizontal
         self.V_c = V_c  # Climb freestream velocity (m/s)
         self.density = density  # Air density (kg/m^3)
         
+        
+        self.D_h0 = None 
         self.T = None  # Thurst
         self.mto_weight = None #weight
         self.rotor_alpha = None #rotor blade pitch angle
@@ -197,11 +199,22 @@ class Ducted_Fan_2: #pure horizontal
 
         self.related_fan = related_fan
 
+    def calc_V_horizontal(self):
+        self.V_hor = self.V * np.cos(self.gamma)
+        return self.V_hor
+    
+    def calc_D_h0(self):
+        self.calc_V_horizontal()
+        self.D_h0 = (0.5) * self.density * (self.V_hor **2) * self.Cd0 * 10 
+        return self.D_h0
+
+
     def calc_weight(self):
         self.mto_weight = self.mtow * 9.81
         return self.mto_weight
     
     def calc_T(self):
+        self.calc_D_h0()
         self.calc_weight()
         self.T = self.mto_weight * np.sqrt(self.k_v_f**2 + (self.D_h0 / self.mto_weight)**2 )
         return self.T
@@ -219,11 +232,9 @@ class Ducted_Fan_2: #pure horizontal
         self.v_f_root = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
         return self.v_f_root
     
-    def calc_V_horizontal(self):
-        self.V_hor = self.V * np.cos(self.gamma)
-        return self.V_hor
     
     def calc_p_idf(self):
+        self.calc_D_h0()
         self.calc_T()
         self.calc_V_horizontal()
         self.calc_rotor_alpha()
@@ -271,6 +282,6 @@ class Ducted_Fan_3: #angled climb
         return V_c_fast
 
 fan_1 = Ducted_Fan_1(mtow=float(718/4))
-fan_2 = Ducted_Fan_2(mtow=float(718/4), V= 3, related_fan=fan_1)
+fan_2 = Ducted_Fan_2(mtow=float(718/4), Cd0=1, V= 3, related_fan=fan_1)
 fan_3 = Ducted_Fan_3(mtow=float(718/4), gamma=3, related_fan1=fan_1, related_fan2 = fan_2 )
 
