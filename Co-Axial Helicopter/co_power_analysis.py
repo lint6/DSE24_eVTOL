@@ -26,6 +26,9 @@ class PowerAnalysis:
         self.AV = self.V_point/(self.omega*self.rotor_radius)
 
         self.forward_flight()
+        self.climbing_flight()
+        self.descending_flight()
+        self.iterate_design()
 
 
     def forward_flight(self):
@@ -64,16 +67,53 @@ class PowerAnalysis:
         self.P_par = 0.5*self.A_eq*self.rho*(self.V_point**3)
 
         ## total power calculation
-        self.P_total_loss = self.P_p + self.P_i + self.P_par
+        self.P_total_level_loss = self.P_p + self.P_i + self.P_par
 
         #account for losses
-        self.P_total = 1.045*self.P_total_loss
+        self.P_total_level = 1.045*self.P_total_level_loss
+
+    def climbing_flight(self):
+        # compute climb power
+        self.gamma_C = 9
+        self.ROC_C = self.V_point * math.sin(math.radians(self.gamma))
+        self.P_C = self.mtow_N * self.ROC_C
+
+        #total power
+        self.P_total_climb = self.P_total_level + self.P_C
+
+    def descending_flight(self):
+        # compute climb power
+        self.gamma_D = 0
+        self.ROC_D = self.V_point * math.sin(math.radians(self.gamma))
+        self.P_D = self.mtow_N * self.ROC_D
+
+        #total power
+        self.P_total_descent = self.P_total_level + self.P_D
+
+    def iterate_design(self, new_mtow_N=None, new_V_point=None, new_solidity=None, new_gamma_C=None, new_gamma_D=None):
+        if new_mtow_N:
+            self.mtow_N = new_mtow_N
+        if new_V_point:
+            self.V_point = new_V_point
+        if new_solidity:
+            self.solidity = new_solidity
+        if new_gamma_C:
+            self.gamma_C = new_gamma_C
+        if new_gamma_D:
+            self.gamma_D = new_gamma_D
+        self.forward_flight()
+        self.climbing_flight()
+        self.descending_flight()
+
 
     def display_parameters(self):
-        print(f"P_p = {self.P_p}")
-        print(f"P_i = {self.P_i}")
-        print(f"P_par = {self.P_par}")
-        print(f"P_total = {self.P_total}")
+        # print(f"P_p = {self.P_p}")
+        # print(f"P_i = {self.P_i}")
+        # print(f"P_par = {self.P_par}")
+        print(f"P_total_level = {self.P_total_level}")
+        print(f"P_C = {self.P_C}")
+        # print(f"P_total_climb = {self.P_total_climb}")
+        print(f"P_D = {self.P_D}")
 
 
 if __name__ == '__main__':
