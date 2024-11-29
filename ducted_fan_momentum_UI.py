@@ -26,6 +26,6 @@ print(f"Horizontal velocity: {fan_2.calc_V_horizontal()}")
 
 
 
-fan_3 = ducted_fan_calc.Ducted_Fan_3(mtow=float(718/4), gamma=3, related_fan1=fan_1, related_fan2 = fan_2 )
+fan_3 = ducted_fan_calc.Ducted_Fan_3(mtow=float(718/4), gamma=2, related_fan1=fan_1, related_fan2 = fan_2 )
 print(f"V_c_slow: {fan_3.calc_V_c_slow()}")
-print(f"V_c_slow: {fan_3.calc_V_c_fast()}")
+print(f"V_c_fast: {fan_3.calc_V_c_fast()}")

@@ -174,7 +174,7 @@ class Ducted_Fan_1: #vertical flight
 
     
 class Ducted_Fan_2: #pure horizontal
-    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 2, related_fan = None): 
+    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 5000, k_v_f = 1, V = 2, related_fan = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -232,7 +232,7 @@ class Ducted_Fan_2: #pure horizontal
 
 
 class Ducted_Fan_3: #angled climb
-    def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 3, P_a =45000,  related_fan1 = None, related_fan2 = None): 
+    def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 5, P_a =45000,  related_fan1 = None, related_fan2 = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
