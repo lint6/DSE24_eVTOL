@@ -65,13 +65,14 @@ class PowerAnalysis:
         self.v_i_hov = math.sqrt((self.mtow_N)/(2*self.rho*self.pi*(self.rotor_radius**2)))
         self.V_bar = self.V_point / self.v_i_hov
         self.alpha = math.asin((self.D_par/self.mtow_N) + math.sin(math.radians(self.gamma_CD)))
-        array = np.array([0,0,0,0,0])
+        array = np.array([0.0,0.0,0.0,0.0,0.0])
         array[0] = 1
         array[1] = 2*self.V_bar*math.sin(self.alpha)
         array[2] = (self.V_bar**2)
         array[3] = 0
         array[4] = -1
-        self.v_i_bar = np.real(np.roots(array)[3]) #aanname
+        self.roots = np.roots(array)[3]
+        self.v_i_bar = np.real(self.roots) #aanname
         self.v_i = self.v_i_bar*self.v_i_hov
 
         #compute induced power
@@ -116,18 +117,17 @@ class PowerAnalysis:
         # print(f"P_C = {self.P_CD}")
         # # print(f"P_total_climb = {self.P_total_climb}")
         # print(f"P_D = {self.P_CD}")
-
         # print(self.v_i_bar)
-        print(self.P_hoge)
+        print(self.roots)
 
 
 if __name__ == '__main__':
     power = PowerAnalysis()
     power.display_parameters()
 
-    power.iterate_design(new_gamma_CD=9)
+    power.iterate_design(new_gamma_CD=0)
 
-    V = np.linspace(5,100, 300)
+    V = np.linspace(0.01,100, 1000)
     P_p = []
     P_i = []
     P_par = []
@@ -169,5 +169,8 @@ if __name__ == '__main__':
     plt.xlabel("Velocity (V) [m/s]")
     plt.ylabel("Power [W]")
 
+    print(f"Maximum endurance velocity = {V[P_total_CD.index(min(P_total_CD))]} [m/s] = {3.6*V[P_total_CD.index(min(P_total_CD))]} [km/h]")
+
     plt.show()
+
 
