@@ -75,7 +75,7 @@ class PowerAnalysis:
     def climbing_flight(self):
         # compute climb power
         self.gamma_C = 9
-        self.ROC_C = self.V_point * math.sin(math.radians(self.gamma))
+        self.ROC_C = self.V_point * math.sin(math.radians(self.gamma_C))
         self.P_C = self.mtow_N * self.ROC_C
 
         #total power
@@ -84,7 +84,7 @@ class PowerAnalysis:
     def descending_flight(self):
         # compute climb power
         self.gamma_D = 0
-        self.ROC_D = self.V_point * math.sin(math.radians(self.gamma))
+        self.ROC_D = self.V_point * math.sin(math.radians(self.gamma_D))
         self.P_D = self.mtow_N * self.ROC_D
 
         #total power
