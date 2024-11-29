@@ -97,7 +97,7 @@ class PowerAnalysis:
         self.P_hoge = self.k_int * self.k * self.T * self.v_i_hov + self.P_p_hov
 
 
-    def iterate_design(self, new_mtow_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None):
+    def iterate_design(self, new_mtow_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None, new_rho=None):
         if new_mtow_N:
             self.mtow_N = new_mtow_N
         if new_V_point:
@@ -106,72 +106,68 @@ class PowerAnalysis:
             self.solidity = new_solidity
         if new_gamma_CD:
             self.gamma_CD = new_gamma_CD
+        if new_rho:
+            self.rho = new_rho
 
         self.forward_flight()
 
 
     def display_parameters(self):
-        # print(f"P_p = {self.P_p}")
-        # print(f"P_i = {self.P_i}")
-        # print(f"P_par = {self.P_par}")
-        # print(f"P_total_level = {self.P_total_level}")
-        # print(f"P_C = {self.P_CD}")
-        # # print(f"P_total_climb = {self.P_total_climb}")
-        # print(f"P_D = {self.P_CD}")
-        # print(self.v_i_bar)
-        print(self.roots)
+        print("Hello")
 
 
 if __name__ == '__main__':
     power = PowerAnalysis()
     power.display_parameters()
 
-    power.iterate_design(new_gamma_CD=0)
+    ## Power plots
+    print = False
+    if print == True:
+        power.iterate_design(new_gamma_CD=0)
+        V = np.linspace(0.01, 100, 1000)
+        P_p = []
+        P_i = []
+        P_par = []
+        P_total_level = []
+        P_CD = []
+        P_total_CD = []
 
-    V = np.linspace(0.01,100, 1000)
-    P_p = []
-    P_i = []
-    P_par = []
-    P_total_level = []
-    P_CD = []
-    P_total_CD = []
+        for velocity in V:
+            power.iterate_design(new_V_point=velocity)
+            P_p.append(power.P_p)
+            P_i.append(power.P_i)
+            P_par.append(power.P_par)
+            P_total_level.append(power.P_total_level)
+            P_CD.append(power.P_CD)
+            P_total_CD.append(power.P_total_CD)
+
+        plt.plot(V, P_p, linestyle='-', color='b')
+        plt.plot(V, P_i, linestyle='--', color='c')
+        plt.plot(V, P_par, linestyle='-.', color='r')
+        plt.plot(V, P_total_level, linestyle='-', color='k')
+
+        # add textual labels
+        plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
+        plt.text(V[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
+        plt.text(V[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
+        plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
+
+        #climb descent
+        plt.plot(V, P_CD, linestyle='-', color='m')
+        plt.plot(V, P_total_CD, linestyle=':', color='k')
+
+        #add textual labels
+        plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
+        plt.text(V[-1], P_total_CD[-1], 'P_total_CD', color='black', va='center', ha='left')
 
 
-    for velocity in V:
-        power.iterate_design(new_V_point=velocity)
-        P_p.append(power.P_p)
-        P_i.append(power.P_i)
-        P_par.append(power.P_par)
-        P_total_level.append(power.P_total_level)
-        P_CD.append(power.P_CD)
-        P_total_CD.append(power.P_total_CD)
+        plt.title("Power Components vs. Velocity")
+        plt.xlabel("Velocity (V) [m/s]")
+        plt.ylabel("Power [W]")
 
-    plt.plot(V, P_p, linestyle='-', color='b')
-    plt.plot(V, P_i, linestyle='--', color='c')
-    plt.plot(V, P_par, linestyle='-.', color='r')
-    plt.plot(V, P_total_level, linestyle='-', color='k')
-
-    # add textual labels
-    plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
-    plt.text(V[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
-    plt.text(V[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
-    plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
-
-    #climb descent
-    plt.plot(V, P_CD, linestyle='-', color='m')
-    plt.plot(V, P_total_CD, linestyle=':', color='k')
-
-    #add textual labels
-    plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
-    plt.text(V[-1], P_total_CD[-1], 'P_total_CD', color='black', va='center', ha='left')
-
-
-    plt.title("Power Components vs. Velocity")
-    plt.xlabel("Velocity (V) [m/s]")
-    plt.ylabel("Power [W]")
-
-    print(f"Maximum endurance velocity = {V[P_total_CD.index(min(P_total_CD))]} [m/s] = {3.6*V[P_total_CD.index(min(P_total_CD))]} [km/h]")
-
-    plt.show()
+        print(f"Maximum endurance velocity = {V[P_total_CD.index(min(P_total_CD))]} [m/s] = {3.6*V[P_total_CD.index(min(P_total_CD))]} [km/h]")
+        print(f"Maximum endurance power = {P_total_CD[P_total_CD.index(min(P_total_CD))]} [W]")
+        print(f"Hover power = {power.P_hoge} [W]")
+        plt.show()
 
 
