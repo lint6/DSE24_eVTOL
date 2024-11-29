@@ -27,11 +27,7 @@ class PowerAnalysis:
         # basic gamma values
         self.gamma_CD = 0
 
-        #advance ratio
         self.forward_flight()
-        self.hover()
-        self.iterate_design()
-
 
     def forward_flight(self):
         self.AV = self.V_point/(self.omega*self.rotor_radius)
@@ -93,7 +89,7 @@ class PowerAnalysis:
         ##total power
         self.P_total_CD = self.P_total_level + self.P_CD
 
-    def hover(self):
+        ##hover power
         self.P_hoge = self.k_int * self.k * self.T * self.v_i_hov + self.P_p_hov
 
 
@@ -111,7 +107,6 @@ class PowerAnalysis:
 
         self.forward_flight()
 
-
     def display_parameters(self):
         print("----------------")
 
@@ -122,7 +117,7 @@ if __name__ == '__main__':
 
     # specify flight condition (through gamma)
     power.iterate_design(new_gamma_CD=0)
-    power.iterate_design(new_rho=1.22148)
+    power.iterate_design(new_rho=1.21796)
 
     # initiate
     V = np.linspace(0.01, 100, 1000)
