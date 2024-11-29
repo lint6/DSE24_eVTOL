@@ -219,7 +219,7 @@ class PerformanceAnalysis:
 
     def calculate_C_T(self):
         """Calculate the thrust coefficient."""
-        C_T = self.T / (0.5 * self.rho * self.calculate_disk_area() * (self.omega * self.rotor_radius) ** 2)
+        C_T = self.T / (self.rho * self.calculate_disk_area() * (self.omega * self.rotor_radius) ** 2)
         return C_T
 
     def calculate_average_C_l(self):
@@ -293,7 +293,7 @@ class PerformanceAnalysis:
         print(f'Disk Area: {disk_area:.2f} m²')
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
-        print(f'Power required for forward flight: {power_required_forward / 1000:.2f} kW')
+        print(f'Power required for forward flight (not optimal speed): {power_required_forward / 1000:.2f} kW')
 
 
 
@@ -381,9 +381,6 @@ class PowerAnalysis:
 
 
 
-
-
-    
 # Main Execution
 if __name__ == "__main__":
     # Initialize the analysis with default values
@@ -413,11 +410,24 @@ if __name__ == "__main__":
         P_pars.append(performance_analysis.calculate_P_par() / 1000)  # Parasite power in kW
         P_reqs.append(performance_analysis.calculate_P_req_fl() / 1000)  # Total required power in kW
 
+    # Find the minimum power and corresponding speed
+    min_power = min(P_reqs) 
+    min_speed = V_points[P_reqs.index(min_power)]
+
+    print(f'the minimum power required in forward flight is : {min_power:.2f} kW and the corresponding optimal speed is : {min_speed * 3.6:.2f} km/h')
+
     # Plot the power curves
     plt.figure(figsize=(12, 8))
     plt.plot(V_points, P_is, label='Induced Power', color='green', linestyle='--', linewidth=2)
     plt.plot(V_points, P_pars, label='Parasite Power', color='red', linestyle='-.', linewidth=2)
     plt.plot(V_points, P_reqs, label='Total Required Power', color='blue', linewidth=2)
+
+    # Add a point for the minimum power and corresponding speed
+    plt.scatter(min_speed, min_power, color='purple', zorder=5, label=f'Minimum Power: {min_power:.1f} kW at {min_speed*3.6:.1f} km/h')
+
+    # Add vertical and horizontal lines to the point
+    plt.axvline(x=min_speed, color='purple', linestyle=':', linewidth=1)
+    plt.axhline(y=min_power, color='purple', linestyle=':', linewidth=1)
 
     # Add labels, title, legend, and grid
     plt.title('Power Requirements for Forward Flight', fontsize=16)
