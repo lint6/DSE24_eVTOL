@@ -1,6 +1,6 @@
 import math
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 class PowerAnalysis:
 
@@ -22,9 +22,11 @@ class PowerAnalysis:
         self.k_dl = 1.04
         self.V_point = 13
 
-        #advance ratio
-        self.AV = self.V_point/(self.omega*self.rotor_radius)
+        # basic gamma values
+        self.gamma_C = 0
+        self.gamma_D = 0
 
+        #advance ratio
         self.forward_flight()
         self.climbing_flight()
         self.descending_flight()
@@ -32,6 +34,8 @@ class PowerAnalysis:
 
 
     def forward_flight(self):
+        self.AV = self.V_point/(self.omega*self.rotor_radius)
+
         ## profile drag power calculation
         self.C_T = self.mtow_N/(self.rho * self.pi * (self.rotor_radius**2) * ((self.rotor_radius * self.omega)**2))
         self.C_L_bar = (6.6 * self.C_T)/self.solidity
@@ -74,7 +78,6 @@ class PowerAnalysis:
 
     def climbing_flight(self):
         # compute climb power
-        self.gamma_C = 9
         self.ROC_C = self.V_point * math.sin(math.radians(self.gamma_C))
         self.P_C = self.mtow_N * self.ROC_C
 
@@ -83,7 +86,6 @@ class PowerAnalysis:
 
     def descending_flight(self):
         # compute climb power
-        self.gamma_D = 0
         self.ROC_D = self.V_point * math.sin(math.radians(self.gamma_D))
         self.P_D = self.mtow_N * self.ROC_D
 
@@ -101,6 +103,7 @@ class PowerAnalysis:
             self.gamma_C = new_gamma_C
         if new_gamma_D:
             self.gamma_D = new_gamma_D
+
         self.forward_flight()
         self.climbing_flight()
         self.descending_flight()
@@ -118,4 +121,63 @@ class PowerAnalysis:
 
 if __name__ == '__main__':
     power = PowerAnalysis()
-    power.display_parameters()
+    #power.display_parameters()
+
+    power.iterate_design(new_gamma_C=0)
+    power.iterate_design(new_gamma_D=-9)
+
+    V = np.linspace(5,100, 300)
+    P_p = []
+    P_i = []
+    P_par = []
+    P_total_level = []
+    P_C = []
+    P_total_climb = []
+    P_D = []
+    P_total_descent = []
+
+    for velocity in V:
+        power.iterate_design(new_V_point=velocity)
+        P_p.append(power.P_p)
+        P_i.append(power.P_i)
+        P_par.append(power.P_par)
+        P_total_level.append(power.P_total_level)
+        P_C.append(power.P_C)
+        P_total_climb.append(power.P_total_climb)
+        P_D.append(power.P_D)
+        P_total_descent.append(power.P_total_descent)
+
+    climb = False
+    descent = True
+
+
+    plt.plot(V, P_p, linestyle='-', color='b')
+    plt.plot(V, P_i, linestyle='--', color='c')
+    plt.plot(V, P_par, linestyle='-.', color='r')
+    plt.plot(V, P_total_level, linestyle='-', color='k')
+
+    # add textual labels
+    plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
+    plt.text(V[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
+    plt.text(V[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
+    plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
+
+    if climb:
+        plt.plot(V, P_C, linestyle='-', color='m')
+        plt.plot(V, P_total_climb, linestyle=':', color='k')
+
+        plt.text(V[-1], P_C[-1], 'P_C', color='black', va='center', ha='left')
+        plt.text(V[-1], P_total_climb[-1], 'P_total_climb', color='black', va='center', ha='left')
+    if descent:
+        plt.plot(V, P_D, linestyle='-', color='g')
+        plt.plot(V, P_total_descent, linestyle='--', color='k')
+
+        plt.text(V[-1], P_D[-1], 'P_D', color='black', va='center', ha='left')
+        plt.text(V[-1], P_total_descent[-1], 'P_total_descent', color='black', va='center', ha='left')
+
+    plt.title("Power Components vs. Velocity")
+    plt.xlabel("Velocity (V) [m/s]")
+    plt.ylabel("Power [W]")
+
+    plt.show()
+
