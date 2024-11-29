@@ -80,4 +80,4 @@ class Blade_Element_Theory:
         self.dP_r = self.dQ_r * self.rpm
         return self.dP_r
     
-    
+     
