@@ -32,27 +32,27 @@ class Ducted_Fan_1:
         self.T_W_R = T_W_R  # Thrust-to-weight ratio
         self.V_c = V_c  # Climb freestream velocity (m/s)
         self.density = density  # Air density (kg/m^3)
-        self.P_a = P_a
+        self.P_a = P_a # Power available set by user
 
         # Calculated Attributes (initialized as None)
         self.disc_loading = None
         self.thrust_loading = None 
         self.v_h = None  # Hover induced velocity
-        self.thrust = None
+        self.thrust = None # thurst
         #self.hover_induced_velocity = None
-        self.v_d = None
-        self.v_d_nd = None
-        self.v_c = None
-        self.v_c_nd = None
-        self.kappa_c = None
-        self.p_idc = None
-        self.p_idh = None 
-        self.kappa_p = None 
-        self.V_c_kappa = None 
-        self.p_idd = None 
-        self.kappa_d = None 
-        self.p_idd_kappa = None 
-        self.V_d_kappa_d = None 
+        self.v_d = None #induced velocitt decent
+        self.v_d_nd = None #above non dimensional
+        self.v_c = None #induced velocity climb
+        self.v_c_nd = None #above non dimensional
+        self.kappa_c = None # #ratio of ideal power abaliable o ideal power required in hover, from climb rate
+        self.p_idc = None # power ideal climb
+        self.p_idh = None  # power ideal hover
+        self.kappa_p = None  # #ratio of ideal power abaliable o ideal power required in hover, from power avalibale 
+        self.V_c_kappa = None # Vertical climb rate from kappa 
+        self.p_idd = None # power ideal decent
+        self.kappa_d = None  # #ratio of ideal power abaliable o ideal power required in hover, from power avalable
+        self.p_idd_kappa = None # power ideal descent from, kappa 
+        self.V_d_kappa_d = None  #vertical Descnet rate from kappa RATE
 
 
         
@@ -113,7 +113,7 @@ class Ducted_Fan_1:
         self.v_c_nd = (self.v_c/self.v_h)
         return self.v_c_nd
     
-    def calc_kappa_c(self):
+    def calc_kappa_c(self): #ratio of ideal power abaliable o ideal power required in hover
         self.calc_disc_loading()
         self.calc_V_c_kappa()
         kappa_v_c = 0.5 * self.V_c_kappa + np.sqrt(0.25 * self.V_c_kappa**2 + self.v_h **2)
@@ -173,14 +173,14 @@ class Ducted_Fan_1:
         return self.V_d_kappa_d
 
     
-class Ducted_Fan_2:
+class Ducted_Fan_2: #pure horizontal
     def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 2, related_fan = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
         self.D_h0 = D_h0
         self.k_v_f = k_v_f 
-        self.V = V
+        self.V = V # we need to know this somehow first .... 
         self.gamma = gamma
 
         # Optional Inputs with Defaults
@@ -188,11 +188,11 @@ class Ducted_Fan_2:
         self.V_c = V_c  # Climb freestream velocity (m/s)
         self.density = density  # Air density (kg/m^3)
         
-        self.T = None 
-        self.mto_weight = None 
-        self.rotor_alpha = None
-        self.v_f_root = None 
-        self.V_hor = None 
+        self.T = None  # Thurst
+        self.mto_weight = None #weight
+        self.rotor_alpha = None #rotor blade pitch angle
+        self.v_f_root = None #induced velocity forward flgiht 
+        self.V_hor = None #horizontal velocity.
 
         self.related_fan = related_fan
 
@@ -231,16 +231,16 @@ class Ducted_Fan_2:
   
 
 
-class Ducted_Fan_3:
+class Ducted_Fan_3: #angled climb
     def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 3, P_a =45000,  related_fan1 = None, related_fan2 = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
-        self.D_h0 = D_h0
-        self.k_v_f = k_v_f 
-        self.V = V
-        self.gamma = gamma
-        self.P_a = P_a
+        self.D_h0 = D_h0 #Drag horizontal
+        self.k_v_f = k_v_f  #coefficient of vertical drag ~ 1
+        self.V = V # Velocity we give
+        self.gamma = gamma # airpath angle
+        self.P_a = P_a # power avilable
 
         # Optional Inputs with Defaults
         self.T_W_R = T_W_R  # Thrust-to-weight ratio
@@ -270,35 +270,6 @@ class Ducted_Fan_3:
         self.V_c_fast = V_c_fast
         return V_c_fast
 
-    
 fan_1 = Ducted_Fan_1(mtow=float(718/4))
-
-# Calculate hover induced velocity
-print(f"Hover Induced Velocity: {fan_1.calc_hover_induced_velovity()}")
-
-# Calculate thrust for hover
-print(f"Thrust for Hover: {fan_1.calc_thrust_hover()}")
-
-# Calculate power for steady climb
-print(f"Power for Steady Climb: {fan_1.calc_power_ideal_steady_climb()}")
-
-print(f"Rate of Climb rate: {fan_1.calc_V_c_kappa()}")
-
-print(f"calc_power_ideal_hover: {fan_1.calc_power_ideal_hover()}")
-
-print(f"calc_disc_loading: {fan_1.calc_disc_loading()}")
-
-print(f"calc_pidd: {fan_1.calc_p_idd()}")
-
 fan_2 = Ducted_Fan_2(mtow=float(718/4), related_fan=fan_1)
-print(f"v from fan 2 from fan 1: {fan_2.calc_v_f()}")
-print(f"v from frotor alphhhaaaaa: {fan_2.calc_rotor_alpha()}")
-print(f"v horrrrrrr: {fan_2.V()}")
-
-print(f"v horrrrrrr: {fan_2.V_hor()}")
-
-
-
 fan_3 = Ducted_Fan_3(mtow=float(718/4), gamma=3, related_fan1=fan_1, related_fan2 = fan_2 )
-print(f"V_c_slow: {fan_3.calc_V_c_slow()}")
-print(f"V_c_slow: {fan_3.calc_V_c_fast()}")
