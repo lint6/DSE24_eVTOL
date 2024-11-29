@@ -264,8 +264,6 @@ class Ducted_Fan_3: #angled climb
         return self.V_c_slow
   
     def calc_V_c_fast(self):
-        print("sdcsdcsdcsdc",self.related_fan2.V_hor)
-        print("scdsdcscdsdcsdcsc" ,self.D_h0)
         V_c_fast = (self.P_a - (self.related_fan2.V_hor * self.D_h0 + self.related_fan2.T * self.related_fan2.v_f_root)) / (self.k_v_f * self.related_fan2.mto_weight)
         self.V_c_fast = V_c_fast
         return V_c_fast
