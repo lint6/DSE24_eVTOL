@@ -25,6 +25,10 @@ class RotorAnalysis:
         self.V_gust = 30 / self.FT_TO_M
         self.C_lalpha = 5.73  # 1/rad; NACA0012
 
+        # Updated variables
+        self.solidity = None
+        self.max_c_t = None
+
     def calculate_radius(self):
         mtow_pounds = self.MTOW_KG * self.POUNDS_PER_KG
         radius_ft = np.sqrt((mtow_pounds / self.N_rotors) / (self.DL_IMPERIAL * np.pi))
@@ -70,19 +74,20 @@ class RotorAnalysis:
         o_turb = c_t_turb / c_t_o_turb
 
         # Maximum solidity
-        solidity = max(o_fl, o_turn, o_turb)
+        self.solidity = max(o_fl, o_turn, o_turb)
+        self.max_c_t = max(c_t_fl, c_t_turn, c_t_turb)
 
         # Aspect ratio calculation for different numbers of blades
         N_blades = range(2, 7)
         aspect_ratios = []
 
         for N_bl in N_blades:
-            chord = (solidity * np.pi * rotor_radius_m) / N_bl
+            chord = (self.solidity * np.pi * rotor_radius_m) / N_bl
             AR_blades = rotor_radius_m**2 / (rotor_diameter_m * chord)
             aspect_ratios.append((N_bl, chord, AR_blades))
 
         # Return all results including advance ratio
-        return rotor_radius_m, rotor_diameter_m, v_tip_ms, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z
+        return rotor_radius_m, rotor_diameter_m, v_tip_ms, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, self.solidity, aspect_ratios, n_z
 
     def plot_aspect_ratios(self, aspect_ratios):
         N_blades = [x[0] for x in aspect_ratios]
@@ -97,9 +102,9 @@ class RotorAnalysis:
         plt.legend()
         plt.show()
 
-    def calculate_chord(self, N_bl, solidity, rotor_radius_m):
+    def calculate_chord(self, N_bl, rotor_radius_m):
         """Calculate the blade chord length given the number of blades and solidity."""
-        chord = (solidity * np.pi * rotor_radius_m) / N_bl
+        chord = (self.solidity * np.pi * rotor_radius_m) / N_bl
         return chord
 
     def interact(self):
@@ -134,7 +139,7 @@ class RotorAnalysis:
         print(f"Solidity in Forward Flight: {o_fl:.4f}")
         print(f"Solidity during Turn: {o_turn:.4f}")
         print(f"Solidity during Turbulence: {o_turb:.4f}")
-        print(f"Solidity used: {solidity:.4f}")
+        print(f"Solidity used: {self.solidity:.4f}")
 
         # Plot results
         self.plot_aspect_ratios(aspect_ratios)
@@ -169,6 +174,7 @@ class PerformanceAnalysis:
         self.rho = rotor_analysis.rho
         self.g = rotor_analysis.g
         self.Cl_alpha = rotor_analysis.C_lalpha
+        self.T = self.mtow *self.g
 
         # Perform rotor sizing
         self.results = rotor_analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
@@ -202,17 +208,15 @@ class PerformanceAnalysis:
     
     def calculate_hoge_ceiling(self):
         #altitude conversion needs to be implemented properly!!!
-        P_max = self.calculate_power_req_hover() + 10000 #placeholder
+        P_max = 100000 #placeholder
         rho_max = (self.T)**3 / (2 * P_max**2 * self.FM**2 * self.calculate_disk_area())
-
-        altitude_this_is_wrong = (self.T_0 * (1 - ((rho_max / self.rho)**(1/((self.g/(self.gas_const*self.lapse_rate)) - 1))))) / self.lapse_rate
+        altitude_this_is_wrong = (self.T_0 / self.lapse_rate) * (math.pow((self.rho / rho_max), (self.gas_const * self.lapse_rate) / (self.g * self.molar_mass)) - 1)
         return altitude_this_is_wrong
     
     #In order to find Forward Flight P_req, we need to calculate some new values:
     #Thrust coefficient
     def calculate_C_T(self): 
-        self.T = self.mtow
-        C_T = (self.T*self.g) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
+        C_T = (self.T) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
         return C_T
     
     #Average C_l
@@ -227,7 +231,11 @@ class PerformanceAnalysis:
     
     #average_C_D_p
     def calculate_average_C_D_p(self):
-        average_C_D_p = 0.0087 - 0.0216 * self.calculate_alpha_m() + 0.4 * self.calculate_alpha_m() ** 2
+        average_C_D_p_1 = 0.0087 - 0.0216 * self.calculate_alpha_m() + 0.4 * self.calculate_alpha_m() ** 2 #bailey
+        average_C_D_p_2 = 0.011 + 0.4 * (self.calculate_alpha_m() ** 2) #marinescu
+        average_C_D_p_3 = 0.009 + 0.73 * (self.calculate_alpha_m() **2) #talbot
+        # pick the highest
+        average_C_D_p = max(average_C_D_p_1, average_C_D_p_2, average_C_D_p_3)
         return average_C_D_p
 
     #Profile drag power for hover
@@ -239,8 +247,43 @@ class PerformanceAnalysis:
     def calculate_P_p(self):
         P_p = self.calculate_P_p_hov() * (1 + 4.65 * self.adv_ratio_fl ** 2)
         return P_p
+    def calculate_P_i(self):
+        #compute hover profile power
+        self.P_p_hov = ((self.solidity * self.calculate_average_C_D_p()/8) * self.rho *((self.omega * self.rotor_radius)**3)*np.pi*(self.rotor_radius**2))
+
+        # compute forward flight profile power
+        self.P_p = self.P_p_hov*(1 + 4.65*(self.adv_ratio_fl**2))
+
+        ## induced power calculation
+        self.V_point = 13                    #assumption for now
+        self.mtow_N = self.mtow * 9.8
+        self.k_dl = 1.04                     #assumption: should be between 1.03 and 1.05
+        self.T = self.k_dl * self.mtow_N
+        self.v_i_hov = np.sqrt((self.mtow_N)/(2*self.rho*np.pi*(self.rotor_radius**2)))
+        self.V_bar = self.V_point / self.v_i_hov
+        self.v_i_bar = 1/self.V_bar
+        self.v_i = self.v_i_hov * self.v_i_bar 
+
+        self.k = 1.15                         #assumption: should be between 1.1 and 1.2
+        P_i = self.k * self.T * self.v_i
+        return P_i
+
+        ## parasite power calculation
+    def calculate_P_par(self):
+        self.A_eq = 0.418 #m^2 #assuming clean configuration, otherwise its near 10 ft^2
+        P_par = 0.5*self.A_eq*self.rho*(self.V_point**3)
+        return P_par
     
+    #Power required forward flight
+
     
+    def calculate_P_req(self):
+        P_req = (self.calculate_P_p() + self.calculate_P_i() + self.calculate_P_par())*1.045 #to accound for 3% to 6% losses
+        return P_req
+
+
+
+
     def display_results(self):
         """Display power requirements and induced velocities."""
         v_i_hover = self.calculate_hover_induced_velocity()
@@ -249,13 +292,15 @@ class PerformanceAnalysis:
         power_requirements = self.calculate_power_req_hover()
         power_loading_hover = self.calculate_power_loading_hover()
         profile_power_fl = self.calculate_P_p()       
+        power_required_forward = self.calculate_P_req()
 
         #print(f'Hover induced velocity: {v_i_hover:.2f} m/s')
         #print(f'Climb induced velocity: {v_i_climb:.2f} m/s')
         print(f'Disk Area: {disk_area:.2f} m2')
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
-        print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
+        #print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
+        print(f'Power required for forward flight: {power_required_forward / 1000:.2f} kW')
 
 
 class PowerAnalysis:
