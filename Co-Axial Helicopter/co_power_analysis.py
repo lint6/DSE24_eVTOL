@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from co_rotor_sizing import RotorSizing
 
 class PowerAnalysis:
 
@@ -10,13 +11,13 @@ class PowerAnalysis:
         self.pi = math.pi
         self.RPM_to_rad = (math.pi / 30)
 
-
         #input
+        self.rotorsizing = RotorSizing()
         self.solidity = 0.03
         self.rho = 1.225
-        self.omega = 43.061
-        self.rotor_radius = 4.7836157
-        self.mtow = 718.89
+        self.omega = self.rotorsizing.omega
+        self.rotor_radius = self.rotorsizing.rotor_radius
+        self.mtow = self.rotorsizing.MTOW
         self.mtow_N = self.mtow * self.g
         self.k = 1.15
         self.k_dl = 1.04
