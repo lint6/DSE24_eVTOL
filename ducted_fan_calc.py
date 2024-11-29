@@ -174,7 +174,7 @@ class Ducted_Fan_1: #vertical flight
 
     
 class Ducted_Fan_2: #pure horizontal
-    def __init__(self, mtow, Cd0, V, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, k_v_f = 1, related_fan = None): 
+    def __init__(self, mtow, Cd0, V, radius=0.625, T_W_R= 1 , gamma = 0, V_c=None, density=1.225, k_v_f = 1, related_fan = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -228,7 +228,7 @@ class Ducted_Fan_2: #pure horizontal
     def calc_v_f(self):
         self.calc_rotor_alpha()
         my_coefficient = [1, (-2 * self.V * np.sin(self.rotor_alpha)), (self.V **2), 0, -1 ]
-        print(my_coefficient)
+        print("The coefficients are ", my_coefficient)
         self.v_f_root = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
         return self.v_f_root
     
@@ -240,6 +240,10 @@ class Ducted_Fan_2: #pure horizontal
         self.calc_rotor_alpha()
         self.calc_v_f()
         self.p_idf = self.V_hor * self.D_h0 + self.T * self.v_f_root
+        print("v_horis ", self.V_hor)
+        print("drag is", self.D_h0)
+        print("thrust is", self.T)
+        print("horizontal induced velocity is", self.v_f_root)
         return self.p_idf
   
 
