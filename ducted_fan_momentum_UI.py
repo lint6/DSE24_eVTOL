@@ -20,11 +20,9 @@ print(f"calc_disc_loading: {fan_1.calc_disc_loading()}")
 print(f"calc_pidd: {fan_1.calc_p_idd()}")
 
 fan_2 = ducted_fan_calc.Ducted_Fan_2(mtow=float(718/4), related_fan=fan_1)
-print(f"v from fan 2 from fan 1: {fan_2.calc_v_f()}")
-print(f"v from frotor alphhhaaaaa: {fan_2.calc_rotor_alpha()}")
-print(f"v horrrrrrr: {fan_2.V()}")
-
-print(f"v horrrrrrr: {fan_2.V_hor()}")
+print(f"Forward flight induced velocity from fan 2: {fan_2.calc_v_f()}")
+print(f"rotor disc angle  of attack from fan 2: {fan_2.calc_rotor_alpha()}")
+print(f"Horizontal velocity: {fan_2.calc_V_horizontal()}")
 
 
 

@@ -22,8 +22,8 @@ def find_roots(coefficients):
 
 
 
-class Ducted_Fan_1:
-    def __init__(self, mtow, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, P_a =45000): 
+class Ducted_Fan_1: #vertical flight
+    def __init__(self, mtow, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, P_a = 58360): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -49,7 +49,7 @@ class Ducted_Fan_1:
         self.p_idh = None  # power ideal hover
         self.kappa_p = None  # #ratio of ideal power abaliable o ideal power required in hover, from power avalibale 
         self.V_c_kappa = None # Vertical climb rate from kappa 
-        self.p_idd = None # power ideal decent
+        self.p_idd = 34000 # power ideal decent
         self.kappa_d = None  # #ratio of ideal power abaliable o ideal power required in hover, from power avalable
         self.p_idd_kappa = None # power ideal descent from, kappa 
         self.V_d_kappa_d = None  #vertical Descnet rate from kappa RATE
@@ -208,7 +208,7 @@ class Ducted_Fan_2: #pure horizontal
     def calc_rotor_alpha(self):
         self.calc_T()
         self.rotor_alpha = - np.arctan(int(self.D_h0) / int(self.T))
-        print( "rotor alpha is", self.rotor_alpha)
+        #print( "rotor alpha is", self.rotor_alpha)
         return self.rotor_alpha
     
     def calc_v_f(self):
@@ -218,15 +218,14 @@ class Ducted_Fan_2: #pure horizontal
         self.v_f_root = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
 
         #write an algorithm to chosee THE root you want
-        print ("the fkcin root is", self.v_f_root)
+        #print ("The forward flight induced velocity", self.v_f_root)
         return self.v_f_root
     
     def calc_V_horizontal(self):
-        print("v", self.V)
-        print("gamma", self.gamma)
-        V_hor = self.V * np.cos(self.gamma)
-        self.V_hor = V_hor
-        print(V_hor)
+        #print("v", self.V)
+        #print("gamma", self.gamma)
+        self.V_hor = self.V * np.cos(self.gamma)
+        #print("v_horizontal is", V_hor)
         return self.V_hor
   
 
