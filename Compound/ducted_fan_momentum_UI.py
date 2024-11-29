@@ -4,13 +4,10 @@ import numpy as np
 
 fan_1 = ducted_fan_calc.Ducted_Fan_1(mtow=float(718/4))
 
-# Calculate hover induced velocity
 print(f"Hover Induced Velocity: {fan_1.calc_hover_induced_velovity()}")
 
-# Calculate thrust for hover
 print(f"Thrust for Hover: {fan_1.calc_thrust_hover()}")
 
-# Calculate power for steady climb
 print(f"Power for Steady Climb: {fan_1.calc_power_ideal_steady_climb()}")
 
 print(f"Rate of Climb rate: {fan_1.calc_V_c_kappa()}")
