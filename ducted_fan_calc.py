@@ -174,11 +174,11 @@ class Ducted_Fan_1: #vertical flight
 
     
 class Ducted_Fan_2: #pure horizontal
-    def __init__(self, mtow, radius=0.625, T_W_R= 1 , gamma = 3, V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 2, related_fan = None): 
+    def __init__(self, mtow, Cd0, V, radius=0.625, T_W_R= 1 , gamma = 0, V_c=None, density=1.225, k_v_f = 1, related_fan = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
-        self.D_h0 = D_h0
+        self.Cd0 = Cd0
         self.k_v_f = k_v_f 
         self.V = V # we need to know this somehow first .... 
         self.gamma = gamma
@@ -188,19 +188,33 @@ class Ducted_Fan_2: #pure horizontal
         self.V_c = V_c  # Climb freestream velocity (m/s)
         self.density = density  # Air density (kg/m^3)
         
+        
+        self.D_h0 = None 
         self.T = None  # Thurst
         self.mto_weight = None #weight
         self.rotor_alpha = None #rotor blade pitch angle
         self.v_f_root = None #induced velocity forward flgiht 
         self.V_hor = None #horizontal velocity.
+        self.p_idf = None  #steady horizontal flgith ideal power for rotor
 
         self.related_fan = related_fan
+
+    def calc_V_horizontal(self):
+        self.V_hor = self.V * np.cos(self.gamma)
+        return self.V_hor
+    
+    def calc_D_h0(self):
+        self.calc_V_horizontal()
+        self.D_h0 = (0.5) * self.density * (self.V_hor **2) * self.Cd0 * 10 
+        return self.D_h0
+
 
     def calc_weight(self):
         self.mto_weight = self.mtow * 9.81
         return self.mto_weight
     
     def calc_T(self):
+        self.calc_D_h0()
         self.calc_weight()
         self.T = self.mto_weight * np.sqrt(self.k_v_f**2 + (self.D_h0 / self.mto_weight)**2 )
         return self.T
@@ -213,26 +227,29 @@ class Ducted_Fan_2: #pure horizontal
     
     def calc_v_f(self):
         self.calc_rotor_alpha()
-        my_coefficient = [1, float(-2 * self.V * np.sin(self.rotor_alpha)), (self.V **2), 0, -1 ]
-        print(my_coefficient)
+        my_coefficient = [1, (-2 * self.V * np.sin(self.rotor_alpha)), (self.V **2), 0, -1 ]
+        print("The coefficients are ", my_coefficient)
         self.v_f_root = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
-
-        #write an algorithm to chosee THE root you want
-        #print ("The forward flight induced velocity", self.v_f_root)
         return self.v_f_root
     
-    def calc_V_horizontal(self):
-        #print("v", self.V)
-        #print("gamma", self.gamma)
-        self.V_hor = self.V * np.cos(self.gamma)
-
-        #print("v_horizontal is", V_hor)
-        return self.V_hor
+    
+    def calc_p_idf(self):
+        self.calc_D_h0()
+        self.calc_T()
+        self.calc_V_horizontal()
+        self.calc_rotor_alpha()
+        self.calc_v_f()
+        self.p_idf = self.V_hor * self.D_h0 + self.T * self.v_f_root
+        print("v_horis ", self.V_hor)
+        print("drag is", self.D_h0)
+        print("thrust is", self.T)
+        print("horizontal induced velocity is", self.v_f_root)
+        return self.p_idf
   
 
 
 class Ducted_Fan_3: #angled climb
-    def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, density=1.225, D_h0 = 500, k_v_f = 1, V = 3, P_a =45000,  related_fan1 = None, related_fan2 = None): 
+    def __init__(self, mtow, gamma, radius=0.625, T_W_R= 1 , V_c=None, V =4, density=1.225, D_h0 = 500, k_v_f = 1, P_a =45000,  related_fan1 = None, related_fan2 = None): 
         # Required Inputs
         self.mtow = mtow  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
@@ -269,5 +286,6 @@ class Ducted_Fan_3: #angled climb
         return V_c_fast
 
 fan_1 = Ducted_Fan_1(mtow=float(718/4))
-fan_2 = Ducted_Fan_2(mtow=float(718/4), related_fan=fan_1)
+fan_2 = Ducted_Fan_2(mtow=float(718/4), Cd0=1, V= 3, related_fan=fan_1)
 fan_3 = Ducted_Fan_3(mtow=float(718/4), gamma=3, related_fan1=fan_1, related_fan2 = fan_2 )
+

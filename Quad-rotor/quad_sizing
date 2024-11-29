@@ -298,11 +298,16 @@ class PerformanceAnalysis:
 
 
 class PowerAnalysis:
-    def __init__(self):
+    def __init__(self, V_roc = 0.76, eta_p = 0.9):
         #values from rotor sizing
         self.N_rotors = RotorAnalysis.N_rotors     # get the amount of rotors    
         #values from performance
         self.P_req_hover = PerformanceAnalysis.calculate_power_req_hover()     # get the required power for hover
+        self.mtowN = PerformanceAnalysis.mtowN
+       
+        self.Vroc = V_roc       #Vertcial rate of climb
+        self.eta_p = eta_p      #propulsion efficiency
+        
         #add power required for take off, climb, cruise, descent, loiter, land
         self.t4 = None
         #NEED TO BE ADDED - import the V_climb1 FROM PERFORMANCE!! - Ask Yunjae!
@@ -315,8 +320,7 @@ class PowerAnalysis:
         t1 = 15                #[s] - Given
         # Vertical Climb
         delta_h1 = 60.0     #[m] - Given
-        Vroc = 0.76         #[m/s] - Given
-        t2 = delta_h1 / Vroc
+        t2 = delta_h1 / self.Vroc
         # HOGE 1  
         t3 = 10             #[s] - Given
         # Steady Climb 1
@@ -366,7 +370,21 @@ class PowerAnalysis:
 
         return t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t_total, d_total
     
+    def calculate_power_required(self):
 
+        # power required for HOGE
+        p_hover = self.P_req_hover   #import P_req_hover from PerformanceAnalysis
+
+        # power required for vertical climb
+        P_vclimb = self.Vroc * self.mtowN     #import Vroc from MTOW in Newtons from PerformanceAnalysis
+        P_vclimbeff = P_vclimb / self.eta_p        # eta_p is the propulsion efficiency
+
+
+
+
+
+    
+# Main Execution
 if __name__ == "__main__":
     # Initialize the analysis with default values
     rotor_analysis = RotorAnalysis()

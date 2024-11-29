@@ -1,4 +1,6 @@
 import ducted_fan_calc
+import matplotlib.pyplot as plt 
+import numpy as np
 
 fan_1 = ducted_fan_calc.Ducted_Fan_1(mtow=float(718/4))
 
@@ -19,13 +21,43 @@ print(f"calc_disc_loading: {fan_1.calc_disc_loading()}")
 
 print(f"calc_pidd: {fan_1.calc_p_idd()}")
 
-fan_2 = ducted_fan_calc.Ducted_Fan_2(mtow=float(718/4), related_fan=fan_1)
-print(f"Forward flight induced velocity from fan 2: {fan_2.calc_v_f()}")
-print(f"rotor disc angle  of attack from fan 2: {fan_2.calc_rotor_alpha()}")
-print(f"Horizontal velocity: {fan_2.calc_V_horizontal()}")
+#fan_2 = ducted_fan_calc.Ducted_Fan_2(mtow=float(718/4), V= 3, related_fan=fan_1)
+#print(f"Forward flight induced velocity from fan 2: {fan_2.calc_v_f()}")
+#print(f"rotor disc angle  of attack from fan 2: {fan_2.calc_rotor_alpha()}")
+#print(f"Horizontal velocity: {fan_2.calc_V_horizontal()}")
+#print(f"power ideal for horizontal steady flight: {fan_2.calc_p_idf()}")
+
+x = np.arange(1,100)
+y = []
+for i in x :
+    fan_2 = ducted_fan_calc.Ducted_Fan_2(mtow=float(718/4), Cd0=0.05, V= i, related_fan=fan_1)
+    # append my y list 
+    #temp1 =  fan_2.calc_v_f()
+    #temp2 = fan_2.calc_rotor_alpha()
+    #temp3 = fan_2.calc_V_horizontal()
+    y.append(fan_2.calc_p_idf())
+#plot graph 
+
+
+# 1. Prepare your data
+# 2. Create the plot
+plt.plot(x, y, label='Line Plot')  # You can use other types like plt.scatter, plt.bar, etc.
+
+# 3. Customize the plot
+plt.title('My Graph')              # Title of the graph
+plt.xlabel('X-axis Label')         # Label for the x-axis
+plt.ylabel('Y-axis Label')         # Label for the y-axis
+plt.legend()                       # Add a legend (if needed)
+plt.grid(True)                     # Add a grid (optional)
+
+# 4. Display the plot
+plt.show()
 
 
 
-fan_3 = ducted_fan_calc.Ducted_Fan_3(mtow=float(718/4), gamma=3, related_fan1=fan_1, related_fan2 = fan_2 )
+
+
+
+fan_3 = ducted_fan_calc.Ducted_Fan_3(mtow=float(718/4), gamma=2, related_fan1=fan_1, related_fan2 = fan_2 )
 print(f"V_c_slow: {fan_3.calc_V_c_slow()}")
-print(f"V_c_slow: {fan_3.calc_V_c_fast()}")
+print(f"V_c_fast: {fan_3.calc_V_c_fast()}")
