@@ -25,6 +25,10 @@ class RotorAnalysis:
         self.V_gust = 30 / self.FT_TO_M
         self.C_lalpha = 5.73  # 1/rad; NACA0012
 
+        # Updated variables
+        self.solidity = None
+        self.max_c_t = None
+
     def calculate_radius(self):
         mtow_pounds = self.MTOW_KG * self.POUNDS_PER_KG
         radius_ft = np.sqrt((mtow_pounds / self.N_rotors) / (self.DL_IMPERIAL * np.pi))
@@ -70,19 +74,20 @@ class RotorAnalysis:
         o_turb = c_t_turb / c_t_o_turb
 
         # Maximum solidity
-        solidity = max(o_fl, o_turn, o_turb)
+        self.solidity = max(o_fl, o_turn, o_turb)
+        self.max_c_t = max(c_t_fl, c_t_turn, c_t_turb)
 
         # Aspect ratio calculation for different numbers of blades
         N_blades = range(2, 7)
         aspect_ratios = []
 
         for N_bl in N_blades:
-            chord = (solidity * np.pi * rotor_radius_m) / N_bl
+            chord = (self.solidity * np.pi * rotor_radius_m) / N_bl
             AR_blades = rotor_radius_m**2 / (rotor_diameter_m * chord)
             aspect_ratios.append((N_bl, chord, AR_blades))
 
         # Return all results including advance ratio
-        return rotor_radius_m, rotor_diameter_m, v_tip_ms, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z
+        return rotor_radius_m, rotor_diameter_m, v_tip_ms, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, self.solidity, aspect_ratios, n_z
 
     def plot_aspect_ratios(self, aspect_ratios):
         N_blades = [x[0] for x in aspect_ratios]
@@ -97,9 +102,9 @@ class RotorAnalysis:
         plt.legend()
         plt.show()
 
-    def calculate_chord(self, N_bl, solidity, rotor_radius_m):
+    def calculate_chord(self, N_bl, rotor_radius_m):
         """Calculate the blade chord length given the number of blades and solidity."""
-        chord = (solidity * np.pi * rotor_radius_m) / N_bl
+        chord = (self.solidity * np.pi * rotor_radius_m) / N_bl
         return chord
 
     def interact(self):
@@ -134,7 +139,7 @@ class RotorAnalysis:
         print(f"Solidity in Forward Flight: {o_fl:.4f}")
         print(f"Solidity during Turn: {o_turn:.4f}")
         print(f"Solidity during Turbulence: {o_turb:.4f}")
-        print(f"Solidity used: {solidity:.4f}")
+        print(f"Solidity used: {self.solidity:.4f}")
 
         # Plot results
         self.plot_aspect_ratios(aspect_ratios)
@@ -169,6 +174,7 @@ class PerformanceAnalysis:
         self.rho = rotor_analysis.rho
         self.g = rotor_analysis.g
         self.Cl_alpha = rotor_analysis.C_lalpha
+        self.T = self.mtow *self.g
 
         # Perform rotor sizing
         self.results = rotor_analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
@@ -210,7 +216,6 @@ class PerformanceAnalysis:
     #In order to find Forward Flight P_req, we need to calculate some new values:
     #Thrust coefficient
     def calculate_C_T(self): 
-        self.T = self.mtow *self.g
         C_T = (self.T) / (self.rho * np.pi * (self.rotor_radius) ** 2 *(self.omega * self.rotor_radius)**2 )
         return C_T
     
