@@ -225,6 +225,7 @@ class Ducted_Fan_2: #pure horizontal
         #print("v", self.V)
         #print("gamma", self.gamma)
         self.V_hor = self.V * np.cos(self.gamma)
+
         #print("v_horizontal is", V_hor)
         return self.V_hor
   
@@ -246,11 +247,11 @@ class Ducted_Fan_3: #angled climb
         self.V_c = V_c  # Climb freestream velocity (m/s)
         self.density = density  # Air density (kg/m^3)
         
-        self.T = fan_2.T
-        self.mto_weight = fan_2.mto_weight
-        self.rotor_alpha = fan_2.rotor_alpha
-        self.v_f_root = fan_2.v_f_root 
-        self.V_hor = fan_2.V_hor 
+        #self.T = fan_2.T
+        #self.mto_weight = fan_2.mto_weight
+        #self.rotor_alpha = fan_2.rotor_alpha
+        #self.v_f_root = fan_2.v_f_root 
+        #self.V_hor = fan_2.V_hor 
         self.V_c_slow = None 
         self.V_c_fast = None 
 
@@ -258,14 +259,14 @@ class Ducted_Fan_3: #angled climb
         self.related_fan2 = related_fan2
 
     def calc_V_c_slow(self):
-        V_c_slow = (self.P_a / (self.k_v_f * self.mto_weight)) - ((self.V) * (self.rotor_alpha) + self.v_f_root)
+        V_c_slow = (self.P_a / (self.k_v_f * self.related_fan2.mto_weight)) - ((self.V) * (self.related_fan2.rotor_alpha) + self.related_fan2.v_f_root)
         self.V_c_slow = V_c_slow
         return self.V_c_slow
   
     def calc_V_c_fast(self):
-        print("sdcsdcsdcsdc",self.V_hor)
+        print("sdcsdcsdcsdc",self.related_fan2.V_hor)
         print("scdsdcscdsdcsdcsc" ,self.D_h0)
-        V_c_fast = (self.P_a - (self.V_hor * self.D_h0 + self.T * self.v_f_root)) / (self.k_v_f * self.mto_weight)
+        V_c_fast = (self.P_a - (self.related_fan2.V_hor * self.D_h0 + self.related_fan2.T * self.related_fan2.v_f_root)) / (self.k_v_f * self.related_fan2.mto_weight)
         self.V_c_fast = V_c_fast
         return V_c_fast
 
