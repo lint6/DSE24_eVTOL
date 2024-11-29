@@ -99,9 +99,6 @@ class RotorSizing:
         plt.xlabel('Number of Blades')
         plt.ylabel('Aspect Ratio')
 
-        plt.axhline(y=14, color='black', linestyle = 'dotted')
-        plt.axhline(y=20, color = 'black', linestyle = 'dotted')
-
         plt.axhspan(14, 20, color='green', alpha=0.2, label='Acceptable Range')
         plt.axhspan(0, 14, color = 'red', alpha=0.2, label = 'Unacceptable Range')
         plt.axhspan(20, 100, color = 'red', alpha = 0.2)
