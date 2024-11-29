@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
 
 class RotorAnalysis:
     def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=3, bank_angle=30, v_max_kmh=150):
@@ -163,6 +164,10 @@ class RotorAnalysis:
             print(f"Corresponding aspect ratio: {selected_aspect_ratio:.4f}")
 
 
+import numpy as np
+from scipy.optimize import fsolve
+import matplotlib.pyplot as plt
+
 class PerformanceAnalysis:
     def __init__(self, rotor_analysis: RotorAnalysis, vertical_climb_speed: float = 0.76):
         self.rotor_analysis = rotor_analysis
@@ -174,26 +179,21 @@ class PerformanceAnalysis:
         self.rho = rotor_analysis.rho
         self.g = rotor_analysis.g
         self.Cl_alpha = rotor_analysis.C_lalpha
-        self.mtowN = self.mtow *self.g
+        self.mtowN = self.mtow * self.g
 
         # Perform rotor sizing
         self.results = rotor_analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
-        self.rotor_radius, self.rotor_diameter, self.v_tip, self.mach_number, self.omega, self.adv_ratio_fl, self.o_fl, self.o_turn, self.o_turb, self.solidity, self.aspect_ratios, self.n_z  = self.results
+        self.rotor_radius, self.rotor_diameter, self.v_tip, self.mach_number, self.omega, self.adv_ratio_fl, self.o_fl, self.o_turn, self.o_turb, self.solidity, self.aspect_ratios, self.n_z = self.results
 
         # Derived parameters
-        self.rotor_area = np.pi * (self.rotor_radius**2)  # Rotor swept area (m^2)
+        self.rotor_area = np.pi * (self.rotor_radius ** 2)  # Rotor swept area (m^2)
         self.weight_per_rotor = (self.mtow / self.N_rotors) * self.g  # Weight supported by each rotor (N)
-        self.FM = 0.78 # figure of merit (assumed)
+        self.FM = 0.78  # figure of merit (assumed)
 
-        ## induced power calculation constants
-        self.V_point = 13                    #cruise speed, assumption for now
-        self.k_dl = 1.04                     #assumption: should be between 1.03 and 1.05
-        self.T = self.k_dl * self.mtowN
-        self.v_i_hov = self.calculate_hover_induced_velocity()
-        self.V_bar = self.V_point / self.v_i_hov
-        self.v_i_bar = 1/self.V_bar
-        self.v_i = self.v_i_hov * self.v_i_bar 
-        self.k = 1.15                         #assumption: should be between 1.1 and 1.2
+        # Induced power calculation constants
+        self.V_point = 13  # cruise speed, assumption for now
+        self.T = rotor_analysis.k_dl * self.mtowN
+        self.k = 1.15  # inflow correction, assumption: should be between 1.1 and 1.2
 
     def calculate_hover_induced_velocity(self):
         """Calculate hover induced velocity (m/s)."""
@@ -205,75 +205,80 @@ class PerformanceAnalysis:
 
     def calculate_disk_area(self):
         """Calculate total disk area of the quadcopter"""
-        S_disk = self.rotor_area*4
+        S_disk = self.rotor_area * 4
         return S_disk
-    
+
     def calculate_power_req_hover(self):
-        P_req_hover = ((self.mtow*self.g)**(3/2))/(np.sqrt(2*self.rho*self.calculate_disk_area())*self.FM)
+        """Calculate the required power for hover."""
+        P_req_hover = ((self.mtow * self.g) ** (3 / 2)) / (np.sqrt(2 * self.rho * self.calculate_disk_area()) * self.FM)
         return P_req_hover
     
     def calculate_power_loading_hover(self):
         P_load_hover = (self.mtow) / (self.calculate_power_req_hover()/1000)
         return P_load_hover
-    
-    def calculate_hoge_ceiling(self):
-        #altitude conversion needs to be implemented properly!!!
-        P_max = 100000 #placeholder
-        rho_max = (self.mtowN)**3 / (2 * P_max**2 * self.FM**2 * self.calculate_disk_area())
-        altitude_this_is_wrong = (self.T_0 / self.lapse_rate) * (math.pow((self.rho / rho_max), (self.gas_const * self.lapse_rate) / (self.g * self.molar_mass)) - 1)
-        return altitude_this_is_wrong
-    
-    #In order to find Forward Flight P_req, we need to calculate some new values:
-    #Thrust coefficient (this assumes ISA might be worth updating to 300m)
-    #also doesnt include the k_dl factor? should it?
-    def calculate_C_T(self): 
-        C_T = (self.T) / (0.5 * self.rho * self.calculate_disk_area() *(self.omega * self.rotor_radius)**2 )
+
+    def calculate_C_T(self):
+        """Calculate the thrust coefficient."""
+        C_T = self.T / (0.5 * self.rho * self.calculate_disk_area() * (self.omega * self.rotor_radius) ** 2)
         return C_T
-    
-    #Average C_l
+
     def calculate_average_C_l(self):
+        """Calculate average coefficient of lift."""
         average_C_l = 6.6 * self.calculate_C_T() / self.solidity
         return average_C_l
 
-    #alpha_m
     def calculate_alpha_m(self):
+        """Calculate angle of attack for maximum lift."""
         alpha_m = self.calculate_average_C_l() / self.Cl_alpha
         return alpha_m
-    
-    #average_C_D_p
+
     def calculate_average_C_D_p(self):
-        average_C_D_p_1 = 0.0087 - 0.0216 * self.calculate_alpha_m() + 0.4 * self.calculate_alpha_m() ** 2 #bailey
-        average_C_D_p_2 = 0.011 + 0.4 * (self.calculate_alpha_m() ** 2) #marinescu
-        average_C_D_p_3 = 0.009 + 0.73 * (self.calculate_alpha_m() **2) #talbot
+        """Calculate the average profile drag coefficient."""
+        average_C_D_p_1 = 0.0087 - 0.0216 * self.calculate_alpha_m() + 0.4 * self.calculate_alpha_m() ** 2  # bailey
+        average_C_D_p_2 = 0.011 + 0.4 * (self.calculate_alpha_m() ** 2)  # marinescu
+        average_C_D_p_3 = 0.009 + 0.73 * (self.calculate_alpha_m() ** 2)  # talbot
         # pick the highest
         average_C_D_p = max(average_C_D_p_1, average_C_D_p_2, average_C_D_p_3)
         return average_C_D_p
 
-    #Profile drag power for hover
     def calculate_P_p_hov(self):
+        """Calculate the profile drag power for hover."""
         P_p_hov = self.solidity * self.calculate_average_C_D_p() / 8 * self.rho * (self.omega * self.rotor_radius) ** 3 * self.calculate_disk_area()
-        return P_p_hov 
+        return P_p_hov
 
-    #Profile drag power for forward flight   
     def calculate_P_p(self):
+        """Calculate the profile drag power for forward flight."""
         P_p = self.calculate_P_p_hov() * (1 + 4.65 * self.adv_ratio_fl ** 2)
         return P_p
-    
+
+    def calculate_v_i_bar(self):
+        """Equation to solve for induced velocity ratio."""
+        v_i_hover = self.calculate_hover_induced_velocity()
+        def equation(v_i_bar):
+            return v_i_bar ** 4 + (self.V_point / v_i_hover) ** 2 * v_i_bar ** 2 - 1
+        initial_guess = 1.0
+        solution = fsolve(equation, initial_guess)
+        return solution[0]
+
     def calculate_P_i(self):
-        P_i = self.k * self.T * self.v_i
+        """Calculate induced power."""
+        # a little uncertainty here from me - Jan
+        # we use the induced velocity of one rotor and then multiply it by the total thrust getting power induced
+        # this kinda confuses me but if i divide thurst by 4 (each rotor induced power) and then multiply power by 4 at the end i get the same result
+        v_i_fl = self.calculate_v_i_bar() * self.calculate_hover_induced_velocity()
+        P_i = self.k * (self.T/4) * v_i_fl * 4
         return P_i
 
-        ## parasite power calculation
     def calculate_P_par(self):
-        self.A_eq = 0.418 #m^2 #assuming clean configuration, otherwise its near 10 ft^2
-        P_par = 0.5*self.A_eq*self.rho*(self.V_point**3)
+        """Calculate parasite power."""
+        A_eq = 0.418  # m^2, assuming clean configuration
+        P_par = 0.5 * A_eq * self.rho * (self.V_point ** 3)
         return P_par
-    
-    #Power required forward flight
-    def calculate_P_req(self):
-        P_req = (self.calculate_P_p() + self.calculate_P_i() + self.calculate_P_par())*1.045 #to accound for 3% to 6% losses
-        return P_req
 
+    def calculate_P_req_fl(self):
+        """Calculate the power required for forward flight."""
+        P_req_fl = (self.calculate_P_p() + self.calculate_P_i() + self.calculate_P_par()) * 1.045  # accounting for 3% to 6% losses
+        return P_req_fl
 
     def display_results(self):
         """Display power requirements and induced velocities."""
@@ -282,17 +287,14 @@ class PerformanceAnalysis:
         disk_area = self.calculate_disk_area()
         power_requirements = self.calculate_power_req_hover()
         power_loading_hover = self.calculate_power_loading_hover()
-        profile_power_fl = self.calculate_P_p()       
-        power_required_forward = self.calculate_P_req()
+        profile_power_fl = self.calculate_P_p()
+        power_required_forward = self.calculate_P_req_fl()
 
-        #print(f'Hover induced velocity: {v_i_hover:.2f} m/s')
-        #print(f'Climb induced velocity: {v_i_climb:.2f} m/s')
-        print(f'Disk Area: {disk_area:.2f} m2')
+        print(f'Disk Area: {disk_area:.2f} m²')
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
-        #print(f'Profile power drag: {profile_power_fl / 1000:.2f} kW')
         print(f'Power required for forward flight: {power_required_forward / 1000:.2f} kW')
-        #print(f'me: {c_t_me:.4f}, floris: {self.calculate_C_T():.4f}')
+
 
 
 class PowerAnalysis:
@@ -365,7 +367,6 @@ class PowerAnalysis:
         return t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t_total, d_total
     
 
-# Main Execution
 if __name__ == "__main__":
     # Initialize the analysis with default values
     rotor_analysis = RotorAnalysis()
@@ -379,4 +380,32 @@ if __name__ == "__main__":
     # Display results
     performance_analysis.display_results()
 
-    
+    # Define the range of forward speeds
+    V_points = np.linspace(5, 60, 1000)  # Forward speeds from 5 to 40 m/s
+
+    # Arrays to store solutions
+    P_is = []  # Induced power
+    P_pars = []  # Parasite power
+    P_reqs = []  # Total required power
+
+    # Calculate power values for each forward speed
+    for V_point in V_points:
+        performance_analysis.V_point = V_point  # Update forward speed
+        P_is.append(performance_analysis.calculate_P_i() / 1000)  # Induced power in kW
+        P_pars.append(performance_analysis.calculate_P_par() / 1000)  # Parasite power in kW
+        P_reqs.append(performance_analysis.calculate_P_req_fl() / 1000)  # Total required power in kW
+
+    # Plot the power curves
+    plt.figure(figsize=(12, 8))
+    plt.plot(V_points, P_is, label='Induced Power', color='green', linestyle='--', linewidth=2)
+    plt.plot(V_points, P_pars, label='Parasite Power', color='red', linestyle='-.', linewidth=2)
+    plt.plot(V_points, P_reqs, label='Total Required Power', color='blue', linewidth=2)
+
+    # Add labels, title, legend, and grid
+    plt.title('Power Requirements for Forward Flight', fontsize=16)
+    plt.xlabel('Forward Speed, $V_{point}$ (m/s)', fontsize=14)
+    plt.ylabel('Power (kW)', fontsize=14)
+    plt.legend(fontsize=12)
+    plt.grid(True)
+    plt.show()
+
