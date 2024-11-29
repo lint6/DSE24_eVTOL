@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 
 class RotorAnalysis:
-    def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=3, bank_angle=30, v_max_kmh=150):
+    def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=7, bank_angle=30, v_max_kmh=150):
         # Constants
         self.MTOW_KG = mtow_kg  # Maximum Takeoff Weight in kg
         self.N_rotors = n_rotors  # Number of rotors
@@ -418,20 +418,21 @@ if __name__ == "__main__":
 
     # Plot the power curves
     plt.figure(figsize=(12, 8))
-    plt.plot(V_points, P_is, label='Induced Power', color='green', linestyle='--', linewidth=2)
-    plt.plot(V_points, P_pars, label='Parasite Power', color='red', linestyle='-.', linewidth=2)
-    plt.plot(V_points, P_reqs, label='Total Required Power', color='blue', linewidth=2)
+    plt.plot(V_points*3.6, P_is, label='Induced Power', color='green', linestyle='--', linewidth=2)
+    plt.plot(V_points*3.6, P_pars, label='Parasite Power', color='red', linestyle='-.', linewidth=2)
+    plt.plot(V_points*3.6, P_reqs, label='Total Required Power', color='blue', linewidth=2)
 
     # Add a point for the minimum power and corresponding speed
-    plt.scatter(min_speed, min_power, color='purple', zorder=5, label=f'Minimum Power: {min_power:.1f} kW at {min_speed*3.6:.1f} km/h')
+    plt.scatter(min_speed*3.6, min_power, color='purple', zorder=5, label=f'Minimum Power: {min_power:.1f} kW at {min_speed*3.6:.1f} km/h')
 
     # Add vertical and horizontal lines to the point
-    plt.axvline(x=min_speed, color='purple', linestyle=':', linewidth=1)
+    plt.axvline(x=min_speed*3.6, color='purple', linestyle=':', linewidth=1)
     plt.axhline(y=min_power, color='purple', linestyle=':', linewidth=1)
+    plt.axhline(y=performance_analysis.calculate_power_req_hover()/1000, label='Hover Required power', color='orange', linewidth=2)
 
     # Add labels, title, legend, and grid
     plt.title('Power Requirements for Forward Flight', fontsize=16)
-    plt.xlabel('Forward Speed, $V_{point}$ (m/s)', fontsize=14)
+    plt.xlabel('Forward Speed, $V_{point}$ (km/h)', fontsize=14)
     plt.ylabel('Power (kW)', fontsize=14)
     plt.legend(fontsize=12)
     plt.grid(True)
