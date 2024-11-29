@@ -364,7 +364,19 @@ class PowerAnalysis:
 
         return t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t_total, d_total
     
+    def calculate_power_required(self):
 
+        #fetch mtow
+
+        # power required for HOGE
+        p_hover = self.P_req_hover
+
+        # power required for vertical climb
+        P_vclimb = Vroc * 
+
+
+
+    
 # Main Execution
 if __name__ == "__main__":
     # Initialize the analysis with default values
