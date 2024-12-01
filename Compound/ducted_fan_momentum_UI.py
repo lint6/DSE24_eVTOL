@@ -37,7 +37,8 @@ for i in vel :
     power.append(fan_2.calc_p_idf())
 power = np.array(power)/int(1000)
 
-# 1. Prepare your data
+
+'''Horizontal Flight'''
 # Power lines
 plt.plot(vel, power.T[0], "-", label="Total")  # You can use other types like plt.scatter, plt.bar, etc.
 plt.plot(vel, power.T[1], "--",label="Induced")
@@ -47,16 +48,15 @@ vel_power_min, power_min = func_min_locator(vel, power.T[0])
 plt.plot(vel_power_min, power_min, '.', label=f'Min. Power \nV = {vel_power_min:.1f}m/s \nP = {power_min:.2f}kW')
 plt.plot(vel[0], power[0][0], '.', label=f'Hover Power P = {power[0][0]:.2f}kW')
 
-# 3. Customize the plot
 plt.title('Forward Flight Power (Single rotor)')              # Title of the graph
 plt.xlabel('Velocity [m/s]')         # Label for the x-axis
 plt.ylabel('Power Required [kW]')         # Label for the y-axis
 plt.legend()                       # Add a legend (if needed)
 plt.grid(True)                     # Add a grid (optional)
-
-# 4. Display the plot
 plt.show()
 plt.clf
+
+'''Vertical Flight'''
 max_rate = 60
 vertical_rate = np.arange(-max_rate,max_rate, max_rate/250)
 vertical_rate = np.sort(np.append(vertical_rate, 0))
