@@ -2,12 +2,12 @@ import ducted_fan_calc
 import matplotlib.pyplot as plt 
 import numpy as np
 
-def func_min_locator(list1, list2):
+def func_min_locator(list1, list2): #find the minimum and its index in list2 and locate the item at the same index in list1
     min_list2 = np.min(list2)
     min_list2_index = list(list2).index(min_list2)
     return list1[min_list2_index], min_list2
 
-fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(718/4), P_a=45000)
+fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(718/4),radius=0.625, P_a=42000)
 
 # Calculate hover induced velocity
 print(f"Hover Induced Velocity: {fan_1.calc_v_h():.2f}")
@@ -22,8 +22,8 @@ if fan_1.P_a == None: #give climb rate, not power
 else: #give power, not climb rate
     print(f"Given power available for climb: {fan_1.P_a:.2f}W")
     print(f"Axial Rate of Climb achieved: {fan_1.calc_V_c_kappa()[0]:.2f}m/s")
-if fan_1.V_c < 0 and fan_1.V_c/fan_1.v_h >= 2:
-    raise Exception(f'V_c v_h ratio too negative, theory does not apply (current ratio {fan_1.V_c()/fan_1.v_h()}, needs to be greater than -2)')
+if fan_1.V_c < 0 and abs(fan_1.V_c)/fan_1.v_h >= 2:
+    raise Exception(f'V_c v_h ratio too negative, theory does not apply (current ratio {fan_1.V_c/fan_1.v_h}, needs to be greater than -2)')
 
 print(f"calc_power_ideal_hover: {fan_1.calc_power_ideal_hover():.2f}")
 
@@ -61,7 +61,7 @@ vertical_rate = np.arange(-max_rate,max_rate, max_rate/250)
 vertical_rate = np.sort(np.append(vertical_rate, 0))
 vertical_power = []
 for i in vertical_rate :
-    fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(718/4), V_c=i)
+    fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(718/4),radius=0.625, V_c=i)
     vertical_power.append(fan_1.calc_P_kappa())
 vertical_power = np.array(vertical_power)/int(1000)
 

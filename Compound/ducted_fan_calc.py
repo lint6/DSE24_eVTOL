@@ -24,7 +24,7 @@ def find_roots(coefficients):
 
 
 class Ducted_Fan_1: #vertical flight
-    def __init__(self, mass, radius=0.625, TWR= 1 , V_c=None, density=1.225, g0 = 9.80665, P_a = None): 
+    def __init__(self, mass, radius=None, TWR= 1 , V_c=None, density=1.225, g0 = 9.80665, P_a = None): 
         # if V_c== None and P_a == None:
         #     raise Exception('Vertical rate and power are both none, need at least one')
         # Required Inputs
@@ -69,7 +69,6 @@ class Ducted_Fan_1: #vertical flight
         self.weight = self.mass * self.g0
         return self.mass, self.weight
     
-    #disc loading here is ACTUALLY thurst to area loading, TWR is thrust to wright ratio for example 1 is necessary for hovering but not enough to climb
     def calc_disc_loading(self):
         self.calc_mass()
         self.disc_loading = self.mass / (np.pi * self.radius**2 ) #Definition of disc loading
