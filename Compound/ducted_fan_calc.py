@@ -188,7 +188,7 @@ class Ducted_Fan_2: #pure horizontal
         self.V_c = V_c  # Climb freestream velocity (m/s)
         self.density = density  # Air density (kg/m^3)
         
-        self.D
+        self.D = None
         self.D_h0 = None 
         self.V_nd = None
         self.T = None  # Thurst
@@ -225,6 +225,7 @@ class Ducted_Fan_2: #pure horizontal
     
     def calc_rotor_alpha(self):
         self.calc_T()
+        self.calc_D()
         self.rotor_alpha = - np.arctan(int(self.D_h0) / int(self.T))
         # print( "rotor alpha is", self.rotor_alpha*180/np.pi )
         return self.rotor_alpha
@@ -232,7 +233,7 @@ class Ducted_Fan_2: #pure horizontal
     def calc_v_f(self):
         self.calc_rotor_alpha()
         self.calc_V_nd()
-        my_coefficient = [1, (-2 * self.V_nd * np.sin(self.rotor_alpha)), (self.V_nd **2), 0, -1 ] #TODO: V should be ND
+        my_coefficient = [1, (-2 * self.V_nd * np.sin(self.rotor_alpha)), (self.V_nd **2), 0, -1 ]
         # print("The coefficients are ", my_coefficient)
         self.v_f_root = find_roots(coefficients=my_coefficient) * self.related_fan.v_h
         return self.v_f_root
@@ -248,13 +249,15 @@ class Ducted_Fan_2: #pure horizontal
         power_induced = self.T * self.v_f_root
         power_parasitic = self.V_hor * self.D_h0
         self.p_idf = power_induced + power_parasitic
-        print("v_horis ", self.V_hor)
-        print("drag is", self.D_h0)
-        print("thrust is", self.T)
-        print("horizontal induced velocity is", self.v_f_root)
-        print(f'Power: {self.p_idf}')
-        print('----------------------------------')
-        return self.p_idf
+        # print("v_horis ", self.V_hor)
+        # print("drag is", self.D_h0)
+        # print("thrust is", self.T)
+        # print("horizontal induced velocity is", self.v_f_root)
+        # print(f'Power: {self.p_idf}')
+        # print(f'power_induced: {power_induced}')
+        # print(f'power_parasitic: {power_parasitic}')
+        # print('----------------------------------')
+        return self.p_idf, power_induced, power_parasitic
   
 
 
