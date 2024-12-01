@@ -27,7 +27,8 @@ if fan_1.V_c < 0 and abs(fan_1.V_c)/fan_1.v_h >= 2:
 
 print(f"calc_power_ideal_hover: {fan_1.calc_power_ideal_hover():.2f}")
 
-print(f"calc_disc_loading: {fan_1.calc_disc_loading()[0]:.2f}")
+print(f"Disc_loading: {fan_1.calc_disc_loading()[0]:.2f}")
+print(f"Power_loading: {(fan_1.calc_mass()[0]/(fan_1.calc_power_ideal_hover()/1000)):.2f}")
 
 vel = np.arange(0,100,0.01)
 power = []
