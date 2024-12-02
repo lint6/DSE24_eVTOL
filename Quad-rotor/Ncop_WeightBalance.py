@@ -14,7 +14,20 @@ class MassBalance:
         self.m_fuelcell = 165
         self.m_h2tank = 114
         if self.aircraft_type == 1:
+            #Define Ideal Total CG for Quadrotor
             self.cg_ideal_ac = 50
+            # Define ideal min/max CG positions for each component
+            self.payload_cg_min = 10
+            self.payload_cg_max = 20
+            self.airframe_cg_min = 45
+            self.airframe_cg_max = 55
+            self.batteries_cg_min = 30
+            self.batteries_cg_max = 70
+            self.fuelcell_cg_min = 50
+            self.fuelcell_cg_max = 90
+            self.h2tank_cg_min = 35
+            self.h2tank_cg_max = 70
+            # Define rotor set parameters
             self.num_rotor_sets = 2
             self.rotor_m = 5
             self.rotor_1_cg_min = 20
@@ -24,14 +37,22 @@ class MassBalance:
             self.rotor_cg_positions = [self.rotor_1_cg_min, self.rotor_2_cg_max]
         elif self.aircraft_type == 2:
             # Define parameters for Coaxial Helicopter
-            self.cg_ideal_ac = 50 #ASK COAXIAL GROUP
+            self.cg_ideal_ac = 39 
+            self.payload_cg_min = 11
+            self.payload_cg_max = 21
+            self.airframe_cg_min = 30
+            self.airframe_cg_max = 45
+            self.batteries_cg_min = 31
+            self.batteries_cg_max = 56
+            self.fuelcell_cg_min = 31
+            self.fuelcell_cg_max = 56
+            self.h2tank_cg_min = 31
+            self.h2tank_cg_max = 56
             self.num_rotor_sets = 1
-            self.rotor_m = 5 #ASK COAXIAL GROUP
-            self.rotor_1_cg_min = 20 #ASK COAXIAL GROUP
-            self.rotor_1_cg_max = 30 #ASK COAXIAL GROUP
-            self.rotor_2_cg_min = 70
-            self.rotor_2_cg_max = 80
-            self.rotor_cg_positions = [self.rotor_1_cg_min, self.rotor_2_cg_max]
+            self.rotor_m = 36 #Based on 3.9 m radius from this site https://aircommand.com/pages/rotor-blade-selection-and-planning#
+            self.rotor_1_cg_min = self.cg_ideal_ac 
+            self.rotor_1_cg_max = self.cg_ideal_ac 
+            self.rotor_cg_positions = [self.cg_ideal_ac]
             pass
         elif self.aircraft_type == 3:
             # Define parameters for Compound Aircraft
@@ -59,7 +80,7 @@ class MassBalance:
         m_rotorset = [self.rotor_m] * self.num_rotor_sets * 2
         cgs = []
         for cg in self.rotor_cg_positions:
-            cgs.extend([cg, cg])
+            cgs.extend([cg] * self.num_rotor_sets)
         return m_rotorset, cgs
 
     def balancing(self):
@@ -91,15 +112,16 @@ class MassBalance:
             adjusted_cg = cg + adjustment
             return max(min(adjusted_cg, max_val), min_val)
 
-        self.cg_payload = adjust_within_bounds(self.cg_payload, adjustment_factor, 10, 20)
-        self.cg_airframe = adjust_within_bounds(self.cg_airframe, adjustment_factor, 45, 55)
-        self.cg_batteries = adjust_within_bounds(self.cg_batteries, adjustment_factor, self.cg_payload, 70)
-        self.cg_fuel_cell = adjust_within_bounds(self.cg_fuel_cell, adjustment_factor, self.cg_payload, 80)
-        self.cg_h2tank = adjust_within_bounds(self.cg_h2tank, adjustment_factor, self.cg_payload, 70)
+        self.cg_payload = adjust_within_bounds(self.cg_payload, adjustment_factor,  self.payload_cg_min, self.payload_cg_max)
+        self.cg_airframe = adjust_within_bounds(self.cg_airframe, adjustment_factor, self.airframe_cg_min, self.airframe_cg_max)
+        self.cg_batteries = adjust_within_bounds(self.cg_batteries, adjustment_factor, self.batteries_cg_min, self.batteries_cg_max)
+        self.cg_fuel_cell = adjust_within_bounds(self.cg_fuel_cell, adjustment_factor, self.fuelcell_cg_min, self.fuelcell_cg_max)
+        self.cg_h2tank = adjust_within_bounds(self.cg_h2tank, adjustment_factor, self.h2tank_cg_min, self.h2tank_cg_max)
         self.rotor_cg_positions = [adjust_within_bounds(cg, adjustment_factor, self.rotor_1_cg_min, self.rotor_1_cg_max) if i == 0 else adjust_within_bounds(cg, adjustment_factor, self.rotor_2_cg_min, self.rotor_2_cg_max) for i, cg in enumerate(self.rotor_cg_positions)]
 
         self.balancing()
-        while abs(self.final_cg - 50) > 0.01:
+        
+        while abs(self.final_cg - self.cg_ideal_ac) > 0.01:
             self.adjust_cgs_for_ideal()
 
     def visual_cg_bar(self):
@@ -108,8 +130,8 @@ class MassBalance:
                      self.cg_fuel_cell, self.cg_h2tank] + self.rotor_cg_positions
         plt.figure(figsize=(10, 6))
         plt.bar(components, cg_values, color='skyblue', label='System CG Values')
+        plt.axhline(y=self.cg_ideal_ac, color='green', linestyle='-', label='Ideal CG = ' + str(self.cg_ideal_ac) + '%')
         plt.axhline(y=self.final_cg, color='red', linestyle='--', label=f'Final CG = {self.final_cg:.2f}%')
-        plt.axhline(y=50, color='green', linestyle='-', label='Ideal CG = 50%')
         plt.title('System CG Values and Final CG', fontsize=16)
         plt.xlabel('Components', fontsize=14)
         plt.ylabel('CG Position (%)', fontsize=14)
