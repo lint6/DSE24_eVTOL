@@ -1,3 +1,4 @@
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from peformance import PerformanceAnalysis  # Import PerformanceAnalysis class from performance
@@ -14,11 +15,12 @@ class PowerAnalysis:
         self.t2
     
     def calculate_missionphase_time(self):
-        t1 = 15 
+        t_1 = 15 
         self.t_1 = t_1 
         return self.t_1 
     
-    def calcualte thurst(self):
+    def calcualte_thurst(self, P, t):
         self.calculate_pahere()
         E = P*t
 
+"""

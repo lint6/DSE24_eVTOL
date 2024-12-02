@@ -26,6 +26,11 @@ class RotorAnalysis:
         self.V_gust = 30 / self.FT_TO_M
         self.C_lalpha = 5.73  # 1/rad; NACA0012
 
+        #User inputs 
+        self.c_t_o_fl = 1 # random, gets updated
+        self.c_t_o_turn = 1 # random, gets updated
+        self.c_t_o_turb = 1 # random, gets updated
+
         # Updated variables
         self.radius_m = None
         self.rotor_diameter_m = None
@@ -41,9 +46,6 @@ class RotorAnalysis:
         self.aspect_ratios = None
         self.N_bl = None
         self.chord = None
-        self.c_t_o_fl = 1 # random, gets updated
-        self.c_t_o_turn = 1 # random, gets updated
-        self.c_t_o_turb = 1 # random, gets updated
         self.max_c_t = None
 
 
@@ -60,6 +62,7 @@ class RotorAnalysis:
         return self.tip_speed
 
     def calculate_mach_number(self):
+        self.calculate_tip_speed()
         mach_num = ((self.V_MAX_KMH / 3.6) + self.tip_speed) / self.SPEED_OF_SOUND
         self.mach_num = mach_num
         return self.mach_num
@@ -165,7 +168,7 @@ class RotorAnalysis:
         # Ask user for the number of blades they want and calculate the corresponding chord
         selected_blades = int(input("Enter the number of blades you want (between 2 and 6): "))
         if selected_blades not in range(2, 7):
-            print("Invalid number of blades selected. Please choose between 2 and 6 blades.")
+            raise ValueError("Invalid number of blades selected. Please choose between 2 and 6 blades.")
         else:
             for self.N_bl, self.chord, self.AR_blades in self.aspect_ratios:
                 if self.N_bl == selected_blades:
@@ -353,7 +356,7 @@ class PerformanceAnalysis:
         #plt.show()
 
 
-
+"""
 class PowerAnalysis:
     def __init__(self, V_roc = 0.76, eta_p = 0.9):
         #values from rotor sizing
@@ -435,7 +438,7 @@ class PowerAnalysis:
         # power required for vertical climb
         P_vclimb = self.Vroc * self.mtowN     #import Vroc from MTOW in Newtons from PerformanceAnalysis
         P_vclimbeff = P_vclimb / self.eta_p        # eta_p is the propulsion efficiency
-
+"""
 
 
 if __name__ == "__main__":

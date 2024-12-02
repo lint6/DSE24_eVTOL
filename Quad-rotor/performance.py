@@ -1,3 +1,4 @@
+"""
 import numpy as np
 from rotor_sizing import RotorAnalysis  # Import RotorAnalysis class from rotor_sizing
 
@@ -144,3 +145,5 @@ if __name__ == "__main__":
 
     # Display results
     performance_analysis.display_results()
+
+"""

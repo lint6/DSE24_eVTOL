@@ -1,3 +1,4 @@
+"""
 import numpy as np 
 import matplotlib.pyplot as plt 
 
@@ -132,3 +133,4 @@ if __name__ == '__main__':
     WB.print_adjusted_cgs()
     WB.visual_cg_bar()
     WB.visual_cg_line()
+"""
