@@ -5,7 +5,7 @@ from scipy.optimize import fsolve
 class RotorAnalysis:
     def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=7, bank_angle=30, v_max_kmh=150):
         # Constants
-        self.MTOW_KG = mtow_kg  # Maximum Takeoff Weight in kg
+        self.mtow = mtow_kg  # Maximum Takeoff Weight in kg
         self.N_rotors = n_rotors  # Number of rotors
         self.DL_IMPERIAL = dl_imperial  # Disc loading in lb/ft²
         self.bank_angle = bank_angle  # Bank angle during turn [deg]
@@ -19,8 +19,8 @@ class RotorAnalysis:
         self.g = 9.80665  # Gravitational acceleration [m/s²]
 
         # Derived values
-        self.D_v = 0.05 * self.MTOW_KG  # Drag penalty [kg]
-        self.k_dl = (1 + (self.D_v / self.MTOW_KG))  # Drag load factor
+        self.D_v = 0.05 * self.mtow  # Drag penalty [kg]
+        self.k_dl = (1 + (self.D_v / self.mtow))  # Drag load factor
         self.V_ne = (self.V_MAX_KMH / 3.6) * 1.1  # Never exceed speed [m/s]
 
         self.V_gust = 30 / self.FT_TO_M
@@ -50,7 +50,7 @@ class RotorAnalysis:
 
 
     def calculate_radius(self):
-        mtow_pounds = self.MTOW_KG * self.POUNDS_PER_KG
+        mtow_pounds = self.mtow * self.POUNDS_PER_KG
         radius_ft = np.sqrt((mtow_pounds / self.N_rotors) / (self.DL_IMPERIAL * np.pi))
         radius_m = radius_ft / self.FT_TO_M
         self.radius_m = radius_m
@@ -82,20 +82,20 @@ class RotorAnalysis:
         self.adv_ratio_fl = self.V_ne / (self.omega * self.rotor_radius_m)
 
         # Thrust and solidity in forward flight
-        T_fl = self.k_dl * self.MTOW_KG * self.g
+        T_fl = self.k_dl * self.mtow * self.g
         c_t_fl = T_fl / (self.N_rotors * (self.rho * np.pi * self.rotor_radius_m**2 * (self.omega * self.rotor_radius_m)**2))
         self.o_fl = c_t_fl / self.c_t_o_fl
 
         # Solidity during turn
         self.n_z = 1 / np.cos(self.bank_angle * (np.pi / 180))  # Load factor
-        T_turn = self.n_z * self.k_dl * self.MTOW_KG * self.g
+        T_turn = self.n_z * self.k_dl * self.mtow * self.g
         c_t_turn = T_turn / (self.N_rotors * (self.rho * np.pi * self.rotor_radius_m**2 * (self.omega * self.rotor_radius_m)**2))
         self.o_turn = c_t_turn / self.c_t_o_turn
 
         # Solidity during turbulence
         delta_n = (0.25 * self.C_lalpha * (self.V_gust / (self.omega * self.rotor_radius_m))) / self.c_t_o_turb
         n_z_turb = 2 + delta_n  # 2g pull up (FAA requirement)
-        T_turb = n_z_turb * self.k_dl * self.MTOW_KG * self.g
+        T_turb = n_z_turb * self.k_dl * self.mtow * self.g
         c_t_turb = T_turb / (self.N_rotors * (self.rho * np.pi * self.rotor_radius_m ** 2 * (self.omega * self.rotor_radius_m) ** 2))
         self.o_turb = c_t_turb / self.c_t_o_turb
 
@@ -187,7 +187,7 @@ class PerformanceAnalysis:
         self.V_vertical_climb = vertical_climb_speed
 
         # Use values from RotorAnalysis
-        self.mtow = rotor_analysis.MTOW_KG
+        self.mtow = rotor_analysis.mtow
         self.N_rotors = rotor_analysis.N_rotors
         self.rho = rotor_analysis.rho
         self.g = rotor_analysis.g
@@ -271,7 +271,8 @@ class PerformanceAnalysis:
             return v_i_bar ** 4 + (self.V_point / v_i_hover) ** 2 * v_i_bar ** 2 - 1
         initial_guess = 1.0
         solution = fsolve(equation, initial_guess)
-        return solution[0]
+        v_i_bar = solution[0]
+        return v_i_bar
 
     def calculate_P_i(self):
         """Calculate induced power."""
@@ -452,7 +453,7 @@ if __name__ == "__main__":
     performance_analysis = PerformanceAnalysis(rotor_analysis)
 
     # Display results for hover and basic performance
-    #performance_analysis.display_results()
+    performance_analysis.display_results()
 
     # Calculate and display power curves for forward flight
-    #performance_analysis.calculate_power_curves()
+    performance_analysis.calculate_power_curves()
