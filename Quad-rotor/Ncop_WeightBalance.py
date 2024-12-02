@@ -1,12 +1,14 @@
+#Made by Ibrahim and Floris
+
 import numpy as np 
 import matplotlib.pyplot as plt 
 
-class WeightBalance:
+class MassBalance:
 
-    def __init__(self, MTOW=718.89, payload=185, airframe=152, batteries=84, fuelcell=165, h2tank=114, num_rotor_sets=2, rotor_weight=5, rotor_cg_positions=[20, 80]):
+    def __init__(self, MTOW=718.89, payload=185, airframe=152, batteries=84, fuelcell=165, h2tank=114, num_rotor_sets=2, rotor_m=5, rotor_cg_positions=[20, 80]):
         self.MTOW = MTOW 
         
-        # weights 
+        # masses 
         self.m_payload = payload
         self.m_airframe = airframe
         self.m_batteries = batteries
@@ -22,42 +24,42 @@ class WeightBalance:
 
         # Rotor sets
         self.num_rotor_sets = num_rotor_sets
-        self.rotor_weight = rotor_weight
-        self.rotor_cg_positions = [np.random.uniform(20, 30), np.random.uniform(70, 80)]  # Rotor set 1: 20% + 10%, Rotor set 2: 80% - 10%
+        self.rotor_m = rotor_m
+        self.rotor_cg_positions = rotor_cg_positions
 
         self.balancing()
 
-    def get_rotor_weights_and_cgs(self):
-        weights = [self.rotor_weight] * self.num_rotor_sets * 2
+    def get_rotorset_m_and_cgs(self):
+        m_rotorset = [self.rotor_m] * self.num_rotor_sets * 2
         cgs = []
         for cg in self.rotor_cg_positions:
             cgs.extend([cg, cg])
-        return weights, cgs
+        return m_rotorset, cgs
 
     def balancing(self):
-        rotor_weights, rotor_cgs = self.get_rotor_weights_and_cgs()
-        self.total_weight = np.sum([self.m_payload, self.m_airframe, 
+        m_rotorset, rotor_cgs = self.get_rotorset_m_and_cgs()
+        self.total_m = np.sum([self.m_payload, self.m_airframe, 
                               self.m_batteries, self.m_fuelcell, 
-                              self.m_h2tank] + rotor_weights)
-        self.total_multiple = np.sum([self.m_payload * self.cg_payload,
+                              self.m_h2tank] + m_rotorset)
+        self.total_m_weighted = np.sum([self.m_payload * self.cg_payload,
                                 self.m_airframe * self.cg_airframe,
                                 self.m_batteries * self.cg_batteries,
                                 self.m_fuelcell * self.cg_fuel_cell,
-                                self.m_h2tank * self.cg_h2tank] + [w * cg for w, cg in zip(rotor_weights, rotor_cgs)])
-        self.final_cg = self.total_multiple / self.total_weight 
+                                self.m_h2tank * self.cg_h2tank] + [m * cg for m, cg in zip(m_rotorset, rotor_cgs)])
+        self.final_cg = self.total_m_weighted / self.total_m 
 
     def adjust_cgs_for_ideal(self):
-        rotor_weights, rotor_cgs = self.get_rotor_weights_and_cgs()
-        total_weight = np.sum([self.m_payload, self.m_airframe, 
+        m_rotorset, rotor_cgs = self.get_rotorset_m_and_cgs()
+        total_m = np.sum([self.m_payload, self.m_airframe, 
                                self.m_batteries, self.m_fuelcell, 
-                               self.m_h2tank] + rotor_weights)
-        total_cg = 50 * total_weight
-        total_multiple = np.sum([self.m_payload * self.cg_payload,
+                               self.m_h2tank] + m_rotorset)
+        ideal_total_cg = 50 * total_m
+        total_m_weighted = np.sum([self.m_payload * self.cg_payload,
                                  self.m_airframe * self.cg_airframe,
                                  self.m_batteries * self.cg_batteries,
                                  self.m_fuelcell * self.cg_fuel_cell,
-                                 self.m_h2tank * self.cg_h2tank] + [w * cg for w, cg in zip(rotor_weights, rotor_cgs)])
-        adjustment_factor = (total_cg - total_multiple) / total_weight
+                                 self.m_h2tank * self.cg_h2tank] + [m * cg for m, cg in zip(m_rotorset, rotor_cgs)])
+        adjustment_factor = (ideal_total_cg - total_m_weighted) / total_m
 
         def adjust_within_bounds(cg, adjustment, min_val, max_val):
             adjusted_cg = cg + adjustment
@@ -66,11 +68,14 @@ class WeightBalance:
         self.cg_payload = adjust_within_bounds(self.cg_payload, adjustment_factor, 10, 20)
         self.cg_airframe = adjust_within_bounds(self.cg_airframe, adjustment_factor, 45, 55)
         self.cg_batteries = adjust_within_bounds(self.cg_batteries, adjustment_factor, (self.cg_payload), 70)
-        self.cg_fuel_cell = adjust_within_bounds(self.cg_fuel_cell, adjustment_factor, (self.cg_payload), 90)
+        self.cg_fuel_cell = adjust_within_bounds(self.cg_fuel_cell, adjustment_factor, (self.cg_payload), 80)
         self.cg_h2tank = adjust_within_bounds(self.cg_h2tank, adjustment_factor, (self.cg_payload), 70)
         self.rotor_cg_positions = [adjust_within_bounds(cg, adjustment_factor, 20, 30) if i == 0 else adjust_within_bounds(cg, adjustment_factor, 70, 80) for i, cg in enumerate(self.rotor_cg_positions)]
 
         self.balancing()
+        while abs(self.final_cg - 50) > 0.01:
+            self.adjust_cgs_for_ideal()
+        
 
     def visual_cg_bar(self):
         components = ['Payload', 'Airframe', 'Batteries', 'Fuel Cell', 'H2 Tank'] + [f'Rotor Set {i+1}' for i in range(self.num_rotor_sets)]
@@ -92,11 +97,11 @@ class WeightBalance:
         components = ['Payload', 'Airframe', 'Batteries', 'Fuel Cell', 'H2 Tank'] + [f'Rotor Set {i+1}' for i in range(self.num_rotor_sets)]
         cg_values = [self.cg_payload, self.cg_airframe, self.cg_batteries, 
                      self.cg_fuel_cell, self.cg_h2tank] + self.rotor_cg_positions
-        weights = [self.m_payload, self.m_airframe, self.m_batteries, 
-                   self.m_fuelcell, self.m_h2tank] + [self.rotor_weight * 2] * self.num_rotor_sets
+        masses = [self.m_payload, self.m_airframe, self.m_batteries, 
+                   self.m_fuelcell, self.m_h2tank] + [self.rotor_m * 2] * self.num_rotor_sets
         plt.figure(figsize=(12, 6))
         plt.plot([0, 100], [0, 0], color='black', linewidth=2)
-        plt.scatter(cg_values, np.zeros_like(cg_values), s=np.array(weights) * 2, color='blue', label='Component CG')
+        plt.scatter(cg_values, np.zeros_like(cg_values), s=np.array(masses) * 2, color='blue', label='Component CG')
         for i, label in enumerate(components):
             plt.text(cg_values[i], 0.05, label, ha='center', fontsize=10)
         plt.scatter(self.final_cg, 0, color='red', s=200, label=f'Final CG = {self.final_cg:.2f}%')
@@ -105,16 +110,15 @@ class WeightBalance:
         plt.legend(fontsize=12)
         plt.tight_layout()
         plt.show()
-
-    def input_weights(self):
-        self.m_payload = 185 #float(input("Enter payload weight: "))
-        self.m_airframe = 170 #float(input("Enter airframe weight: "))
-        self.m_batteries = float(input("Enter batteries weight: "))
-        self.m_fuelcell = float(input("Enter fuel cell weight: "))
-        self.m_h2tank = float(input("Enter H2 tank weight: "))
+    def input_mass(self):
+        self.m_payload = 185 #float(input("Enter payload mass: "))
+        self.m_airframe = 170 #float(input("Enter airframe mass: "))
+        self.m_batteries = 84 #float(input("Enter batteries mass: "))
+        self.m_fuelcell = 165 #float(input("Enter fuel cell mass: "))
+        self.m_h2tank = 116 #float(input("Enter H2 tank mass: "))
         self.balancing()
         self.adjust_cgs_for_ideal()
-
+    
     def print_adjusted_cgs(self):
         print(f"Adjusted CGs:")
         print(f"Payload: {self.cg_payload:.2f}%")
@@ -126,9 +130,12 @@ class WeightBalance:
             print(f"Rotor Set {i+1}: {cg:.2f}%")
 
 if __name__ == '__main__':
-    WB = WeightBalance()
-    WB.input_weights()
-    print(f"Final CG: {WB.final_cg:.2f}")
-    WB.print_adjusted_cgs()
-    WB.visual_cg_bar()
-    WB.visual_cg_line()
+    MB = MassBalance()
+    MB.input_mass()
+    
+    print(f"Final CG: {MB.final_cg:.2f}")
+    
+    MB.print_adjusted_cgs()
+    
+    MB.visual_cg_bar()
+    MB.visual_cg_line()
