@@ -123,11 +123,11 @@ if __name__ == '__main__':
     power.display_parameters()
 
     #specify athmospheric condition
-    power.iterate_design(new_rho=1.21796)
+    power.iterate_design(new_rho=1.19011)
 
     ## Compute hover specifics
     # specify hover flight conditions
-    power.iterate_design(new_ROC_VCD=-0.5)
+    power.iterate_design(new_ROC_VCD=0)
     print(f"HOGE power = {power.P_hoge} [W]")
     print(f"Vertical climb/descent power = {power.P_VCD} [W]")
 
@@ -136,7 +136,8 @@ if __name__ == '__main__':
     power.iterate_design(new_gamma_CD=0)
 
     # initiate
-    V = np.linspace(0.01, 100, 1000)
+    V = np.linspace(0.01, 85, 1000)
+    AV = []
     P_p = []
     P_i = []
     P_par = []
@@ -146,6 +147,7 @@ if __name__ == '__main__':
 
     for velocity in V:
         power.iterate_design(new_V_point=velocity)
+        AV.append(velocity/(power.omega*power.rotor_radius))
         P_p.append(power.P_p)
         P_i.append(power.P_i)
         P_par.append(power.P_par)
@@ -159,36 +161,41 @@ if __name__ == '__main__':
     # compute power required at Vbe
     power.iterate_design(new_V_point=V_be)
 
-    # print(f"Maximum endurance velocity = {V_be} [m/s] = {3.6 * V_be} [km/h]")
-    # print(f"Maximum endurance power = {power.P_total_CD} [W]")
+    print(f"Maximum endurance velocity = {V_be} [m/s] = {3.6 * V_be} [km/h]")
+    print(f"Maximum endurance power = {power.P_total_CD} [W]")
+    print(power.solidity,power.omega,power.rotor_radius)
 
     print("----------------")
 
     ## power plots
-    print = False
+    print = True
     if print == True:
-        plt.plot(V, P_p, linestyle='-', color='b')
-        plt.plot(V, P_i, linestyle='--', color='c')
-        plt.plot(V, P_par, linestyle='-.', color='r')
-        plt.plot(V, P_total_level, linestyle='-', color='k')
+        plt.plot(AV, P_p, label="Profile drag power", linestyle='-', color='b')
+        plt.plot(AV, P_i, label="Induced power", linestyle='--', color='c')
+        plt.plot(AV, P_par, label="Parasitic power", linestyle='-.', color='r')
+        plt.plot(AV, P_total_level, label="Total power (level flight)", linestyle='-', color='k')
 
         # add textual labels
-        plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
-        plt.text(V[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
-        plt.text(V[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
-        plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
+        plt.text(AV[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
+        plt.text(AV[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
+        plt.text(AV[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
+        plt.text(AV[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
 
         #climb descent
-        plt.plot(V, P_CD, linestyle='-', color='m')
-        plt.plot(V, P_total_CD, linestyle=':', color='k')
+        plt.plot(AV, P_CD, label='Climb power ($\gamma$ = 9$^\circ$)', linestyle='-', color='m')
+        plt.plot(AV, P_total_CD, linestyle=':', label='Total power (climbing flight)', color='k')
 
         #add textual labels
-        plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
-        plt.text(V[-1], P_total_CD[-1], 'P_total_CD', color='black', va='center', ha='left')
+        plt.text(AV[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
+        plt.text(AV[-1], P_total_CD[-1], 'P_total_CD', color='black', va='center', ha='left')
+
+        plt.axvline(x=0.4569090434, color='gray', linestyle='-', linewidth=1, label='Never Exceed AV')
 
 
-        plt.title("Power Components vs. Velocity")
-        plt.xlabel("Velocity (V) [m/s]")
+        plt.title("Power Components vs. Advance Ratio")
+        plt.legend(loc='upper left', fontsize='large')
+        plt.grid(color='gray', linestyle=':', linewidth=0.5)
+        plt.xlabel("Advance Ratio [-]")
         plt.ylabel("Power [W]")
         plt.show()
 
