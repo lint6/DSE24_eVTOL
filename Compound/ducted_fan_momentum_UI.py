@@ -7,7 +7,7 @@ def func_min_locator(list1, list2): #find the minimum and its index in list2 and
     min_list2_index = list(list2).index(min_list2)
     return list1[min_list2_index], min_list2
 
-fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(718/4),radius=0.625, P_a=42000)
+fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(718/10),radius=0.4, P_a=42000)
 
 # Calculate hover induced velocity
 print(f"Hover Induced Velocity: {fan_1.calc_v_h():.2f}")
