@@ -59,7 +59,7 @@ class SoundAnalysis:
         self.rotational_SPL_uncorrected = interpolator[0]*(self.M_E)**3  + interpolator[1]*(self.M_E)**2 + interpolator[2]*(self.M_E) + interpolator [3]
 
         #Apply SPL correction
-        self.rotational_SPL = self.rotational_SPL_uncorrected + 11 + np.log10((self.T/(self.r**2))*(self.T/self.A))
+        self.rotational_SPL = self.rotational_SPL_uncorrected + 11 + 10*np.log10((self.T/(self.r**2))*(self.T/self.A))
 
         #Calculate fundamental frequency
         self.f_rotational = (self.n*self.B)/(2*np.pi*(1-self.M_f*np.cos(self.theta)))
@@ -76,6 +76,7 @@ class SoundAnalysis:
 
     def display_parameters_rotor(self):
         print(f"Equivalent M: {self.M_E}")
+        print(f"Uncorrected SPL: {self.rotational_SPL_uncorrected} dB")
         print(f"Correction factor: {self.rotational_SPL-self.rotational_SPL_uncorrected} dB")
         print(f"Corrected SPL: {self.rotational_SPL} dB")
         print(f"Fundamental frequency: {self.f_rotational} Hz")
