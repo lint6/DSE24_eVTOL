@@ -1,3 +1,4 @@
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -160,3 +161,4 @@ if __name__ == "__main__":
         print(f"Selected number of blades: {selected_blades}")
         print(f"Corresponding blade chord length: {selected_chord:.4f} meters")
         print(f"Corresponding aspect ratio: {selected_aspect_ratio:.4f}")
+"""

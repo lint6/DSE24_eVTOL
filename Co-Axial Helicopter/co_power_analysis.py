@@ -83,6 +83,7 @@ class PowerAnalysis:
         self.P_total_level = 1.045*self.P_total_level_loss
 
         ## compute climb/descent power
+        #1.045 is a drag to fuselage kinda constant. 
         self.ROC_CD = self.V_point * math.sin(math.radians(self.gamma_CD))
         self.P_CD_loss = self.mtow_N * self.ROC_CD
         self.P_CD = self.P_CD_loss * 1.045
