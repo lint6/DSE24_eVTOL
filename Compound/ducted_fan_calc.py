@@ -118,6 +118,7 @@ class Ducted_Fan_1: #vertical flight
         self.V_c = self.V_c_nd * self.v_h
         return self.V_c, self.V_c_nd
     
+    #code implementation 
     def calc_V_c_nd(self): #Find V_c_nd if calc_V_c_kappa() is not used
         self.calc_v_h()
         self.V_c_nd = self.V_c / self.v_h
@@ -286,7 +287,7 @@ class Ducted_Fan_3: #angled climb
     def calc_V_c_fast(self):
         V_c_fast = (self.P_a - (self.related_fan2.V_hor * self.D_h0 + self.related_fan2.T * self.related_fan2.v_f_root)) / (self.k_v_f * self.related_fan2.mto_weight)
         self.V_c_fast = V_c_fast
-        return V_c_fast
+        return self.V_c_fast
 
 fan_1 = Ducted_Fan_1(mass=float(718/4))
 fan_2 = Ducted_Fan_2(mass=float(718/4), Cd0=0.05, V= 3, related_fan=fan_1)
