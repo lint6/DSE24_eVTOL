@@ -300,10 +300,10 @@ class PerformanceAnalysis:
         profile_power_fl = self.calculate_P_p()
         power_required_forward = self.calculate_P_req_fl()
 
-        #print(f'Disk Area: {disk_area:.2f} m²')
-        #print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
-        #print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
-        #print(f'Power required for forward flight (not optimal speed): {power_required_forward / 1000:.2f} kW')
+        print(f'Disk Area: {disk_area:.2f} m²')
+        print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
+        print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
+        print(f'Power required for forward flight (not optimal speed): {power_required_forward / 1000:.2f} kW')
 
     def calculate_power_curves(self):
         """Calculate power requirements for a range of forward speeds and display results."""
@@ -350,7 +350,7 @@ class PerformanceAnalysis:
         plt.ylabel('Power (kW)', fontsize=14)
         plt.legend(fontsize=12)
         plt.grid(True)
-        #plt.show()
+        plt.show()
 
 
 
@@ -449,7 +449,7 @@ if __name__ == "__main__":
     performance_analysis = PerformanceAnalysis(rotor_analysis)
 
     # Display results for hover and basic performance
-    performance_analysis.display_results()
+    #performance_analysis.display_results()
 
     # Calculate and display power curves for forward flight
-    performance_analysis.calculate_power_curves()
+    #performance_analysis.calculate_power_curves()
