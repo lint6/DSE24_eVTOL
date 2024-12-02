@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 
 class RotorAnalysis:
-    def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=3, bank_angle=30, v_max_kmh=150):
+    def __init__(self, mtow_kg=718.89, n_rotors=4, dl_imperial=7, bank_angle=30, v_max_kmh=150):
         # Constants
         self.MTOW_KG = mtow_kg  # Maximum Takeoff Weight in kg
         self.N_rotors = n_rotors  # Number of rotors
@@ -27,72 +27,94 @@ class RotorAnalysis:
         self.C_lalpha = 5.73  # 1/rad; NACA0012
 
         # Updated variables
+        self.radius_m = None
+        self.rotor_diameter_m = None
+        self.tip_speed = None
+        self.mach_num = None
+        self.omega = None
+        self.adv_ratio_fl = None
+        self.n_z = None
+        self.o_fl = None
+        self.o_turn = None
+        self.o_turb = None
         self.solidity = None
+        self.aspect_ratios = None
+        self.N_bl = None
+        self.chord = None
+        self.c_t_o_fl = 1 # random, gets updated
+        self.c_t_o_turn = 1 # random, gets updated
+        self.c_t_o_turb = 1 # random, gets updated
         self.max_c_t = None
+
 
     def calculate_radius(self):
         mtow_pounds = self.MTOW_KG * self.POUNDS_PER_KG
         radius_ft = np.sqrt((mtow_pounds / self.N_rotors) / (self.DL_IMPERIAL * np.pi))
         radius_m = radius_ft / self.FT_TO_M
-        return radius_m
+        self.radius_m = radius_m
+        return self.radius_m
 
-    def calculate_tip_speed(self, diameter_si):
-        return 603 / 3.6  # Tip speed in m/s (fixed)
+    def calculate_tip_speed(self):
+        tip_speed = 603 / 3.6  # Tip speed in m/s (fixed)
+        self.tip_speed = tip_speed
+        return self.tip_speed
 
-    def calculate_mach_number(self, v_max, v_tip):
-        return (v_max + v_tip) / self.SPEED_OF_SOUND
+    def calculate_mach_number(self):
+        mach_num = ((self.V_MAX_KMH / 3.6) + self.tip_speed) / self.SPEED_OF_SOUND
+        self.mach_num = mach_num
+        return self.mach_num
 
-    def perform_analysis(self, c_t_o_fl, c_t_o_turn, c_t_o_turb):
-        rotor_radius_m = self.calculate_radius()
-        rotor_diameter_m = 2 * rotor_radius_m
+    def perform_analysis(self):
+        self.rotor_radius_m = self.calculate_radius()
+        self.rotor_diameter_m = 2 * self.rotor_radius_m
 
         # Tip speed
-        v_tip_ms = self.calculate_tip_speed(rotor_diameter_m)
-        mach_number = self.calculate_mach_number(self.V_MAX_KMH / 3.6, v_tip_ms)
+        self.tip_speed = self.calculate_tip_speed()
+        self.mach_num = self.calculate_mach_number()
 
         # Rotational speed
-        omega = v_tip_ms / rotor_radius_m  # Rotational speed in rad/s
+        self.omega = self.tip_speed / self.rotor_radius_m  # Rotational speed in rad/s
 
         # Advance ratio
-        adv_ratio_fl = self.V_ne / (omega * rotor_radius_m)
+        self.adv_ratio_fl = self.V_ne / (self.omega * self.rotor_radius_m)
 
         # Thrust and solidity in forward flight
         T_fl = self.k_dl * self.MTOW_KG * self.g
-        c_t_fl = T_fl / (self.N_rotors * (self.rho * np.pi * rotor_radius_m**2 * (omega * rotor_radius_m)**2))
-        o_fl = c_t_fl / c_t_o_fl
+        c_t_fl = T_fl / (self.N_rotors * (self.rho * np.pi * self.rotor_radius_m**2 * (self.omega * self.rotor_radius_m)**2))
+        self.o_fl = c_t_fl / self.c_t_o_fl
 
         # Solidity during turn
-        n_z = 1 / np.cos(self.bank_angle * (np.pi / 180))  # Load factor
-        T_turn = n_z * self.k_dl * self.MTOW_KG * self.g
-        c_t_turn = T_turn / (self.N_rotors * (self.rho * np.pi * rotor_radius_m**2 * (omega * rotor_radius_m)**2))
-        o_turn = c_t_turn / c_t_o_turn
+        self.n_z = 1 / np.cos(self.bank_angle * (np.pi / 180))  # Load factor
+        T_turn = self.n_z * self.k_dl * self.MTOW_KG * self.g
+        c_t_turn = T_turn / (self.N_rotors * (self.rho * np.pi * self.rotor_radius_m**2 * (self.omega * self.rotor_radius_m)**2))
+        self.o_turn = c_t_turn / self.c_t_o_turn
 
         # Solidity during turbulence
-        delta_n = (0.25 * self.C_lalpha * (self.V_gust / (omega * rotor_radius_m))) / c_t_o_turb
+        delta_n = (0.25 * self.C_lalpha * (self.V_gust / (self.omega * self.rotor_radius_m))) / self.c_t_o_turb
         n_z_turb = 2 + delta_n  # 2g pull up (FAA requirement)
         T_turb = n_z_turb * self.k_dl * self.MTOW_KG * self.g
-        c_t_turb = T_turb / (self.N_rotors * (self.rho * np.pi * rotor_radius_m ** 2 * (omega * rotor_radius_m) ** 2))
-        o_turb = c_t_turb / c_t_o_turb
+        c_t_turb = T_turb / (self.N_rotors * (self.rho * np.pi * self.rotor_radius_m ** 2 * (self.omega * self.rotor_radius_m) ** 2))
+        self.o_turb = c_t_turb / self.c_t_o_turb
 
         # Maximum solidity
-        self.solidity = max(o_fl, o_turn, o_turb)
+        self.solidity = max(self.o_fl, self.o_turn, self.o_turb)
         self.max_c_t = max(c_t_fl, c_t_turn, c_t_turb)
 
         # Aspect ratio calculation for different numbers of blades
         N_blades = range(2, 7)
-        aspect_ratios = []
+        self.aspect_ratios = []
 
-        for N_bl in N_blades:
-            chord = (self.solidity * np.pi * rotor_radius_m) / N_bl
-            AR_blades = rotor_radius_m**2 / (rotor_diameter_m * chord)
-            aspect_ratios.append((N_bl, chord, AR_blades))
+        for self.N_bl in N_blades:
+            chord = (self.solidity * np.pi * self.rotor_radius_m) / self.N_bl
+            self.AR_blades = self.rotor_radius_m**2 / (self.rotor_diameter_m * chord)
+            self.aspect_ratios.append((self.N_bl, chord, self.AR_blades))
 
         # Return all results including advance ratio
-        return rotor_radius_m, rotor_diameter_m, v_tip_ms, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, self.solidity, aspect_ratios, n_z
+        return self.rotor_radius_m, self.rotor_diameter_m, self.tip_speed, self.mach_num, self.omega, self.adv_ratio_fl, self.o_fl, self.o_turn, self.o_turb, self.solidity, self.aspect_ratios, self.n_z
 
-    def plot_aspect_ratios(self, aspect_ratios):
-        N_blades = [x[0] for x in aspect_ratios]
-        aspect_ratios_values = [x[2] for x in aspect_ratios]
+    def plot_aspect_ratios(self):
+        N_blades = [x[0] for x in self.aspect_ratios]
+        aspect_ratios_values = [x[2] for x in self.aspect_ratios]
 
         plt.figure(figsize=(8, 5))
         plt.plot(N_blades, aspect_ratios_values, marker='o', label="Aspect Ratio")
@@ -103,70 +125,58 @@ class RotorAnalysis:
         plt.legend()
         plt.show()
 
-    def calculate_chord(self, N_bl, rotor_radius_m):
+    def calculate_chord(self):
         """Calculate the blade chord length given the number of blades and solidity."""
-        chord = (self.solidity * np.pi * rotor_radius_m) / N_bl
-        return chord
+        chord = (self.solidity * np.pi * self.rotor_radius_m) / self.N_bl
+        self.chord = chord
+        return self.chord
 
     def interact(self):
         # Perform analysis with default coefficients to get advance ratio first
-        results = self.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
-
-        # Unpack results
-        rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results
+        results = self.perform_analysis()
 
         # Print advance ratio and other results
-        print(f"Advance Ratio in forward flight = {adv_ratio_fl:.2f}")
-        print(f"Rotor Radius [m]: {rotor_radius:.2f}")
-        print(f"Rotor Diameter [m]: {rotor_diameter:.2f}")
-        print(f"Tip Speed [m/s]: {v_tip:.2f}")
-        print(f"Mach Number: {mach_number:.2f}")
-        print(f"Rotational Speed (Omega) [rad/s]: {omega:.2f}")
-        print(f"RPMs : {omega*(60/(2*np.pi)): .2f}")
+        print(f"Advance Ratio in forward flight = {self.adv_ratio_fl:.2f}")
+        print(f"Rotor Radius [m]: {self.rotor_radius_m:.2f}")
+        print(f"Rotor Diameter [m]: {self.rotor_diameter_m:.2f}")
+        print(f"Tip Speed [m/s]: {self.tip_speed:.2f}")
+        print(f"Mach Number: {self.mach_num:.2f}")
+        print(f"Rotational Speed (Omega) [rad/s]: {self.omega:.2f}")
+        print(f"RPMs : {self.omega*(60/(2*np.pi)): .2f}")
 
         # Now ask for user input for thrust coefficients
         print("Please enter the thrust coefficients:")
-        c_t_o_fl = float(input("Enter thrust coefficient for forward flight (c_t_o_fl): "))
-        c_t_o_turn = float(input("Enter thrust coefficient for turning flight (c_t_o_turn): "))
-        c_t_o_turb = float(input("Enter thrust coefficient for turbulence (c_t_o_turb): "))
+        self.c_t_o_fl = float(input("Enter thrust coefficient for forward flight (c_t_o_fl): "))
+        self.c_t_o_turn = float(input("Enter thrust coefficient for turning flight (c_t_o_turn): "))
+        self.c_t_o_turb = float(input("Enter thrust coefficient for turbulence (c_t_o_turb): "))
 
         # Perform analysis with user-provided coefficients
-        results_with_input = self.perform_analysis(c_t_o_fl, c_t_o_turn, c_t_o_turb)
+        results_with_input = self.perform_analysis()
 
-        # Unpack new results
-        rotor_radius, rotor_diameter, v_tip, mach_number, omega, adv_ratio_fl, o_fl, o_turn, o_turb, solidity, aspect_ratios, n_z = results_with_input
-
-        # Print key results with user inputs
-        print(f"Solidity in Forward Flight: {o_fl:.4f}")
-        print(f"Solidity during Turn: {o_turn:.4f}")
-        print(f"Solidity during Turbulence: {o_turb:.4f}")
+        # Print new results with user inputs
+        print(f"Solidity in Forward Flight: {self.o_fl:.4f}")
+        print(f"Solidity during Turn: {self.o_turn:.4f}")
+        print(f"Solidity during Turbulence: {self.o_turb:.4f}")
         print(f"Solidity used: {self.solidity:.4f}")
 
         # Plot results
-        self.plot_aspect_ratios(aspect_ratios)
+        self.plot_aspect_ratios()
 
         # Ask user for the number of blades they want and calculate the corresponding chord
         selected_blades = int(input("Enter the number of blades you want (between 2 and 6): "))
         if selected_blades not in range(2, 7):
             print("Invalid number of blades selected. Please choose between 2 and 6 blades.")
         else:
-            # Get the selected aspect ratio and chord
-            selected_aspect_ratio = None
-            selected_chord = None
-            for N_bl, chord, AR_bl in aspect_ratios:
-                if N_bl == selected_blades:
-                    selected_aspect_ratio = AR_bl
-                    selected_chord = chord
+            for self.N_bl, self.chord, self.AR_blades in self.aspect_ratios:
+                if self.N_bl == selected_blades:
+                    self.AR_blades = self.AR_blades
+                    self.chord = self.chord
 
             # Print the results
             print(f"Selected number of blades: {selected_blades}")
-            print(f"Corresponding blade chord length: {selected_chord:.4f} meters")
-            print(f"Corresponding aspect ratio: {selected_aspect_ratio:.4f}")
+            print(f"Corresponding blade chord length: {self.chord:.4f} meters")
+            print(f"Corresponding aspect ratio: {self.AR_blades:.4f}")
 
-
-import numpy as np
-from scipy.optimize import fsolve
-import matplotlib.pyplot as plt
 
 class PerformanceAnalysis:
     def __init__(self, rotor_analysis: RotorAnalysis, vertical_climb_speed: float = 0.76):
@@ -182,7 +192,7 @@ class PerformanceAnalysis:
         self.mtowN = self.mtow * self.g
 
         # Perform rotor sizing
-        self.results = rotor_analysis.perform_analysis(c_t_o_fl=0.12, c_t_o_turn=0.15, c_t_o_turb=0.17)
+        self.results = rotor_analysis.perform_analysis()
         self.rotor_radius, self.rotor_diameter, self.v_tip, self.mach_number, self.omega, self.adv_ratio_fl, self.o_fl, self.o_turn, self.o_turb, self.solidity, self.aspect_ratios, self.n_z = self.results
 
         # Derived parameters
@@ -219,7 +229,7 @@ class PerformanceAnalysis:
 
     def calculate_C_T(self):
         """Calculate the thrust coefficient."""
-        C_T = self.T / (0.5 * self.rho * self.calculate_disk_area() * (self.omega * self.rotor_radius) ** 2)
+        C_T = self.T / (self.rho * self.calculate_disk_area() * (self.omega * self.rotor_radius) ** 2)
         return C_T
 
     def calculate_average_C_l(self):
@@ -293,7 +303,7 @@ class PerformanceAnalysis:
         print(f'Disk Area: {disk_area:.2f} m²')
         print(f'Power required for hover: {power_requirements / 1000:.2f} kW')
         print(f'Power loading for hover: {power_loading_hover:.2f} kg/kW')
-        print(f'Power required for forward flight: {power_required_forward / 1000:.2f} kW')
+        print(f'Power required for forward flight (not optimal speed): {power_required_forward / 1000:.2f} kW')
 
 
 
@@ -381,9 +391,6 @@ class PowerAnalysis:
 
 
 
-
-
-    
 # Main Execution
 if __name__ == "__main__":
     # Initialize the analysis with default values
@@ -413,15 +420,29 @@ if __name__ == "__main__":
         P_pars.append(performance_analysis.calculate_P_par() / 1000)  # Parasite power in kW
         P_reqs.append(performance_analysis.calculate_P_req_fl() / 1000)  # Total required power in kW
 
+    # Find the minimum power and corresponding speed
+    min_power = min(P_reqs) 
+    min_speed = V_points[P_reqs.index(min_power)]
+
+    print(f'the minimum power required in forward flight is : {min_power:.2f} kW and the corresponding optimal speed is : {min_speed * 3.6:.2f} km/h')
+
     # Plot the power curves
     plt.figure(figsize=(12, 8))
-    plt.plot(V_points, P_is, label='Induced Power', color='green', linestyle='--', linewidth=2)
-    plt.plot(V_points, P_pars, label='Parasite Power', color='red', linestyle='-.', linewidth=2)
-    plt.plot(V_points, P_reqs, label='Total Required Power', color='blue', linewidth=2)
+    plt.plot(V_points*3.6, P_is, label='Induced Power', color='green', linestyle='--', linewidth=2)
+    plt.plot(V_points*3.6, P_pars, label='Parasite Power', color='red', linestyle='-.', linewidth=2)
+    plt.plot(V_points*3.6, P_reqs, label='Total Required Power', color='blue', linewidth=2)
+
+    # Add a point for the minimum power and corresponding speed
+    plt.scatter(min_speed*3.6, min_power, color='purple', zorder=5, label=f'Minimum Power: {min_power:.1f} kW at {min_speed*3.6:.1f} km/h')
+
+    # Add vertical and horizontal lines to the point
+    plt.axvline(x=min_speed*3.6, color='purple', linestyle=':', linewidth=1)
+    plt.axhline(y=min_power, color='purple', linestyle=':', linewidth=1)
+    plt.axhline(y=performance_analysis.calculate_power_req_hover()/1000, label='Hover Required power', color='orange', linewidth=2)
 
     # Add labels, title, legend, and grid
     plt.title('Power Requirements for Forward Flight', fontsize=16)
-    plt.xlabel('Forward Speed, $V_{point}$ (m/s)', fontsize=14)
+    plt.xlabel('Forward Speed, $V_{point}$ (km/h)', fontsize=14)
     plt.ylabel('Power (kW)', fontsize=14)
     plt.legend(fontsize=12)
     plt.grid(True)
