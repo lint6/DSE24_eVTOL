@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 class RotorSizing:
 
-    def __init__(self, MTOW=718.89, n_blades=6, n_rotor = 1, bank_angle = 30, cto_fl = 0.1, cto_turn = 0.12, cto_turb = 0.15):
+    def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, d_fact = 0.05):
 
         # conversions  
         self.celsius_to_kelvin = 273.15     # add
@@ -30,9 +30,10 @@ class RotorSizing:
         self.n_z_turn = 1 / np.cos(self.roll_angle * self.deg_to_rad)    # load factor in turn
         self.lift_slope = 5.73      # 1 / rad (from NACA0012)
         self.gust_velocity = 30 * self.ft_to_m # from FAA
+        self.coaxial = 1 # 1 if not coaxial, 2 if coaxial
 
-
-        self.fuselage_download = 0.04 * self.MTOW * self.g                 # N
+        download_factor = d_fact
+        self.fuselage_download = download_factor * self.MTOW * self.g                 # N
         self.k_dl = 1 + (self.fuselage_download / (self.MTOW * self.g))    # --
 
         # initialize the parameters 
@@ -42,11 +43,16 @@ class RotorSizing:
         # derived parameters 
         # Disc loading calcualtion, we assumed the disc loading relation, To be further discussed 
         #check the source of this 
-        self.disc_loading = 2.28 * ((self.MTOW)**(1/3) - 2.34)                      # kg/m^2
-        self.rotor_radius = math.sqrt((self.MTOW / self.N_rotors) / (math.pi * self.disc_loading))    # m 
+        #for co-axial
+        #self.disc_loading = 2.28 * ((self.MTOW)**(1/3) - 2.34)                      # kg/m^2
+
+        # for quad (assumed):
+        self.disc_loading = 34.2   # kg/m^2 ( 7 lbs/ft2)
+        self.rotor_radius = np.sqrt((self.MTOW / self.N_rotors) / (np.pi * self.disc_loading))    # m 
         self.rotor_diameter = 2 * self.rotor_radius                                 # m
         # marilena statistics for helicopters. quad assumed 550 ft/s (NASA paper), to be discussed
-        self.tip_speed = 140 * (self.rotor_diameter)**0.171                         # m / s
+        #self.tip_speed = 140 * (self.rotor_diameter)**0.171                         # m / s
+        self.tip_speed = 550 * self.ft_to_m
 
         #self.RPM = 2673 / ((self.rotor_diameter)**0.892)                            # rpm
         #self.omega = self.RPM_to_rad * self.RPM                                     # rad / s
@@ -78,8 +84,9 @@ class RotorSizing:
 
         # chord and aspect ratio 
         self.maximum_solidity = np.max([self.solidity_forward_flight, self.solidity_turn, self.solidity_turbulent])
-        self.chord = (self.maximum_solidity * math.pi * self.rotor_radius) / (2 * self.n_blades)
+        self.chord = (self.maximum_solidity * np.pi * self.rotor_radius) / (self.coaxial * self.n_blades)
         self.aspect_ratio = self.rotor_radius**2 / (self.rotor_radius * self.chord)
+
 
     def display_parameters(self):
         print(f"MTOW: {self.MTOW} kg")
@@ -124,11 +131,11 @@ class RotorSizing:
 
 class PowerAnalysis:
 
-    def __init__(self, FM = 0.7, k_int = 1, A_eq = 1):
+    def __init__(self, FM = 0.7, k_int = 1, A_eq = 0.418):
         #conversion
         self.g = 9.80665
-        self.pi = math.pi
-        self.RPM_to_rad = (math.pi / 30)
+        self.pi = np.pi
+        self.RPM_to_rad = (np.pi / 30)
 
         #input
         self.rotorsizing = RotorSizing()
@@ -144,11 +151,11 @@ class PowerAnalysis:
         self.V_point = 13 # cruise speed, assumption for now
         self.k_int = k_int # 1.28 for co axial
         self.ROC_VCD = 10
-        self.C_l_alpha = self.rotorsizing.lift_slope # 1/ rad NACA0012
+        self.C_l_alpha = self.rotorsizing.lift_slope # 1/rad NACA0012
         self.A_eq = A_eq # equivalent flat plate area
 
         # basic gamma values
-        self.gamma_CD = 9
+        self.gamma_CD = 0
 
         self.forward_flight()
 
@@ -198,7 +205,7 @@ class PowerAnalysis:
         self.v_i = self.v_i_bar*self.v_i_hov
 
         #compute induced power
-        self.P_i = self.k_int * self.k * self.T * self.v_i * self.rotorsizing.N_rotors
+        self.P_i = self.k_int * self.k * self.T * self.v_i 
 
         ## total power
         self.P_total_level_loss = self.P_p + self.P_i + self.P_par
@@ -222,8 +229,6 @@ class PowerAnalysis:
 
         ## vertical climb/descent power
         self.P_VCD = self.P_hoge + self.ROC_VCD*self.MTOW_N
-
-        print(self.ROC_VCD*self.MTOW_N)
 
 
     def iterate_design(self, new_MTOW_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None, new_rho=None, new_ROC_VCD=None):
@@ -269,8 +274,8 @@ if __name__ == '__main__':
     ## Compute hover specifics
     # specify hover flight conditions
     power.iterate_design(new_ROC_VCD=0)
-    print(f"HOGE power = {power.P_hoge} [W]")
-    print(f"Vertical climb/descent power = {power.P_VCD} [W]")
+    print(f"HOGE power = {power.P_hoge / 1000:.2f} [kW]")
+    print(f"Vertical climb/descent power = {power.P_VCD / 1000:.2f} [kW]")
 
     ## Compute forward flight specifics
     # specify forward flight condition (through gamma)
@@ -304,9 +309,11 @@ if __name__ == '__main__':
     # compute power required at Vbe
     power.iterate_design(new_V_point=V_be)
 
-    print(f"Maximum endurance velocity = {V_be} [m/s] = {3.6 * V_be} [km/h]")
-    print(f"Maximum endurance power = {power.P_total_CD} [kW]")
-    print(power.solidity,power.omega,power.rotor_radius)
+    print(f"Maximum endurance velocity = {V_be:.2f} [m/s] = {3.6 * V_be:.2f} [km/h]")
+    print(f"Maximum endurance power = {power.P_total_level / 1000 :.2f} [kW]")
+    print(f'Maximum solidity = {power.solidity:.3f}')
+    print(f'Rotational Velocity = {power.omega:.2f} [rad/s]')
+    print(f'Rotor Radius = {power.rotor_radius:.2f} [m]')
 
     print("----------------")
 
