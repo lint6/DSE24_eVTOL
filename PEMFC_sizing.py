@@ -165,7 +165,6 @@ if __name__ == '__main__':      #printing the P_req vs t plot
     for i in range(len(ts)-1):
         bins.append(float(bins[i]) + float(ts[i+1]))
     power_brute = []
-    
     for i in range(len(bins)-1):
         count = 0
         while count < data_P[i]:
@@ -200,3 +199,4 @@ if __name__ == '__main__':      #printing the P_req vs t plot
 
     
         
+## theres a problem with the total energy calculation 
