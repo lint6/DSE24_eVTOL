@@ -160,7 +160,7 @@ class RotorAnalysis:
         #print(f"Solidity used: {self.solidity:.4f}")
 
         # Plot results
-        self.plot_aspect_ratios()
+        #self.plot_aspect_ratios()
 
         # Ask user for the number of blades they want and calculate the corresponding chord
         selected_blades = int(input("Enter the number of blades you want (between 2 and 6): "))
@@ -350,7 +350,7 @@ class PerformanceAnalysis:
         plt.ylabel('Power (kW)', fontsize=14)
         plt.legend(fontsize=12)
         plt.grid(True)
-        plt.show()
+        #plt.show()
 
 
 
