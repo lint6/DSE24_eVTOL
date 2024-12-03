@@ -17,12 +17,15 @@ def get_configuration():
             "n_rotor": 1, 
             "DL": 2.28 * ((718.89)**(1/3) - 2.34), #kg/m2
             "bank_angle": 30, #max bank angle
-            "cto_fl": 0.11, #next 3 parameters defined depending on max advance ratio
+            "cto_fl": 0.11, #next 3 parameters defined depending on max advance ratio. same for all configurations
             "cto_turn": 0.14, 
-            "cto_turb": 0.16,
+            "cto_turb": 0.17,
             "co_ax": 2, # 1 if not coaxial, 2if coaxial 
             "d_fact": 0.04, 
-            "max_v": 50  #m/s
+            "max_v": 50,  #m/s
+            "k_int": 1.28, #some coaxial thing
+            "A_eq": 0.75, #equivalent flat plate area
+            "FM": 0.7 #figure of merit
         }
     
     #conf 2 is quad-rotor
@@ -33,12 +36,15 @@ def get_configuration():
             "n_rotor": 4, 
             "DL": 34.2, # kg/m2
             "bank_angle": 30, #max bank angle
-            "cto_fl": 0.12, #next 3 parameters defined depending on max advance ratio
-            "cto_turn": 0.15, 
+            "cto_fl": 0.11, #next 3 parameters defined depending on max advance ratio
+            "cto_turn": 0.14, 
             "cto_turb": 0.17, 
             "co_ax": 1, # 1 if not coaxial, 2if coaxial 
             "d_fact": 0.05, 
-            "max_v": 50  #m/s
+            "max_v": 50,  #m/s
+            "k_int": 1,
+            "A_eq": 0.48, #equivalent flat plate area
+            "FM": 0.75 #figure of merit
         }
     
     #conf 3 is compound
@@ -49,27 +55,19 @@ def get_configuration():
             "n_rotor": 6, 
             "DL": 100, #kg/m2
             "bank_angle": 30, #max bank angle
-            "cto_fl": 0.10, #next 3 parameters defined depending on max advance ratio
-            "cto_turn": 0.12, 
-            "cto_turb": 0.14, 
+            "cto_fl": 0.11, #next 3 parameters defined depending on max advance ratio
+            "cto_turn": 0.14, 
+            "cto_turb": 0.17, 
             "co_ax": 1, # 1 if not coaxial, 2if coaxial 
             "d_fact": 0.06, 
-            "max_v": 50  #m/s
+            "max_v": 50,  #m/s
+            "k_int": 1,
+            "A_eq": 0.5, #equivalent flat plate area
+            "FM": 0.6 #figure of merit
         }
     else:
         print("Invalid selection! Defaulting to Configuration 1.")
-        return {
-            "MTOW": 800, 
-            "n_blades": 4, 
-            "n_rotor": 4, 
-            "DL": 1,
-            "bank_angle": 25, 
-            "cto_fl": 0.11, 
-            "cto_turn": 0.14, 
-            "cto_turb": 0.16, 
-            "d_fact": 0.04, 
-            "max_v": 60
-        }
+        return print('you wrong boi, try again')
 
 def main():
     """
@@ -89,7 +87,10 @@ def main():
         cto_turn=config["cto_turn"], 
         cto_turb=config["cto_turb"], 
         d_fact=config["d_fact"], 
-        max_v=config["max_v"]
+        max_v=config["max_v"],
+        k_int=config["k_int"],
+        A_eq=config["A_eq"],
+        FM=config["FM"]
     )
     
     print('----------------------------------------')

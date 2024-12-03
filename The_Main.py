@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 class RotorSizing:
 
-    def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, DL = 34.2, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, co_ax = 1, d_fact = 0.05, max_v = 50):
+    def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, DL = 34.2, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, co_ax = 1, d_fact = 0.05, max_v = 50, k_int = 1, A_eq = 0.48, FM = 0.7):
 
         # conversions  
         self.celsius_to_kelvin = 273.15     # addition
@@ -38,6 +38,10 @@ class RotorSizing:
         download_factor = d_fact
         self.fuselage_download = download_factor * self.MTOW * self.g                 # N
         self.k_dl = 1 + (self.fuselage_download / (self.MTOW * self.g))    # --
+
+        self.k_int = k_int
+        self.A_eq = A_eq
+        self.FM = FM
 
         # initialize the parameters 
         self.update_parameters()
@@ -136,7 +140,7 @@ class RotorSizing:
 
 class PowerAnalysis:
 
-    def __init__(self, rotorsizing=None, FM = 0.7, k_int = 1, A_eq = 0.418):
+    def __init__(self, rotorsizing=None):
         #conversion
         self.g = 9.80665
         self.pi = np.pi
@@ -144,7 +148,7 @@ class PowerAnalysis:
 
         #input
         self.rotorsizing = rotorsizing if rotorsizing else RotorSizing()  # Use the provided object or create a default one
-        self.FM = FM
+        self.FM = self.rotorsizing.FM
         self.solidity = self.rotorsizing.maximum_solidity
         self.rho = self.rotorsizing.rho
         self.omega = self.rotorsizing.omega
@@ -154,10 +158,10 @@ class PowerAnalysis:
         self.k = 1.15       # inflow correction, assumption: should be between 1.1 and 1.2
         self.k_dl = self.rotorsizing.k_dl # fuselage downlaod factor
         self.V_point = 13 # cruise speed, assumption for now
-        self.k_int = k_int # 1.28 for co axial
+        self.k_int = self.rotorsizing.k_int # 1.28 for co axial
         self.ROC_VCD = 10
         self.C_l_alpha = self.rotorsizing.lift_slope # 1/rad NACA0012
-        self.A_eq = A_eq # equivalent flat plate area
+        self.A_eq = self.rotorsizing.A_eq # equivalent flat plate area
 
         # basic gamma values
         self.gamma_CD = 9
