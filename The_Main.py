@@ -274,12 +274,29 @@ class PowerAnalysis:
             P_total_CD.append(self.P_total_CD / 1000)
             P_hoge.append(self.P_hoge / 1000)
 
+        # Identify velocity corresponding to minimum flight-level power
+        min_power = min(P_total_level)
+        min_power_velocity = V[P_total_level.index(min_power)]
+        print(f"The velocity corresponding to the minimum flight-level power ({min_power:.2f} kW) is {min_power_velocity:.2f} m/s")
+
+
         plt.plot(V, P_p, label="Profile drag power", linestyle='-', color='b')
         plt.plot(V, P_i, label="Induced power", linestyle='--', color='c')
         plt.plot(V, P_par, label="Parasitic power", linestyle='-.', color='r')
         plt.plot(V, P_total_level, label="Total power (level flight)", linestyle='-', color='k')
 
         plt.plot(V, P_hoge, label="Power HOGE", linestyle=':', color='purple')
+
+        # plotting min power point
+        plt.scatter(min_power_velocity, min_power, color='red', label='Level Flight Min. Power', zorder=5)
+        plt.annotate(f'({min_power_velocity:.2f} m/s, {min_power:.2f} kW)',
+                 (min_power_velocity, min_power),
+                 textcoords="offset points",
+                 xytext=(-30, 10),
+                 ha='center',
+                 fontsize=9,
+                 color='red')
+
 
         plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
         plt.text(V[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
