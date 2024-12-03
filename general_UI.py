@@ -149,7 +149,13 @@ def main():
     print("\nMission Energies (Wh):")
     #print(energies)
     total_energy = energies['total']
+    loiter_energy = energies['Loiter']
+    loiter_time = times['Loiter']/60
     print(f'Total Energy Consumption = {total_energy:.2f} [Wh]')
+
+    print(f'Loiter power required = {power.min_power:.2f} [kW] at a speed of {power.min_power_velocity*3.6:.2f} [km/h]')
+    print(f'Loiter time = {loiter_time} [min]')
+    print(f'Energy Consumption during loiter = {loiter_energy:.2f} [Wh]')
 
     print("\nMission Amps:")
     #print(amps)
