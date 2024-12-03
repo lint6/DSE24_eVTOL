@@ -5,19 +5,21 @@ import matplotlib.pyplot as plt
 
 class PowerAnalysis:        ## IT MUST BE NOTED THAT TAKE OFF AND LANDING ARE NOT INCLUDED -> find time and power required for speed up and speed down the rotors
 
-                            ## ALSO NoTE: all the Velocities are HORIZONTAL VELOCITIES!!!!
+                            ## ALSO NoTE: all the Velocities are HORIZONTAL VELOCITIES!!!! (this is )
     
-    def __init__(self, V_roc = 0.76 , rho = 1.225, eta_p = 0.9, V_climb1 = 30, V_cruise = 40, V_loiter = 5, V_descent = 35, V_climb2 = 32):     #Yunjae, help a homie out brother (Velocities here are just random values to test)
+    def __init__(self, V_roc = 0.76 , rho = 1.225, eta_p = 0.9, V_climb1 = 30, V_cruise = 40, V_loiter = 6, V_descent = 35, V_climb2 = 32, Volts = 840, motor_eta = 0.85):     #Yunjae, help a homie out brother (Velocities here are just random values to test)
 
         #values 
         self.Vroc = V_roc       #Vertcial rate of climb
         self.eta_p = eta_p      #propulsion efficiency
         self.rho = rho
+        self.Volts = Volts
         self.V_climb1 = V_climb1
         self.V_cruise = V_cruise
         self.V_loiter = V_loiter
         self.V_descent = V_descent
         self.V_climb2 = V_climb2
+        self.motor_eta = motor_eta
 
         #add power required for take off, climb, cruise, descent, loiter, land (corresponding phases can be found in the energy definition)
         self.t1 = None          #[s]
@@ -53,6 +55,7 @@ class PowerAnalysis:        ## IT MUST BE NOTED THAT TAKE OFF AND LANDING ARE NO
         self.P12 = 65000
         self.P13 = 37500
         self.P14 = 60000
+        self.P_req_tot = None
 
         #for the energy
         self.E1 = None          #[s]
@@ -135,29 +138,62 @@ class PowerAnalysis:        ## IT MUST BE NOTED THAT TAKE OFF AND LANDING ARE NO
     
     
     def calculate_energy_required(self):
-        self.E1 = self.t1 * self.P1                 #Energy required for HIGE 1                 [Wh]
-        self.E2 = self.t2 * self.P2                 #Energy required for Vertical Climb
-        self.E3 = self.t3 * self.P3                 #Energy required for HOGE 1
-        self.E4 = self.t4 * self.P4                 #Energy required for Steady Climb 1
-        self.E5 = self.t5 * self.P5                 #Energy required for Cruise 1
-        self.E6 = self.t6 * self.P6                 #Energy required for Descent 1
-        self.E7 = self.t7 * self.P7                 #Energy required for HOGE 2
-        self.E8 = self.t8 * self.P8                 #Energy required for Loiter
-        self.E9 = self.t9 * self.P9                 #Energy required for Steady Climb 1
-        self.E10 = self.t10 * self.P10                 #Energy required for Cruise 2
-        self.E11 = self.t11 * self.P11                 #Energy required for Descent 2
-        self.E12 = self.t12 * self.P12                 #Energy required for HOGE 3
-        self.E13 = self.t13 * self.P13                 #Energy required for Vertical Descent
-        self.E14 = self.t14 * self.P14                 #Energy required for HIGE 2
+        self.E1 = self.t1/3600 * self.P1/self.motor_eta                 #Energy required for HIGE 1                 [Wh]
+        self.E2 = self.t2/3600 * self.P2/self.motor_eta                 #Energy required for Vertical Climb
+        self.E3 = self.t3/3600 * self.P3/self.motor_eta                 #Energy required for HOGE 1
+        self.E4 = self.t4/3600 * self.P4/self.motor_eta                 #Energy required for Steady Climb 1
+        self.E5 = self.t5/3600 * self.P5/self.motor_eta                 #Energy required for Cruise 1
+        self.E6 = self.t6/3600 * self.P6/self.motor_eta                 #Energy required for Descent 1
+        self.E7 = self.t7/3600 * self.P7/self.motor_eta                 #Energy required for HOGE 2
+        self.E8 = self.t8/3600 * self.P8/self.motor_eta                 #Energy required for Loiter
+        self.E9 = self.t9/3600 * self.P9/self.motor_eta                 #Energy required for Steady Climb 1
+        self.E10 = self.t10/3600 * self.P10/self.motor_eta                 #Energy required for Cruise 2
+        self.E11 = self.t11/3600 * self.P11/self.motor_eta                 #Energy required for Descent 2
+        self.E12 = self.t12/3600 * self.P12/self.motor_eta                 #Energy required for HOGE 3
+        self.E13 = self.t13/3600 * self.P13/self.motor_eta                 #Energy required for Vertical Descent
+        self.E14 = self.t14/3600 * self.P14/self.motor_eta                 #Energy required for HIGE 2
         self.E_total = self.E1 + self.E2 + self.E3 + self.E4 + self.E5 + self.E6 + self.E7 + self.E8 + self.E9 + self.E10 + self.E11 + self.E12 + self.E13 + self.E14
 
         return self.E1, self.E2, self.E3, self.E4, self.E5, self.E6, self.E7, self.E8, self.E9, self.E10, self.E11, self.E12, self.E13, self.E14, self.E_total
+    
+    def calculate_amps(self):                           #[A]
+        self.A1 = self.P1 / (self.Volts * self.motor_eta)
+        self.A2 = self.P2 / (self.Volts * self.motor_eta) 
+        self.A3 = self.P3 / (self.Volts * self.motor_eta)
+        self.A4 = self.P4 / (self.Volts * self.motor_eta)
+        self.A5 = self.P5 / (self.Volts * self.motor_eta)
+        self.A6 = self.P6 / (self.Volts * self.motor_eta)
+        self.A7 = self.P7 / (self.Volts * self.motor_eta)
+        self.A8 = self.P8 / (self.Volts * self.motor_eta)
+        self.A9 = self.P9 / (self.Volts * self.motor_eta)
+        self.A10 = self.P10 / (self.Volts * self.motor_eta)
+        self.A11 = self.P11 / (self.Volts * self.motor_eta)
+        self.A12 = self.P12 / (self.Volts * self.motor_eta)
+        self.A13 = self.P13 / (self.Volts * self.motor_eta)
+        self.A14 = self.P14 / (self.Volts * self.motor_eta)
+        self.A_max = max(self.A1, self.A2, self.A3, self.A4, self.A5, self.A6, self.A7, self.A8, self.A9, self.A10, self.A11, self.A12, self.A13, self.A14)
+        return self.A1, self.A2, self.A3, self.A4, self.A5, self.A6, self.A7, self.A8, self.A9, self.A10, self.A11, self.A12, self.A13, self.A14, self.A_max
+    
+
+
+    
+    # def calculate_total_p_req(self):
+        
+    #     P_req_tot = self.P1 + self.P2 + self.P3 + self.P4 + self.P5 + self.P6 + self.P7 + self.P8 + self.P9 + self.P10 + self.P11 + self.P12 + self.P13 + self.P14
+        
+
+    #     return self.P_req_tot
+
+
+
+
+
 
 if __name__ == '__main__':      #printing the P_req vs t plot
     power = PowerAnalysis()
     
-    #initiate
-    data_P = [power.P1, power.P2, power.P3, power.P4, power.P5, power.P6, power.P7, power.P8, power.P9, power.P10, power.P11, power.P12, power.P13, power.P14]
+    #initiate Power Diagram
+    data_P = [power.P1/power.motor_eta, power.P2/power.motor_eta, power.P3/power.motor_eta, power.P4/power.motor_eta, power.P5/power.motor_eta, power.P6/power.motor_eta, power.P7/power.motor_eta, power.P8/power.motor_eta, power.P9/power.motor_eta, power.P10/power.motor_eta, power.P11/power.motor_eta, power.P12/power.motor_eta, power.P13/power.motor_eta, power.P14/power.motor_eta]
     power.calculate_missionphase_time()
     ts = [0, power.t1, power.t2, power.t3, power.t4, power.t5, power.t6, power.t7, power.t8, power.t9, power.t10, power.t11, power.t12, power.t13, power.t14]
     bins = [0]
@@ -170,33 +206,77 @@ if __name__ == '__main__':      #printing the P_req vs t plot
         while count < data_P[i]:
             power_brute.append(bins[i])
             count += 1
-  
-    
-    plt.hist(power_brute, bins=bins, edgecolor='olive', color='darkkhaki')
 
-    #Height labels
+    fig, axs = plt.subplots(2, 1)  #2 rows, 1 columns of subplots
+
+    #plot first diagram
+    axs[0].hist(power_brute, bins=bins, edgecolor='olive', color='darkkhaki')
+    axs[0].set_xlabel('Time [s]')
+    axs[0].set_ylabel('Power Required [W]')
+    axs[0].set_title('Power Required For Each Flight Phase')
+
+    #Height labels Power
     bin_centers = [0.5 * (bins[i] + bins[i + 1]) for i in range(len(bins) - 1)]  # Compute bin centers
     for center, count in zip(bin_centers, data_P):
-        plt.text(center, count + 0.5, f'{int(count)} W', ha='center', va='bottom', fontsize=10, color='blue')  # Count above bin
+        axs[0].text(center, count + 0.5, f'{int(count)} W', ha='center', va='bottom', fontsize=10, color='red', rotation=90)  # Count above bin
 
-
-    
     # Add vertical labels for each bin (Phase Duration)
     bin_centers = [0.5 * (bins[i] + bins[i + 1]) for i in range(len(bins) - 1)]  # Compute bin centers
     for center, time_label in zip(bin_centers, ts[1:]):  # Use time intervals as labels
-        plt.text(center, -1, f'{round(time_label, 2)} s', ha='center', va='top', fontsize=10, rotation=90)
+        axs[0].text(center, -1, f'{round(time_label, 2)} s', ha='center', va='top', fontsize=10, rotation=90)
+
     # Adjust plot limits to fit vertical labels
-    plt.ylim(bottom=-20000)  # Extend y-axis to make room for vertical labels
+    axs[0].set_ylim(bottom=-20000)  # Extend y-axis to make room for vertical labels
+    axs[0].set_ylim(top=150000)  # Extend y-axis to make room for vertical labels
+    # ------------------------------------------------------------------------------------------------------------------------------------
 
+    #initiate Energy Diagram
+    power.calculate_energy_required()
+    data_E = [power.E1, power.E2, power.E3, power.E4, power.E5, power.E6, power.E7, power.E8, power.E9, power.E10, power.E11, power.E12, power.E13, power.E14]
+    power.calculate_missionphase_time()
+    tse = [0, power.t1, power.t2, power.t3, power.t4, power.t5, power.t6, power.t7, power.t8, power.t9, power.t10, power.t11, power.t12, power.t13, power.t14]
+    binz = [0]
 
-    # Add labels and title
-    plt.xlabel('Time [s]')
-    plt.ylabel('Power Required [W]')
-    plt.title('Power Required For Each Flight Phase')
-    
+    for i in range(len(ts)-1):
+        binz.append(float(binz[i]) + float(tse[i+1]))
+    power_brutez = []
+    for i in range(len(binz)-1):
+        count = 0
+        while count < data_E[i]:
+            power_brutez.append(binz[i])
+            count += 1
+  
+
+    #plot second diagram
+    axs[1].hist(power_brutez, bins=binz, edgecolor='black', color='gray')
+    axs[1].set_xlabel('Time [s]')
+    axs[1].set_ylabel('Energy Required [Wh]')
+    axs[1].set_title('Energy Required For Each Flight Phase')
+
+    #Height labels Energy
+    binz_centers = [0.5 * (binz[i] + binz[i + 1]) for i in range(len(binz) - 1)]  # Compute bin centers
+    for center, count in zip(binz_centers, data_E):
+        axs[1].text(center, count + 0.5, f'{int(count)} Wh', ha='center', va='bottom', fontsize=10, color='red', rotation=90)  # Count above bin
+
+    # Add vertical labels for each bin (Phase Duration)
+    bin_centers = [0.5 * (binz[i] + binz[i + 1]) for i in range(len(binz) - 1)]  # Compute bin centers
+    for center, time_label in zip(binz_centers, tse[1:]):  # Use time intervals as labels
+        axs[1].text(center, -1, f'{round(time_label, 2)} s', ha='center', va='top', fontsize=10, rotation=90)
+
+    # Adjust plot limits to fit vertical labels
+    axs[1].set_ylim(bottom=-20000)  # Extend y-axis to make room for vertical labels
+    axs[1].set_ylim(top=55000)  # Extend y-axis to make room for vertical labels
     # Show the plot
     plt.show()
-
+     
+    # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
     
-        
+    #print the energy required per phase
+    print('Total Energy Required : ', power.calculate_energy_required()[-1], '[Wh]', 'or', power.calculate_energy_required()[-1]/1000, '[kWh]')
+
+    #print the max amps
+    print('Max Ampere: ', power.calculate_amps()[-1], '[A]')
+    #print the max amps
+    print('Max Voltage: ', power.Volts, '[V]')
+
 ## theres a problem with the total energy calculation 
