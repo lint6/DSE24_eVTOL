@@ -328,15 +328,14 @@ class PowerAnalysis:
         plt.ylabel("Power [kW]")
         plt.show()
 
-
 class SoundAnalysis:
-    def __init__(self, rotorsizing=None):
+    def __init__(self):
         #Conversions
         self.m_to_f = 1/0.3048 #Conversion factor from meter to feet
         self.N_to_lbs = (1/9.80665)*2.20462
 
         #Input
-        self.rotorsizing = rotorsizing if rotorsizing else RotorSizing()
+        self.rotorsizing = RotorSizing()
 
         #Observer position relative to rotor
         self.x = 0 #np.linspace(0,100,1000) #Measured in direction of motion of helicopter [ft]
@@ -348,10 +347,10 @@ class SoundAnalysis:
         self.R = self.rotorsizing.rotor_radius*self.m_to_f #Get rotor radius in [f]
         self.A = np.pi*(self.R**2) #Rotor area [ft^2]
         self.n = self.rotorsizing.omega #Rotor rotational speed [rad/s] 
-        self.V = self.rotorsizing.V_max*self.m_to_f #Set to max speed for now [ft/s]
+        self.V = self.rotorsizing.max_forward_velocity*self.m_to_f #Set to max speed for now [ft/s]
         self.c = self.rotorsizing.speed_of_sound*self.m_to_f #Speed of sound [ft/s]
         self.B = self.rotorsizing.n_blades
-        self.T = self.rotorsizing.T_forward_flight*self.N_to_lbs/self.rotorsizing.N_rotors #Thrust [lbs]
+        self.T = self.rotorsizing.T_forward_flight*self.N_to_lbs #Thrust [lbs]
 
         #Inputs for vortex noise
         self.D = 2*self.R #Rotor diameter [ft]
@@ -391,7 +390,6 @@ class SoundAnalysis:
 
         #Calculate fundamental frequency
         self.f_rotational = (self.n*self.B)/(2*np.pi*(1-self.M_f*np.cos(self.theta)))
-
     def vortex_noise(self):
         #Calculate SPL for 300 ft distance
         self.vortex_SPL_uncorrected = 10*(2*np.log10(self.V_07)+2*np.log10(self.T)-np.log10(self.A_b)-3.57)
@@ -409,14 +407,10 @@ class SoundAnalysis:
         print(f"Correction factor: {self.rotational_SPL-self.rotational_SPL_uncorrected} dB")
         print(f"Corrected SPL: {self.rotational_SPL} dB")
         print(f"Fundamental frequency: {self.f_rotational} Hz")
-
     def display_paramenters_vortex(self):
         print(f"Uncorrected SPL: {self.vortex_SPL_uncorrected} dB")
         print(f"Corrected SPL: {self.vortex_SPL} dB")
         print(f"Vortex frequency: {self.f_vortex} Hz")
-
-
-
 
 
 '''
