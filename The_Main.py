@@ -309,7 +309,7 @@ class PowerAnalysis:
         plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
         plt.text(V[-1], P_hoge[-1], 'P_hoge', color='black', va='center', ha='left')
 
-        plt.plot(V, P_CD, label='Climb power ($\gamma$ = 9$^\circ$)', linestyle='-', color='m')
+        plt.plot(V, P_CD, label=f'Climb power ($\gamma$ = {self.gamma_CD}$^\circ$)', linestyle='-', color='m')
         plt.plot(V, P_total_CD, linestyle=':', label='Total power (climbing flight)', color='k')
 
         plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
