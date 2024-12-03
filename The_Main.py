@@ -626,7 +626,7 @@ class EnergyAnalysis:
         
         # Descent 2 time (T11)
         d_des2 = delta_h2 / np.tan(np.radians(self.gamma_2))
-        times_dict['Descent2'] = d_des2 / self.V_descent
+        times_dict['Descent2'] = abs(d_des2) / self.V_descent
 
         # Cruise 2 time (T10)
         d_cr2 = d_tothalf - d_cl2 - (self.V_descent * times_dict['Descent2'])
