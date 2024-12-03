@@ -390,6 +390,7 @@ class SoundAnalysis:
 
         #Calculate fundamental frequency
         self.f_rotational = (self.n*self.B)/(2*np.pi*(1-self.M_f*np.cos(self.theta)))
+
     def vortex_noise(self):
         #Calculate SPL for 300 ft distance
         self.vortex_SPL_uncorrected = 10*(2*np.log10(self.V_07)+2*np.log10(self.T)-np.log10(self.A_b)-3.57)
@@ -407,6 +408,7 @@ class SoundAnalysis:
         print(f"Correction factor: {self.rotational_SPL-self.rotational_SPL_uncorrected} dB")
         print(f"Corrected SPL: {self.rotational_SPL} dB")
         print(f"Fundamental frequency: {self.f_rotational} Hz")
+        
     def display_paramenters_vortex(self):
         print(f"Uncorrected SPL: {self.vortex_SPL_uncorrected} dB")
         print(f"Corrected SPL: {self.vortex_SPL} dB")
