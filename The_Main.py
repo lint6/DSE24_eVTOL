@@ -140,7 +140,7 @@ class RotorSizing:
 
 class PowerAnalysis:
 
-    def __init__(self, rotorsizing=None):
+    def __init__(self, rotorsizing):
         #conversion
         self.g = 9.80665
         self.pi = np.pi
@@ -164,7 +164,32 @@ class PowerAnalysis:
         self.A_eq = self.rotorsizing.A_eq # equivalent flat plate area
 
         # basic gamma values
-        self.gamma_CD = 9
+        self.gamma_CD = 9 # deg
+        self.ROC_CD_steep = -7.6 # m/s
+
+        self.hige_factor = 1  #power in hige / power hoge
+        self.min_power = None
+        self.min_power_velocity = None
+        self.min_power_CD = None
+        self.min_power_velocity_CD = None
+        self.gamma_CD_steep = None
+
+        self.P = {
+            'HIGE1': None,
+            'V_climb': None,
+            'HOGE1': None,
+            'Climb1': None,
+            'Cruise1': None,
+            'Descent1': None,
+            'HOGE2': None,
+            'Loiter': None,
+            'Climb2': None,
+            'Cruise2': None,
+            'Descent2': None,
+            'HOGE3': None,
+            'V_Descent': None,
+            'HIGE2': None
+        }
 
         self.forward_flight()
 
@@ -231,6 +256,12 @@ class PowerAnalysis:
         ## total power (including climb/descent)
         self.P_total_CD = self.P_total_level + self.P_CD
 
+        #steep descent
+        self.P_CD_loss_steep = self.MTOW_N * self.ROC_CD_steep
+        self.P_CD_steep = self.P_CD_loss_steep * 1.045
+        ## total power steep descent (including climb/descent)
+        self.P_total_CD_steep = self.P_total_level + self.P_CD_steep
+
         ## hover power; what is this?? changed it to momentum theory (james wang adn stepiniewski)
         #self.P_hoge = self.k_int * self.k * self.T * self.v_i_hov + self.P_p_hov
 
@@ -271,6 +302,7 @@ class PowerAnalysis:
         P_CD = []
         P_total_CD = []
         P_hoge = []
+        P_total_CD_steep = []
 
         for velocity in V:
             self.iterate_design(new_V_point=velocity)
@@ -282,24 +314,41 @@ class PowerAnalysis:
             P_CD.append(self.P_CD / 1000)
             P_total_CD.append(self.P_total_CD / 1000)
             P_hoge.append(self.P_hoge / 1000)
+            P_total_CD_steep.append(self.P_total_CD_steep / 1000)
 
         # Identify velocity corresponding to minimum flight-level power
-        min_power = min(P_total_level)
-        min_power_velocity = V[P_total_level.index(min_power)]
-        print(f"The velocity corresponding to the minimum flight-level power ({min_power:.2f} kW) is {min_power_velocity:.2f} m/s")
+        self.min_power = min(P_total_level)
+        self.min_power_velocity = V[P_total_level.index(self.min_power)]
+        print(f"The velocity corresponding to the minimum flight-level power ({self.min_power:.2f} kW) is {self.min_power_velocity:.2f} m/s")
+
+        #steep deescent angle
+        #self.gamma_CD_steep = math.degrees(math.asin(self.ROC_CD_steep / self.min_power_velocity_CD))
+
+        self.min_power_CD = min(P_total_CD)
+        self.min_power_velocity_CD = V[P_total_CD.index(self.min_power_CD)]
 
 
-        plt.plot(V, P_p, label="Profile drag power", linestyle='-', color='b')
-        plt.plot(V, P_i, label="Induced power", linestyle='--', color='c')
-        plt.plot(V, P_par, label="Parasitic power", linestyle='-.', color='r')
+        print(f"The velocity corresponding to the minimum climb power ({self.min_power_CD:.2f} kW) is {self.min_power_velocity_CD:.2f} m/s")
+        plt.scatter(self.min_power_velocity_CD, self.min_power_CD, color='green', label='CD Min. Power', zorder=5)
+        plt.annotate(f'({self.min_power_velocity_CD:.2f} m/s, {self.min_power_CD:.2f} kW)',
+                 (self.min_power_velocity_CD, self.min_power_CD),
+                 textcoords="offset points",
+                 xytext=(-30, 10),
+                 ha='center',
+                 fontsize=9,
+                 color='green')
+
+        #plt.plot(V, P_p, label="Profile drag power", linestyle='-', color='b')
+        #plt.plot(V, P_i, label="Induced power", linestyle='--', color='c')
+        #plt.plot(V, P_par, label="Parasitic power", linestyle='-.', color='r')
         plt.plot(V, P_total_level, label="Total power (level flight)", linestyle='-', color='k')
 
         plt.plot(V, P_hoge, label="Power HOGE", linestyle=':', color='purple')
 
         # plotting min power point
-        plt.scatter(min_power_velocity, min_power, color='red', label='Level Flight Min. Power', zorder=5)
-        plt.annotate(f'({min_power_velocity:.2f} m/s, {min_power:.2f} kW)',
-                 (min_power_velocity, min_power),
+        plt.scatter(self.min_power_velocity, self.min_power, color='red', label='Level Flight Min. Power', zorder=5)
+        plt.annotate(f'({self.min_power_velocity:.2f} m/s, {self.min_power:.2f} kW)',
+                 (self.min_power_velocity, self.min_power),
                  textcoords="offset points",
                  xytext=(-30, 10),
                  ha='center',
@@ -307,19 +356,22 @@ class PowerAnalysis:
                  color='red')
 
 
-        plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
-        plt.text(V[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
-        plt.text(V[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
+        #plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
+        #plt.text(V[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
+        #plt.text(V[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
         plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
         plt.text(V[-1], P_hoge[-1], 'P_hoge', color='black', va='center', ha='left')
+        plt.text(V[-1], P_total_CD_steep[-1], 'P_steep_descent', color='black', va='center', ha='left')
 
-        plt.plot(V, P_CD, label=f'Climb power ($\gamma$ = {self.gamma_CD}$^\circ$)', linestyle='-', color='m')
+        #plt.plot(V, P_CD, label=f'Climb power ($\gamma$ = {self.gamma_CD}$^\circ$)', linestyle='-', color='m')
         plt.plot(V, P_total_CD, linestyle=':', label='Total power (climbing flight)', color='k')
 
-        plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
+        plt.plot(V, P_total_CD_steep, linestyle=':', label='Steep descent power', color='green')
+
+        #plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
         plt.text(V[-1], P_total_CD[-1], 'P_total_CD', color='black', va='center', ha='left')
 
-        plt.axvline(x=0.4569090434, color='gray', linestyle='-', linewidth=1, label='Never Exceed AV')
+        #plt.axvline(x=0.4569090434, color='gray', linestyle='-', linewidth=1, label='Never Exceed AV')
 
         plt.title("Power Components vs. Advance Ratio")
         plt.legend(loc='upper left', fontsize='large')
@@ -327,6 +379,24 @@ class PowerAnalysis:
         plt.xlabel("Velocity [m/s]")
         plt.ylabel("Power [kW]")
         plt.show()
+
+    def final_power(self):
+        self.P = {
+            'HIGE1': self.P_hoge * self.hige_factor,
+            'V_climb': 85000, #needs to be implemented
+            'HOGE1': self.P_hoge,
+            'Climb1': self.min_power_CD, # 9deg climb
+            'Cruise1': self.min_power,
+            'Descent1': 40000, # steep descent, needs to be implemented
+            'HOGE2': self.P_hoge,
+            'Loiter': self.min_power,
+            'Climb2': 100000, # needs to be implemented
+            'Cruise2': self.min_power,
+            'Descent2': 40000, # needs to be implemented
+            'HOGE3': self.P_hoge,
+            'V_Descent': 37500, # needs to be implemented
+            'HIGE2': self.P_hoge * self.hige_factor
+        }
 
 class SoundAnalysis:
     def __init__(self):
@@ -415,33 +485,156 @@ class SoundAnalysis:
         print(f"Vortex frequency: {self.f_vortex:.4f} Hz")
 
 
-'''
-if __name__ == '__main__':
-    rotor = RotorSizing()
-    print('----------------------------------------')
-    print(f'Number of Blades = {rotor.n_blades} and MTOW = {rotor.MTOW}kg')
-    print('----------------------------------------')
-    rotor.display_parameters()
-    ### visualizations ###
-    rotor.visual_blade_vs_aspect_ratio()
+class EnergyAnalysis:
+    def __init__(self, V_roc=0.76, rho=1.225, eta_p=0.9, V_climb1=30, V_cruise=40, V_loiter=6, V_descent=35, V_climb2=32, Volts=840, motor_eta=0.85, climb_angle = 9, descent_angle = 5):
+        # Assigning the input parameters
+        self.Vroc = V_roc
+        self.eta_p = eta_p
+        self.rho = rho
+        self.Volts = Volts
+        self.V_climb1 = V_climb1
+        self.V_cruise = V_cruise
+        self.V_loiter = V_loiter
+        self.V_descent = V_descent
+        self.V_climb2 = V_climb2
+        self.motor_eta = motor_eta  # motor efficiency i think
+        self.gamma_1 = climb_angle  # deg
+        self.gamma_2 = descent_angle
+        
+        # Initialize the Power object
+        self.power = Power()
+        
+        # Create a dictionary to hold times, powers, energies, and amps
+        self.mission_data = {
+            'times': { 'HIGE1': None, 'V_climb': None, 'HOGE1': None, 'Climb1': None, 'Cruise1': None, 'Descent1': None, 'HOGE2': None, 
+                      'Loiter': None, 'Climb2': None, 'Cruise2': None, 'Descent2': None, 'HOGE3': None, 'V_Descent': None, 'HIGE2': None, 'total': None },
+            'powers': self.power.P,
+            'energies': { 'HIGE1': None, 'V_climb': None, 'HOGE1': None, 'Climb1': None, 'Cruise1': None, 'Descent1': None, 'HOGE2': None, 
+                          'Loiter': None, 'Climb2': None, 'Cruise2': None, 'Descent2': None, 'HOGE3': None, 'V_Descent': None, 'HIGE2': None, 'total': None },
+            'amps': { 'HIGE1': None, 'V_climb': None, 'HOGE1': None, 'Climb1': None, 'Cruise1': None, 'Descent1': None, 'HOGE2': None, 
+                      'Loiter': None, 'Climb2': None, 'Cruise2': None, 'Descent2': None, 'HOGE3': None, 'V_Descent': None, 'HIGE2': None, 'max': None }
+        }
+    
+    def calculate_missionphase_time(self):
+        # Define given constants
+        h1, h2, h3 = 60.0, 300.0, 30.0  # Altitudes (m)
+        delta_h2 = h2 - h1
+        delta_h3 = h2 - h3
+        d_tothalf = 30000  # Distance to half
+        
+        # Calculate times using loops
+        times_dict = self.mission_data['times']
+        
+        # HIGE 1 time
+        times_dict['HIGE1'] = 15
+        
+        # Vertical Climb time (T2)
+        times_dict['V_climb'] = h1 / self.Vroc
+        
+        # HOGE 1 time
+        times_dict['HOGE1'] = 10
+        
+        # Steady Climb 1 time (T4)
+        d_cl1 = delta_h2 / np.tan(np.radians(self.gamma_1))
+        times_dict['Climb1'] = d_cl1 / self.V_climb1
+        
+        # Descent 1 time (T6)
+        roc_descent = 7.6 # m/s
+        times_dict['Descent1'] = delta_h3 / roc_descent
 
+        # Cruise 1 time (T5)
+        d_cr1 = d_tothalf - d_cl1 - (self.V_climb1 * times_dict['Descent1'])
+        times_dict['Cruise1'] = d_cr1 / self.V_cruise
+        
+        # HOGE 2 time
+        times_dict['HOGE2'] = 30
+        
+        # Loiter time
+        times_dict['Loiter'] = 600 # Dependent on max endurance
+        
+        # Steady Climb 2 time (T9)
+        d_cl2 = delta_h3 / np.tan(np.radians(self.gamma_1))
+        times_dict['Climb2'] = d_cl2 / self.V_climb2
+        
+        # Descent 2 time (T11)
+        d_des2 = delta_h2 / np.tan(np.radians(self.gamma_2))
+        times_dict['Descent2'] = d_des2 / self.V_descent
 
+        # Cruise 2 time (T10)
+        d_cr2 = d_tothalf - d_cl2 - (self.V_descent * times_dict['Descent2'])
+        times_dict['Cruise2'] = d_cr2 / self.V_cruise
+        
+        # HOGE 3 time
+        times_dict['HOGE3'] = 10
+        
+        # Vertical Descent time (T13)
+        Vrod = 0.5
+        times_dict['V_Descent'] = h1 / Vrod
+        
+        # HIGE 2 time
+        times_dict['HIGE2'] = 15
+        
+        # Total time
+        # Initialize sum to 0
+        total_time = 0
+        # Iterate through the 'times' dictionary and sum values excluding 'total'
+        for key, value in self.mission_data['times'].items():
+            if key != 'total' and value is not None:
+                total_time += value
+    
+        #total_time = sum(times_dict.values()[:-1]) 
+        times_dict['total'] = total_time
+        
+        # Update mission data
+        self.mission_data['times'] = times_dict
 
-if __name__ == '__main__':
-    power = PowerAnalysis()
-    power.display_parameters()
+        return self.mission_data['times']
+    
+    def calculate_energy_required(self):
+        energies_dict = self.mission_data['energies']
+        times_dict = self.mission_data['times']
+        
+        for phase, time in times_dict.items():
+            if phase != 'total':
+                # Calculate energy (Wh)
+                power = self.power.P.get(phase, 0)
+                energies_dict[phase] = (time / 3600) * power / self.motor_eta
+        
+        # Calculate total energy
+        # Initialize sum to 0
+        total_energy = 0
 
-    # Specify atmospheric condition
-    power.iterate_design(new_rho=1.19011)  # rho at cruise altitude
+        # Iterate through the 'energies' dictionary and sum values excluding 'total'
+        for key, value in self.mission_data['energies'].items():
+            if key != 'total' and value is not None:
+                total_energy += value
 
-    # Compute hover specifics
-    power.iterate_design(new_ROC_VCD=0)
-    print(f"HOGE power = {power.P_hoge / 1000:.2f} [kW]")
-    print(f"Vertical climb/descent power = {power.P_VCD / 1000:.2f} [kW]")
+        energies_dict['total'] = total_energy
+        
+        # Update mission data
+        self.mission_data['energies'] = energies_dict
 
-    # Compute forward flight specifics
-    power.iterate_design(new_gamma_CD=0)
+        return self.mission_data['energies']
+    
+    def calculate_amps(self):
+        amps_dict = self.mission_data['amps']
+        powers_dict = self.power.P
+        
+        for phase, power in powers_dict.items():
+            amps_dict[phase] = power / (self.Volts * self.motor_eta)
+        
+        #amps_dict['max'] = max(amps_dict.values())
+        # Initialize max_amps to store the maximum value
+        max_amps = None
 
-    # Plot power components
-    power.plot_power_components()
-'''
+        # Iterate through the 'amps' dictionary, excluding 'max' and None values
+        for key, value in self.mission_data['amps'].items():
+            if key != 'max' and value is not None:
+                if max_amps is None or value > max_amps:
+                    max_amps = value
+
+        amps_dict['max'] = max_amps
+        # Update mission data
+        self.mission_data['amps'] = amps_dict
+
+        return self.mission_data['amps']

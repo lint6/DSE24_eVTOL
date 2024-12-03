@@ -22,7 +22,7 @@ class Power:
         }
 
 class PowerAnalysis:
-    def __init__(self, V_roc=0.76, rho=1.225, eta_p=0.9, V_climb1=30, V_cruise=40, V_loiter=6, V_descent=35, V_climb2=32, Volts=840, motor_eta=0.85):
+    def __init__(self, V_roc=0.76, rho=1.225, eta_p=0.9, V_climb1=30, V_cruise=40, V_loiter=6, V_descent=35, V_climb2=32, Volts=840, motor_eta=0.85, climb_angle = 9, descent_angle = 5):
         # Assigning the input parameters
         self.Vroc = V_roc
         self.eta_p = eta_p
@@ -33,7 +33,9 @@ class PowerAnalysis:
         self.V_loiter = V_loiter
         self.V_descent = V_descent
         self.V_climb2 = V_climb2
-        self.motor_eta = motor_eta
+        self.motor_eta = motor_eta  # motor efficiency i think
+        self.gamma_1 = climb_angle  # deg
+        self.gamma_2 = descent_angle
         
         # Initialize the Power object
         self.power = Power()
@@ -69,12 +71,11 @@ class PowerAnalysis:
         times_dict['HOGE1'] = 10
         
         # Steady Climb 1 time (T4)
-        gamma_1 = 9  # flight path angle
-        d_cl1 = delta_h2 / np.tan(np.radians(gamma_1))
+        d_cl1 = delta_h2 / np.tan(np.radians(self.gamma_1))
         times_dict['Climb1'] = d_cl1 / self.V_climb1
         
         # Descent 1 time (T6)
-        roc_descent = 7.6
+        roc_descent = 7.6 # m/s
         times_dict['Descent1'] = delta_h3 / roc_descent
 
         # Cruise 1 time (T5)
@@ -88,13 +89,11 @@ class PowerAnalysis:
         times_dict['Loiter'] = 600 # Dependent on max endurance
         
         # Steady Climb 2 time (T9)
-        gamma_1 = 9
-        d_cl2 = delta_h3 / np.tan(np.radians(gamma_1))
+        d_cl2 = delta_h3 / np.tan(np.radians(self.gamma_1))
         times_dict['Climb2'] = d_cl2 / self.V_climb2
         
         # Descent 2 time (T11)
-        gamma_2 = 5
-        d_des2 = delta_h2 / np.tan(np.radians(gamma_2))
+        d_des2 = delta_h2 / np.tan(np.radians(self.gamma_2))
         times_dict['Descent2'] = d_des2 / self.V_descent
 
         # Cruise 2 time (T10)
