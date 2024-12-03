@@ -3,6 +3,7 @@ from math import *
 import scipy 
 import matplotlib.pyplot as plt 
 import sys
+#Code from YUNJAE 
 
 
 #def calc_p_idd_kappa(self):
