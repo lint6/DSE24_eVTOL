@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 class RotorSizing:
 
-    def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, d_fact = 0.05):
+    def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, d_fact = 0.05, max_v = 50):
 
         # conversions  
         self.celsius_to_kelvin = 273.15     # addition
@@ -31,6 +31,8 @@ class RotorSizing:
         self.lift_slope = 5.73      # 1 / rad (from NACA0012)
         self.gust_velocity = 30 * self.ft_to_m # from FAA
         self.coaxial = 1 # 1 if not coaxial, 2 if coaxial
+        self.V_max = max_v
+        self.V_ne = 1.1 * self.V_max
 
         download_factor = d_fact
         self.fuselage_download = download_factor * self.MTOW * self.g                 # N
@@ -64,6 +66,10 @@ class RotorSizing:
         self.max_forward_velocity = (self.max_tip_mach * self.speed_of_sound) - self.tip_speed  # m / s; choose max mach, calculate max velocity
         self.never_exceed_velocity = 1.1 * self.max_forward_velocity                            # m / s
         self.mu_ne = self.never_exceed_velocity / self.tip_speed                                # --; advance ratio
+
+        print(f'User chosen max velocity = {self.V_max * 3.6 :.2f} [km/h]')
+        print(f'Corresponding never exceed advance ratio = {self.V_ne / self.tip_speed} [-]')
+
 
         # forward flight solidity 
         self.T_forward_flight = self.k_dl * self.MTOW * self.g             # N
