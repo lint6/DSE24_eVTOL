@@ -114,6 +114,7 @@ def main():
 
     # Step 4: Plot power components
     power.plot_power_components()
+    power.final_power()
 
     # Print the noise outputs
     sound = SoundAnalysis()

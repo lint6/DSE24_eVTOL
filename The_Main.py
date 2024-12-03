@@ -178,6 +178,10 @@ class PowerAnalysis:
         self.vertical_climb = vertical_climb
         self.vertical_descent = vertical_descent
         self.P_vertical_climb = None
+        self.min_power_watts = None
+        self.min_power_CD_watts = None
+        self.power_steep_descent_watts = None
+        self.min_power_descent_watts = None
 
         self.P = {
             'HIGE1': None,
@@ -267,10 +271,6 @@ class PowerAnalysis:
         ## total power steep descent (including climb/descent)
         self.P_total_CD_steep = self.P_total_level + self.P_CD_steep
 
-        self.P_vertical_climb =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_climb / 2) + np.sqrt((self.vertical_climb / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2))))
-        self.P_vertical_descent =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_descent / 2) + np.sqrt((self.vertical_descent / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2))))
-        print(f'P_req for vertical climb = {self.P_vertical_climb / 1000:.2f}kW')
-        print(f'P_req for vertical descent = {self.P_vertical_descent / 1000:.2f}kW')
 
         ## compute climb/descent power
         #1.045 is a drag to fuselage kinda constant. 
@@ -286,6 +286,13 @@ class PowerAnalysis:
 
         self.P_hoge = ((self.MTOW * self.g) ** (3/2)) / (np.sqrt(2 * self.rho *(self.pi*(self.rotor_radius**2)) * self.rotorsizing.N_rotors) * self.FM)
 
+        #self.P_vertical_climb =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_climb / 2) + np.sqrt((self.vertical_climb / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2)))) 
+        self.P_vertical_climb = self.P_hoge + self.MTOW_N * self.vertical_climb
+        #self.P_vertical_descent =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_descent / 2) + np.sqrt((self.vertical_descent / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2))))
+        self.P_vertical_descent = self.P_hoge + self.MTOW_N * self.vertical_descent
+        #print(f'P_req for vertical climb = {self.P_vertical_climb / 1000:.2f}kW')
+        #print(f'P_req for vertical descent = {self.P_vertical_descent / 1000:.2f}kW')
+        
         ## vertical climb/descent power
         self.P_VCD = self.P_hoge + self.ROC_VCD*self.MTOW_N
 
@@ -339,6 +346,7 @@ class PowerAnalysis:
 
         # Identify velocity corresponding to minimum flight-level power
         self.min_power = min(P_total_level)
+        self.min_power_watts = self.min_power * 1000
         self.min_power_velocity = V[P_total_level.index(self.min_power)]
         print(f"The velocity corresponding to the minimum flight-level power ({self.min_power:.2f} kW) is {self.min_power_velocity:.2f} m/s")
 
@@ -347,15 +355,18 @@ class PowerAnalysis:
 
         #climb min power
         self.min_power_CD = min(P_total_CD)
+        self.min_power_CD_watts = self.min_power_CD * 1000
         self.min_power_velocity_CD = V[P_total_CD.index(self.min_power_CD)]
 
         #second descent min power
         self.min_power_descent = min(P_total_descent)
+        self.min_power_descent_watts = self.min_power_descent * 1000
         self.min_power_velocity_descent = V[P_total_descent.index(self.min_power_descent)]
 
         self.power_steep_descent = P_total_CD_steep[V.tolist().index(self.min_power_velocity_CD)]
+        self.power_steep_descent_watts = self.power_steep_descent * 1000
 
-        print(f"The velocity corresponding to the minimum climb power ({self.min_power_CD:.2f} kW) is {self.min_power_velocity_CD:.2f} m/s")
+        #print(f"The velocity corresponding to the minimum climb power ({self.min_power_CD:.2f} kW) is {self.min_power_velocity_CD:.2f} m/s")
         plt.scatter(self.min_power_velocity_CD, self.min_power_CD, color='green', label='Climb Min. Power', zorder=5)
         plt.annotate(f'({self.min_power_velocity_CD:.2f} m/s, {self.min_power_CD:.2f} kW)',
                  (self.min_power_velocity_CD, self.min_power_CD),
@@ -434,18 +445,20 @@ class PowerAnalysis:
             'HIGE1': self.P_hoge * self.hige_factor,
             'V_climb': self.P_vertical_climb, #0.76 m/s
             'HOGE1': self.P_hoge,
-            'Climb1': self.min_power_CD, # 9deg climb
-            'Cruise1': self.min_power,
-            'Descent1': self.power_steep_descent, # steep descent
+            'Climb1': self.min_power_CD_watts, # 9deg climb
+            'Cruise1': self.min_power_watts,
+            'Descent1': self.power_steep_descent_watts, # steep descent
             'HOGE2': self.P_hoge,
-            'Loiter': self.min_power,
-            'Climb2': self.min_power_CD, # second climb
-            'Cruise2': self.min_power,
-            'Descent2': self.P_total_descent, # second descent
+            'Loiter': self.min_power_watts,
+            'Climb2': self.min_power_CD_watts, # second climb 
+            'Cruise2': self.min_power_watts, 
+            'Descent2': self.min_power_descent_watts, # second descent
             'HOGE3': self.P_hoge,
             'V_Descent': self.P_vertical_descent, # 0.5 m/s
             'HIGE2': self.P_hoge * self.hige_factor
         }
+        print(self.P)
+    
 
 class SoundAnalysis:
     def __init__(self):
