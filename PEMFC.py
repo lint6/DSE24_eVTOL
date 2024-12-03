@@ -111,6 +111,12 @@ class PowerAnalysis:        ## IT MUST BE NOTED THAT TAKE OFF AND LANDING ARE NO
         self.t8 = self.t8     #DEPENDS ON MAX ENDURENCE!!-> to be designed for
         self.d_loiter = self.V_loiter * self.t8
         # Steady Climb 2
+
+        # Steady Climb 2 time (T9)
+        d_cl2 = delta_h2 - h3 / np.tan(np.radians(9))
+        times_dict['Climb2'] = d_cl2 / self.V_climb2
+
+        
         delta_h4 = h2 - h3
         gamma_2 = 9     #[deg] flight path angle
         d_cl2 = delta_h4 / np.tan(gamma_2*np.pi/180)        #[m] horizontal distance of climb 2
