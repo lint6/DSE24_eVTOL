@@ -80,7 +80,7 @@ def main():
         MTOW=config["MTOW"], 
         n_blades=config["n_blades"], 
         n_rotor=config["n_rotor"], 
-        DL = config["DL"],
+        DL=config["DL"],
         bank_angle=config["bank_angle"], 
         cto_fl=config["cto_fl"], 
         cto_turn=config["cto_turn"], 
@@ -95,8 +95,8 @@ def main():
     rotor.display_parameters()
     rotor.visual_blade_vs_aspect_ratio()
 
-    # Step 3: Initialize PowerAnalysis with RotorSizing object
-    power = PowerAnalysis()
+    # Step 3: Initialize PowerAnalysis with the configured RotorSizing object
+    power = PowerAnalysis(rotorsizing=rotor)  # Pass the rotor object directly to PowerAnalysis
     power.display_parameters()
 
     # Update power analysis with specific conditions if required

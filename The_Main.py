@@ -66,8 +66,8 @@ class RotorSizing:
         self.never_exceed_velocity = 1.1 * self.max_forward_velocity                            # m / s
         self.mu_ne = self.never_exceed_velocity / self.tip_speed                                # --; advance ratio
 
-        print(f'User chosen max velocity = {self.V_max * 3.6 :.2f} [km/h]')
-        print(f'Corresponding never exceed advance ratio = {self.V_ne / self.tip_speed} [-]')
+        #print(f'User chosen max velocity = {self.V_max * 3.6 :.2f} [km/h]')
+        #print(f'Corresponding never exceed advance ratio = {self.V_ne / self.tip_speed} [-]')
 
 
         # forward flight solidity 
@@ -136,14 +136,14 @@ class RotorSizing:
 
 class PowerAnalysis:
 
-    def __init__(self, FM = 0.7, k_int = 1, A_eq = 0.418):
+    def __init__(self, rotorsizing=None, FM = 0.7, k_int = 1, A_eq = 0.418):
         #conversion
         self.g = 9.80665
         self.pi = np.pi
         self.RPM_to_rad = (np.pi / 30)
 
         #input
-        self.rotorsizing = RotorSizing()
+        self.rotorsizing = rotorsizing if rotorsizing else RotorSizing()  # Use the provided object or create a default one
         self.FM = FM
         self.solidity = self.rotorsizing.maximum_solidity
         self.rho = self.rotorsizing.rho
