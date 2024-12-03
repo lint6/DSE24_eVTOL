@@ -119,9 +119,9 @@ class RotorSizing:
         plt.xlabel('Number of Blades')
         plt.ylabel('Aspect Ratio')
 
-        plt.axhspan(14, 20, color='green', alpha=0.2, label='Acceptable Range')
-        plt.axhspan(0, 14, color = 'red', alpha=0.2, label = 'Unacceptable Range')
-        plt.axhspan(20, 100, color = 'red', alpha = 0.2)
+        #plt.axhspan(14, 20, color='green', alpha=0.2, label='Acceptable Range')
+        #plt.axhspan(0, 14, color = 'red', alpha=0.2, label = 'Unacceptable Range')
+        #plt.axhspan(20, 100, color = 'red', alpha = 0.2)
 
         plt.grid(True)
         plt.legend()
