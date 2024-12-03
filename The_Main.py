@@ -403,16 +403,16 @@ class SoundAnalysis:
         self.f_vortex = (self.V_07*0.28)/self.thickness  #Only valid for small AoA
 
     def display_parameters_rotor(self):
-        print(f"Equivalent M: {self.M_E}")
-        print(f"Uncorrected SPL: {self.rotational_SPL_uncorrected} dB")
-        print(f"Correction factor: {self.rotational_SPL-self.rotational_SPL_uncorrected} dB")
-        print(f"Corrected SPL: {self.rotational_SPL} dB")
-        print(f"Fundamental frequency: {self.f_rotational} Hz")
+        print(f"Equivalent M: {self.M_E :.4f}")
+        print(f"Uncorrected SPL: {self.rotational_SPL_uncorrected:.4f} dB")
+        print(f"Correction factor: {self.rotational_SPL-self.rotational_SPL_uncorrected:.4f} dB")
+        print(f"Corrected SPL: {self.rotational_SPL:.4f} dB")
+        print(f"Fundamental frequency: {self.f_rotational:.4f} Hz")
         
     def display_paramenters_vortex(self):
-        print(f"Uncorrected SPL: {self.vortex_SPL_uncorrected} dB")
-        print(f"Corrected SPL: {self.vortex_SPL} dB")
-        print(f"Vortex frequency: {self.f_vortex} Hz")
+        print(f"Uncorrected SPL: {self.vortex_SPL_uncorrected:.4f} dB")
+        print(f"Corrected SPL: {self.vortex_SPL:.4f} dB")
+        print(f"Vortex frequency: {self.f_vortex:.4f} Hz")
 
 
 '''

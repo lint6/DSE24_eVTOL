@@ -117,9 +117,9 @@ def main():
 
     # Print the noise outputs
     sound = SoundAnalysis()
-    print('-----Rotational noise-----')
+    print('----------Rotational noise----------')
     sound.display_parameters_rotor()
-    print('-----Vortex noise-----')
+    print('----------Vortex noise----------')
     sound.display_paramenters_vortex()
 
     
