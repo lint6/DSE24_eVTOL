@@ -7,7 +7,7 @@ class RotorSizing:
     def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, d_fact = 0.05):
 
         # conversions  
-        self.celsius_to_kelvin = 273.15     # add
+        self.celsius_to_kelvin = 273.15     # addition
         self.RPM_to_rad = math.pi / 30      # multiply
         self.deg_to_rad = math.pi / 180     # multiply
         self.ft_to_m = 0.3048               # multiply
@@ -252,6 +252,56 @@ class PowerAnalysis:
         print("----------------")
 
 
+    def plot_power_components(self):
+        V = np.linspace(0.01, 85, 1000)
+        AV = []
+        P_p = []
+        P_i = []
+        P_par = []
+        P_total_level = []
+        P_CD = []
+        P_total_CD = []
+        P_hoge = []
+
+        for velocity in V:
+            self.iterate_design(new_V_point=velocity)
+            AV.append(velocity / (self.omega * self.rotor_radius))
+            P_p.append(self.P_p / 1000)
+            P_i.append(self.P_i / 1000)
+            P_par.append(self.P_par / 1000)
+            P_total_level.append(self.P_total_level / 1000)
+            P_CD.append(self.P_CD / 1000)
+            P_total_CD.append(self.P_total_CD / 1000)
+            P_hoge.append(self.P_hoge / 1000)
+
+        plt.plot(V, P_p, label="Profile drag power", linestyle='-', color='b')
+        plt.plot(V, P_i, label="Induced power", linestyle='--', color='c')
+        plt.plot(V, P_par, label="Parasitic power", linestyle='-.', color='r')
+        plt.plot(V, P_total_level, label="Total power (level flight)", linestyle='-', color='k')
+
+        plt.plot(V, P_hoge, label="Power HOGE", linestyle=':', color='purple')
+
+        plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
+        plt.text(V[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
+        plt.text(V[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
+        plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
+        plt.text(V[-1], P_hoge[-1], 'P_hoge', color='black', va='center', ha='left')
+
+        plt.plot(V, P_CD, label='Climb power ($\gamma$ = 9$^\circ$)', linestyle='-', color='m')
+        plt.plot(V, P_total_CD, linestyle=':', label='Total power (climbing flight)', color='k')
+
+        plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
+        plt.text(V[-1], P_total_CD[-1], 'P_total_CD', color='black', va='center', ha='left')
+
+        plt.axvline(x=0.4569090434, color='gray', linestyle='-', linewidth=1, label='Never Exceed AV')
+
+        plt.title("Power Components vs. Advance Ratio")
+        plt.legend(loc='upper left', fontsize='large')
+        plt.grid(color='gray', linestyle=':', linewidth=0.5)
+        plt.xlabel("Velocity [m/s]")
+        plt.ylabel("Power [kW]")
+        plt.show()
+
 
 if __name__ == '__main__':
     rotor = RotorSizing()
@@ -268,87 +318,16 @@ if __name__ == '__main__':
     power = PowerAnalysis()
     power.display_parameters()
 
-    #specify athmospheric condition
-    power.iterate_design(new_rho=1.19011) # rho at cruise altitude
+    # Specify atmospheric condition
+    power.iterate_design(new_rho=1.19011)  # rho at cruise altitude
 
-    ## Compute hover specifics
-    # specify hover flight conditions
+    # Compute hover specifics
     power.iterate_design(new_ROC_VCD=0)
     print(f"HOGE power = {power.P_hoge / 1000:.2f} [kW]")
     print(f"Vertical climb/descent power = {power.P_VCD / 1000:.2f} [kW]")
 
-    ## Compute forward flight specifics
-    # specify forward flight condition (through gamma)
+    # Compute forward flight specifics
     power.iterate_design(new_gamma_CD=0)
 
-    # initiate
-    V = np.linspace(0.01, 85, 1000)
-    AV = []
-    P_p = []
-    P_i = []
-    P_par = []
-    P_total_level = []
-    P_CD = []
-    P_total_CD = []
-    P_hoge = []
-
-    for velocity in V:
-        power.iterate_design(new_V_point=velocity)
-        AV.append(velocity/(power.omega*power.rotor_radius))
-        P_p.append(power.P_p / 1000)
-        P_i.append(power.P_i / 1000)
-        P_par.append(power.P_par / 1000)
-        P_total_level.append(power.P_total_level / 1000)
-        P_CD.append(power.P_CD / 1000)
-        P_total_CD.append(power.P_total_CD / 1000)
-        P_hoge.append(power.P_hoge / 1000)
-
-    # compute velocity at minimum power required
-    V_be = V[P_total_CD.index(min(P_total_CD))]
-
-    # compute power required at Vbe
-    power.iterate_design(new_V_point=V_be)
-
-    print(f"Maximum endurance velocity = {V_be:.2f} [m/s] = {3.6 * V_be:.2f} [km/h]")
-    print(f"Maximum endurance power = {power.P_total_level / 1000 :.2f} [kW]")
-    print(f'Maximum solidity = {power.solidity:.3f}')
-    print(f'Rotational Velocity = {power.omega:.2f} [rad/s]')
-    print(f'Rotor Radius = {power.rotor_radius:.2f} [m]')
-
-    print("----------------")
-
-    ## power plots
-    print = True
-    if print == True:
-        plt.plot(V, P_p, label="Profile drag power", linestyle='-', color='b')
-        plt.plot(V, P_i, label="Induced power", linestyle='--', color='c')
-        plt.plot(V, P_par, label="Parasitic power", linestyle='-.', color='r')
-        plt.plot(V, P_total_level, label="Total power (level flight)", linestyle='-', color='k')
-
-        # plot hover power
-        plt.plot(V, P_hoge, label="Power HOGE", linestyle=':', color='purple')
-
-        # add textual labels
-        plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
-        plt.text(V[-1], P_i[-1], 'P_i', color='black', va='center', ha='left')
-        plt.text(V[-1], P_par[-1], 'P_par', color='black', va='center', ha='left')
-        plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
-        plt.text(V[-1], P_hoge[-1], 'P_hoge', color='black', va='center', ha='left')
-
-        #climb descent
-        plt.plot(V, P_CD, label='Climb power ($\gamma$ = 9$^\circ$)', linestyle='-', color='m')
-        plt.plot(V, P_total_CD, linestyle=':', label='Total power (climbing flight)', color='k')
-
-        #add textual labels
-        plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
-        plt.text(V[-1], P_total_CD[-1], 'P_total_CD', color='black', va='center', ha='left')
-
-        plt.axvline(x=0.4569090434, color='gray', linestyle='-', linewidth=1, label='Never Exceed AV')
-
-
-        plt.title("Power Components vs. Advance Ratio")
-        plt.legend(loc='upper left', fontsize='large')
-        plt.grid(color='gray', linestyle=':', linewidth=0.5)
-        plt.xlabel("Velocity [m/s]")
-        plt.ylabel("Power [kW]")
-        plt.show()
+    # Plot power components
+    power.plot_power_components()
