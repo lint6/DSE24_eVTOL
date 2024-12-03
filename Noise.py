@@ -1,5 +1,5 @@
 import numpy as np
-from co_rotor_sizing import RotorSizing
+from The_Main import RotorSizing
 
 class SoundAnalysis:
     def __init__(self):
