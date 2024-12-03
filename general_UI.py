@@ -1,5 +1,5 @@
 # Importing classes
-from The_Main import RotorSizing, PowerAnalysis  
+from The_Main import RotorSizing, PowerAnalysis, SoundAnalysis  
 
 def get_configuration():
 #user chosen configuration
@@ -115,5 +115,14 @@ def main():
     # Step 4: Plot power components
     power.plot_power_components()
 
+    # Print the noise outputs
+    sound = SoundAnalysis()
+    print('-----Rotational noise-----')
+    sound.display_parameters_rotor()
+    print('-----Vortex noise-----')
+    sound.display_paramenters_vortex()
+
+    
 if __name__ == '__main__':
     main()
+
