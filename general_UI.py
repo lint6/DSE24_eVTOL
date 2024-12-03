@@ -94,10 +94,12 @@ def main():
     )
     
     print('----------------------------------------')
-    print(f'Number of Blades = {rotor.n_blades} and MTOW = {rotor.MTOW}kg')
+    print(f'Number of Blades = {rotor.n_blades}, Number of Rotors = {rotor.N_rotors} and MTOW = {rotor.MTOW}kg')
     print('----------------------------------------')
     rotor.display_parameters()
-    rotor.visual_blade_vs_aspect_ratio()
+
+    # uncomment to plot blades vs aspect ratio graph
+    #rotor.visual_blade_vs_aspect_ratio()
 
     # Step 3: Initialize PowerAnalysis with the configured RotorSizing object
     power = PowerAnalysis(rotorsizing=rotor)  # Pass the rotor object directly to PowerAnalysis
@@ -109,19 +111,22 @@ def main():
 
     # Compute and display hover and forward flight power
     power.iterate_design(new_ROC_VCD=0)
-    print(f"HOGE power = {power.P_hoge / 1000:.2f} [kW]")
-    print(f"Vertical climb/descent power = {power.P_VCD / 1000:.2f} [kW]")
+    #print(f"HOGE power = {power.P_hoge / 1000:.2f} [kW]")
+    #print(f"Vertical climb/descent power = {power.P_VCD / 1000:.2f} [kW]")
 
     # Step 4: Plot power components
     power.plot_power_components()
     power.final_power()
-
+    power.get_highest_power()
+    print('----------------------------------------')
+    #power.print_all_powers()
+    #print('----------------------------------------')
     # Print the noise outputs
-    sound = SoundAnalysis()
-    print('----------Rotational noise----------')
-    sound.display_parameters_rotor()
-    print('----------Vortex noise----------')
-    sound.display_paramenters_vortex()
+    #sound = SoundAnalysis()
+    #print('----------Rotational noise----------')
+    #sound.display_parameters_rotor()
+    #print('----------Vortex noise----------')
+    #sound.display_paramenters_vortex()
 
 
     # Instantiate the EnergyAnalysis class
@@ -137,13 +142,20 @@ def main():
     amps = energy_analysis.calculate_amps()
 
     print("Mission Phase Times:")
-    print(times)
+    #print(times)
+    total_time = times['total']/60
+    print(f'Total Mission time = {total_time:.2f} [min]')
 
     print("\nMission Energies (Wh):")
-    print(energies)
+    #print(energies)
+    total_energy = energies['total']
+    print(f'Total Energy Consumption = {total_energy:.2f} [Wh]')
 
     print("\nMission Amps:")
-    print(amps)
+    #print(amps)
+    max_amps = amps['max']
+    print(f'Max amps = {max_amps:.2f} [A]')
+
 
     
 if __name__ == '__main__':

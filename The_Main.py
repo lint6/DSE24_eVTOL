@@ -106,8 +106,10 @@ class RotorSizing:
         print(f"Maximum Solidity: {self.maximum_solidity:.3f}")
         print(f"Blade Chord: {self.chord:.3f} m")
         print(f"Aspect Ratio: {self.aspect_ratio:.2f}")
-        print(f"Max Forward Velocity: {self.max_forward_velocity:.2f} m/s")
-        print(f"Never Exceed Velocity: {self.never_exceed_velocity:.2f} m/s")
+
+        #next 2 not really used anymore
+        #print(f"Max Forward Velocity: {self.max_forward_velocity:.2f} m/s")
+        #print(f"Never Exceed Velocity: {self.never_exceed_velocity:.2f} m/s")
 
     def iterate_design(self, new_MTOW=None, new_n_blades=None):
         if new_MTOW:
@@ -349,7 +351,7 @@ class PowerAnalysis:
         self.min_power = min(P_total_level)
         self.min_power_watts = self.min_power * 1000
         self.min_power_velocity = V[P_total_level.index(self.min_power)]
-        print(f"The velocity corresponding to the minimum flight-level power ({self.min_power:.2f} kW) is {self.min_power_velocity:.2f} m/s")
+        print(f"The velocity corresponding to the minimum flight-level power {self.min_power:.2f} kW is {self.min_power_velocity:.2f} m/s")
 
         #steep deescent angle
         #self.gamma_CD_steep = math.degrees(math.asin(self.ROC_CD_steep / self.min_power_velocity_CD))
@@ -458,7 +460,27 @@ class PowerAnalysis:
             'V_Descent': self.P_vertical_descent, # 0.5 m/s
             'HIGE2': self.P_hoge * self.hige_factor
         }
-        print(self.P)
+        return self.P
+    
+    def get_highest_power(self):
+        # Find the maximum value
+        max_key = max(self.P, key=self.P.get)
+        max_value = self.P[max_key]
+
+        print(f"The maximum power usage is {max_value / 1000:.2f} [kW], corresponding to {max_key}.")
+
+    def print_all_powers(self):
+        # Ensure the final_power method has been called to populate self.P
+        if not hasattr(self, 'P'):
+            self.final_power()
+        
+        # Print each power name and value
+        for name, power in self.P.items():
+            # Ensure correct formatting based on the type of `power`
+            if isinstance(power, (int, float)):  # If the value is a number
+                print(f"The Power usage is = {power / 1000:.2f} [kW] in {name} phase")
+            else:  # For non-numeric types
+                print(f"The Power usage in {name} phase is {power}")
     
 
 class SoundAnalysis:
