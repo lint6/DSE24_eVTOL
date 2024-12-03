@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 class RotorSizing:
 
-    def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, DL = 34.2, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, d_fact = 0.05, max_v = 50):
+    def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, DL = 34.2, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, co_ax = 1, d_fact = 0.05, max_v = 50):
 
         # conversions  
         self.celsius_to_kelvin = 273.15     # addition
@@ -31,7 +31,7 @@ class RotorSizing:
         self.n_z_turn = 1 / np.cos(self.roll_angle * self.deg_to_rad)    # load factor in turn
         self.lift_slope = 5.73      # 1 / rad (from NACA0012)
         self.gust_velocity = 30 * self.ft_to_m # from FAA
-        self.coaxial = 1 # 1 if not coaxial, 2 if coaxial
+        self.coaxial = co_ax # 1 if not coaxial, 2 if coaxial
         self.V_max = max_v
         self.V_ne = 1.1 * self.V_max
 

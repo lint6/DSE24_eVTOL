@@ -19,7 +19,8 @@ def get_configuration():
             "bank_angle": 30, #max bank angle
             "cto_fl": 0.11, #next 3 parameters defined depending on max advance ratio
             "cto_turn": 0.14, 
-            "cto_turb": 0.16, 
+            "cto_turb": 0.16,
+            "co_ax": 2, # 1 if not coaxial, 2if coaxial 
             "d_fact": 0.04, 
             "max_v": 50  #m/s
         }
@@ -35,6 +36,7 @@ def get_configuration():
             "cto_fl": 0.12, #next 3 parameters defined depending on max advance ratio
             "cto_turn": 0.15, 
             "cto_turb": 0.17, 
+            "co_ax": 1, # 1 if not coaxial, 2if coaxial 
             "d_fact": 0.05, 
             "max_v": 50  #m/s
         }
@@ -50,6 +52,7 @@ def get_configuration():
             "cto_fl": 0.10, #next 3 parameters defined depending on max advance ratio
             "cto_turn": 0.12, 
             "cto_turb": 0.14, 
+            "co_ax": 1, # 1 if not coaxial, 2if coaxial 
             "d_fact": 0.06, 
             "max_v": 50  #m/s
         }
