@@ -4,25 +4,26 @@ import matplotlib.pyplot as plt
 
 class RotorSizing:
 
-    def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, d_fact = 0.05, max_v = 50):
+    def __init__(self, MTOW=718.89, n_blades=4, n_rotor = 4, DL = 34.2, bank_angle = 30, cto_fl = 0.12, cto_turn = 0.15, cto_turb = 0.17, d_fact = 0.05, max_v = 50):
 
         # conversions  
         self.celsius_to_kelvin = 273.15     # addition
-        self.RPM_to_rad = math.pi / 30      # multiply
-        self.deg_to_rad = math.pi / 180     # multiply
+        self.RPM_to_rad = np.pi / 30      # multiply
+        self.deg_to_rad = np.pi / 180     # multiply
         self.ft_to_m = 0.3048               # multiply
 
         # ambient constants 
         self.g = 9.80665        # m / s^2
         self.rho = 1.225        # kg/m^3
         self.temperature = 15   # celsius 
-        self.speed_of_sound = math.sqrt(1.4 * 287 * (self.temperature + self.celsius_to_kelvin))
+        self.speed_of_sound = np.sqrt(1.4 * 287 * (self.temperature + self.celsius_to_kelvin))
 
         # physical constants
         self.MTOW = MTOW 
         self.n_blades = n_blades 
         self.max_tip_mach = 0.85
         self.N_rotors = n_rotor
+        self.disc_loading = DL   # kg/m^2 
         self.c_t_o_fl = cto_fl #user defined depending on advance ratio
         self.c_t_o_turn = cto_turn # user defined
         self.c_t_o_turb = cto_turb # user defined
@@ -48,8 +49,6 @@ class RotorSizing:
         #for co-axial
         #self.disc_loading = 2.28 * ((self.MTOW)**(1/3) - 2.34)                      # kg/m^2
 
-        # for quad (assumed):
-        self.disc_loading = 34.2   # kg/m^2 ( 7 lbs/ft2)
         self.rotor_radius = np.sqrt((self.MTOW / self.N_rotors) / (np.pi * self.disc_loading))    # m 
         self.rotor_diameter = 2 * self.rotor_radius                                 # m
         # marilena statistics for helicopters. quad assumed 550 ft/s (NASA paper), to be discussed
@@ -161,7 +160,7 @@ class PowerAnalysis:
         self.A_eq = A_eq # equivalent flat plate area
 
         # basic gamma values
-        self.gamma_CD = 0
+        self.gamma_CD = 9
 
         self.forward_flight()
 
@@ -197,7 +196,7 @@ class PowerAnalysis:
 
         ## induced power calculation
         self.T = self.rotorsizing.T_forward_flight
-        self.v_i_hov = math.sqrt((self.MTOW_N / self.rotorsizing.N_rotors)/(2*self.rho*self.pi*(self.rotor_radius**2)))
+        self.v_i_hov = np.sqrt((self.MTOW_N / self.rotorsizing.N_rotors)/(2*self.rho*self.pi*(self.rotor_radius**2)))
         self.V_bar = self.V_point / self.v_i_hov
         self.alpha = math.asin((self.D_par/self.MTOW_N) + math.sin(math.radians(self.gamma_CD)))
         array = np.array([0.0,0.0,0.0,0.0,0.0])
@@ -326,6 +325,7 @@ class PowerAnalysis:
         plt.show()
 
 
+'''
 if __name__ == '__main__':
     rotor = RotorSizing()
     print('----------------------------------------')
@@ -354,3 +354,4 @@ if __name__ == '__main__':
 
     # Plot power components
     power.plot_power_components()
+'''
