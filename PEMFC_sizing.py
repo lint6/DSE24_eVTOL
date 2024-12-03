@@ -279,4 +279,3 @@ if __name__ == '__main__':      #printing the P_req vs t plot
     #print the max amps
     print('Max Voltage: ', power.Volts, '[V]')
 
-## theres a problem with the total energy calculation 
