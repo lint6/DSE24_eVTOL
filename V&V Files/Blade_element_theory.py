@@ -6,20 +6,20 @@ class Blade_Element_Theory:
         self.V_c = V_c
         self.v_r = v_r
         self.omega = omega
-        self.sigma = sigma 
+        self.sigma = sigma
         self.c_r = c_r
-        self.d_r = d_r 
+        self.d_r = d_r
         self.rpm = rpm
-        self.r = r 
+        self.r = r
         self.R = R
         self.theta_r = theta_r
         self.theta_0 = theta_0
-        self.theta_tot = theta_tot 
+        self.theta_tot = theta_tot
 
         #Check where this comes from, maybe we need to redefine the T, Q, P as we are giving it as input vairbale here 
-        self.T = T 
-        self.Q = Q 
-        self.P = P 
+        self.T = T
+        self.Q = Q
+        self.P = P
 
     
 
@@ -165,5 +165,4 @@ class Blade_Element_Theory:
     def calc_local_power_coefficient(self):
         self.c_p = self.C_P / self.sigma
         return self.c_p
-    
     
