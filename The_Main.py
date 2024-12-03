@@ -140,7 +140,7 @@ class RotorSizing:
 
 class PowerAnalysis:
 
-    def __init__(self, rotorsizing):
+    def __init__(self, rotorsizing, climb_angle = 9, descent_angle = -5, vertical_climb = 0.76, vertical_descent = -0.5):
         #conversion
         self.g = 9.80665
         self.pi = np.pi
@@ -164,7 +164,7 @@ class PowerAnalysis:
         self.A_eq = self.rotorsizing.A_eq # equivalent flat plate area
 
         # basic gamma values
-        self.gamma_CD = 9 # deg
+        self.gamma_CD = climb_angle # deg
         self.ROC_CD_steep = -7.6 # m/s
 
         self.hige_factor = 1  #power in hige / power hoge
@@ -173,6 +173,11 @@ class PowerAnalysis:
         self.min_power_CD = None
         self.min_power_velocity_CD = None
         self.gamma_CD_steep = None
+        self.power_steep_descent = None
+        self.gamma_descent = descent_angle
+        self.vertical_climb = vertical_climb
+        self.vertical_descent = vertical_descent
+        self.P_vertical_climb = None
 
         self.P = {
             'HIGE1': None,
@@ -262,6 +267,20 @@ class PowerAnalysis:
         ## total power steep descent (including climb/descent)
         self.P_total_CD_steep = self.P_total_level + self.P_CD_steep
 
+        self.P_vertical_climb =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_climb / 2) + np.sqrt((self.vertical_climb / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2))))
+        self.P_vertical_descent =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_descent / 2) + np.sqrt((self.vertical_descent / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2))))
+        print(f'P_req for vertical climb = {self.P_vertical_climb / 1000:.2f}kW')
+        print(f'P_req for vertical descent = {self.P_vertical_descent / 1000:.2f}kW')
+
+        ## compute climb/descent power
+        #1.045 is a drag to fuselage kinda constant. 
+        self.ROC_descent = self.V_point * math.sin(math.radians(self.gamma_descent))
+        self.P_CD_loss_descent = self.MTOW_N * self.ROC_descent
+        self.P_CD_descent = self.P_CD_loss_descent * 1.045
+
+        ## total power (including climb/descent)
+        self.P_total_descent = self.P_total_level + self.P_CD_descent
+
         ## hover power; what is this?? changed it to momentum theory (james wang adn stepiniewski)
         #self.P_hoge = self.k_int * self.k * self.T * self.v_i_hov + self.P_p_hov
 
@@ -303,6 +322,7 @@ class PowerAnalysis:
         P_total_CD = []
         P_hoge = []
         P_total_CD_steep = []
+        P_total_descent = []
 
         for velocity in V:
             self.iterate_design(new_V_point=velocity)
@@ -315,6 +335,7 @@ class PowerAnalysis:
             P_total_CD.append(self.P_total_CD / 1000)
             P_hoge.append(self.P_hoge / 1000)
             P_total_CD_steep.append(self.P_total_CD_steep / 1000)
+            P_total_descent.append(self.P_total_descent / 1000)
 
         # Identify velocity corresponding to minimum flight-level power
         self.min_power = min(P_total_level)
@@ -324,12 +345,18 @@ class PowerAnalysis:
         #steep deescent angle
         #self.gamma_CD_steep = math.degrees(math.asin(self.ROC_CD_steep / self.min_power_velocity_CD))
 
+        #climb min power
         self.min_power_CD = min(P_total_CD)
         self.min_power_velocity_CD = V[P_total_CD.index(self.min_power_CD)]
 
+        #second descent min power
+        self.min_power_descent = min(P_total_descent)
+        self.min_power_velocity_descent = V[P_total_descent.index(self.min_power_descent)]
+
+        self.power_steep_descent = P_total_CD_steep[V.tolist().index(self.min_power_velocity_CD)]
 
         print(f"The velocity corresponding to the minimum climb power ({self.min_power_CD:.2f} kW) is {self.min_power_velocity_CD:.2f} m/s")
-        plt.scatter(self.min_power_velocity_CD, self.min_power_CD, color='green', label='CD Min. Power', zorder=5)
+        plt.scatter(self.min_power_velocity_CD, self.min_power_CD, color='green', label='Climb Min. Power', zorder=5)
         plt.annotate(f'({self.min_power_velocity_CD:.2f} m/s, {self.min_power_CD:.2f} kW)',
                  (self.min_power_velocity_CD, self.min_power_CD),
                  textcoords="offset points",
@@ -337,6 +364,24 @@ class PowerAnalysis:
                  ha='center',
                  fontsize=9,
                  color='green')
+        
+        plt.scatter(self.min_power_velocity_CD, self.power_steep_descent, color='purple', label='Descent Min. Power', zorder=5)
+        plt.annotate(f'({self.min_power_velocity_CD:.2f} m/s, {self.power_steep_descent:.2f} kW)',
+                 (self.min_power_velocity_CD, self.power_steep_descent),
+                 textcoords="offset points",
+                 xytext=(-30, 10),
+                 ha='center',
+                 fontsize=9,
+                 color='purple')
+        
+        plt.scatter(self.min_power_velocity_descent, self.min_power_descent, color='yellow', label='Second descent min. Power', zorder=5)
+        plt.annotate(f'({self.min_power_velocity_descent:.2f} m/s, {self.min_power_descent:.2f} kW)',
+                 (self.min_power_velocity_descent, self.min_power_descent),
+                 textcoords="offset points",
+                 xytext=(-30, 10),
+                 ha='center',
+                 fontsize=9,
+                 color='yellow')
 
         #plt.plot(V, P_p, label="Profile drag power", linestyle='-', color='b')
         #plt.plot(V, P_i, label="Induced power", linestyle='--', color='c')
@@ -354,6 +399,7 @@ class PowerAnalysis:
                  ha='center',
                  fontsize=9,
                  color='red')
+        
 
 
         #plt.text(V[-1], P_p[-1], 'P_p', color='black', va='center', ha='left')
@@ -362,11 +408,14 @@ class PowerAnalysis:
         plt.text(V[-1], P_total_level[-1], 'P_total_level', color='black', va='center', ha='left')
         plt.text(V[-1], P_hoge[-1], 'P_hoge', color='black', va='center', ha='left')
         plt.text(V[-1], P_total_CD_steep[-1], 'P_steep_descent', color='black', va='center', ha='left')
+        plt.text(V[-1], P_total_descent[-1], 'P_second_descent', color='black', va='center', ha='left')
 
         #plt.plot(V, P_CD, label=f'Climb power ($\gamma$ = {self.gamma_CD}$^\circ$)', linestyle='-', color='m')
         plt.plot(V, P_total_CD, linestyle=':', label='Total power (climbing flight)', color='k')
 
         plt.plot(V, P_total_CD_steep, linestyle=':', label='Steep descent power', color='green')
+
+        plt.plot(V, P_total_descent, linestyle='-', label='Second descent power', color='purple')
 
         #plt.text(V[-1], P_CD[-1], 'P_C', color='black', va='center', ha='left')
         plt.text(V[-1], P_total_CD[-1], 'P_total_CD', color='black', va='center', ha='left')
@@ -383,18 +432,18 @@ class PowerAnalysis:
     def final_power(self):
         self.P = {
             'HIGE1': self.P_hoge * self.hige_factor,
-            'V_climb': 85000, #needs to be implemented
+            'V_climb': self.P_vertical_climb, #0.76 m/s
             'HOGE1': self.P_hoge,
             'Climb1': self.min_power_CD, # 9deg climb
             'Cruise1': self.min_power,
-            'Descent1': 40000, # steep descent, needs to be implemented
+            'Descent1': self.power_steep_descent, # steep descent
             'HOGE2': self.P_hoge,
             'Loiter': self.min_power,
-            'Climb2': 100000, # needs to be implemented
+            'Climb2': self.min_power_CD, # second climb
             'Cruise2': self.min_power,
-            'Descent2': 40000, # needs to be implemented
+            'Descent2': self.P_total_descent, # second descent
             'HOGE3': self.P_hoge,
-            'V_Descent': 37500, # needs to be implemented
+            'V_Descent': self.P_vertical_descent, # 0.5 m/s
             'HIGE2': self.P_hoge * self.hige_factor
         }
 
