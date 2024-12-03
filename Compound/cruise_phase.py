@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 
 class WingedFlight:
-    def __init__(self, vel, mass, chord, span, Cd0 = 0.1, power_a = None, wing_count=1, density = 1.225, g0 = 9.80665):
+    def __init__(self, vel, mass, chord, span, Cd0 = 0.05, power_a = None, wing_count=1, density = 1.225, g0 = 9.80665):
         self.power_a = power_a #power available
         self.wing_count = wing_count    #amount of wing on aircraft
         self.vel = vel  #airspeed of aircraft
@@ -122,13 +122,14 @@ class Airfoil:
         
 TEST = True
 if TEST:
+    #currently running B-29 root airfoil
     vel = np.arange(10,60,0.1)
     power_tot = []
     power_ind = []
     power_par = []
     Cl = []
     for i in vel:
-        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 718, span=10, chord=[1.25])
+        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 718, span=10, chord=[1])
         power_tot.append(flight_point.power_tot)
         power_ind.append(flight_point.power_ind)
         power_par.append(flight_point.power_par)
