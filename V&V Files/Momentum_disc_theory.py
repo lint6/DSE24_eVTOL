@@ -54,7 +54,7 @@ class Ducted_Fan_1: #vertical flight
         self.kappa = None # #ratio of ideal power abaliable o ideal power required in hover, from climb rate
         self.P_id_c = None # power ideal climb
         self.P_id_h = None  # power ideal hover
-        # self.kappa = None  # #ratio of ideal power abaliable o ideal power required in hover, from power avalibale 
+        # self.kappa = None  # #ratio of ideal power abaliable o ideal power required in hover, from power avalibale
         self.p_idd = None # power ideal decent
         self.kappa_d = None  # #ratio of ideal power abaliable o ideal power required in hover, from power avalable
         self.p_idd_kappa = None # power ideal descent from, kappa 
@@ -97,7 +97,7 @@ class Ducted_Fan_1: #vertical flight
         self.P_id_h = self.weight * self.v_h
         return self.P_id_h
 
-    def calc_v_c (self): #Induced velocity during axial maneuver 
+    def calc_v_c (self): #Induced velocity during axial maneuver
         self.calc_v_h()
         if self.V_c == None:
             self.calc_V_c_kappa()

@@ -138,7 +138,7 @@ class Blade_Element_Theory:
         self.c_l_r_bar = self.alpha_r_bar * self.a
         return self.c_l_r_bar
     
-
+    
     #Non dimentional coefficient 
     def calc_thrust_coefficient(self):
         self.C_T = self.T / (np.pi * (self.R **2) * self.density * (self.V_t ** 2 ))
