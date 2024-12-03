@@ -1,5 +1,5 @@
 # Importing classes
-from The_Main import RotorSizing, PowerAnalysis, SoundAnalysis  
+from The_Main import RotorSizing, PowerAnalysis, SoundAnalysis, EnergyAnalysis
 
 def get_configuration():
 #user chosen configuration
@@ -122,6 +122,28 @@ def main():
     sound.display_parameters_rotor()
     print('----------Vortex noise----------')
     sound.display_paramenters_vortex()
+
+
+    # Instantiate the EnergyAnalysis class
+    energy_analysis = EnergyAnalysis(power)
+
+    # Calculate mission phase times
+    times = energy_analysis.calculate_missionphase_time()
+
+    # Calculate energies
+    energies = energy_analysis.calculate_energy_required()
+
+    # Calculate amps
+    amps = energy_analysis.calculate_amps()
+
+    print("Mission Phase Times:")
+    print(times)
+
+    print("\nMission Energies (Wh):")
+    print(energies)
+
+    print("\nMission Amps:")
+    print(amps)
 
     
 if __name__ == '__main__':

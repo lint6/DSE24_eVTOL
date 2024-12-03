@@ -175,13 +175,14 @@ class PowerAnalysis:
         self.gamma_CD_steep = None
         self.power_steep_descent = None
         self.gamma_descent = descent_angle
-        self.vertical_climb = vertical_climb
-        self.vertical_descent = vertical_descent
+        self.vertical_climb = vertical_climb # m/s
+        self.vertical_descent = vertical_descent # m/s
         self.P_vertical_climb = None
         self.min_power_watts = None
         self.min_power_CD_watts = None
         self.power_steep_descent_watts = None
         self.min_power_descent_watts = None
+        self.min_power_velocity_descent = None
 
         self.P = {
             'HIGE1': None,
@@ -292,12 +293,12 @@ class PowerAnalysis:
         self.P_vertical_descent = self.P_hoge + self.MTOW_N * self.vertical_descent
         #print(f'P_req for vertical climb = {self.P_vertical_climb / 1000:.2f}kW')
         #print(f'P_req for vertical descent = {self.P_vertical_descent / 1000:.2f}kW')
-        
+
         ## vertical climb/descent power
         self.P_VCD = self.P_hoge + self.ROC_VCD*self.MTOW_N
 
 
-    def iterate_design(self, new_MTOW_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None, new_rho=None, new_ROC_VCD=None):
+    def iterate_design(self, new_MTOW_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None, new_rho=None, new_ROC_VCD=None, new_min_power_velocity_CD = None, new_min_power_velocity = None, new_min_power_velocity_descent = None, new_gamma_descent = None):
         if new_MTOW_N:
             self.MTOW_N = new_MTOW_N
         if new_V_point:
@@ -356,14 +357,14 @@ class PowerAnalysis:
         #climb min power
         self.min_power_CD = min(P_total_CD)
         self.min_power_CD_watts = self.min_power_CD * 1000
-        self.min_power_velocity_CD = V[P_total_CD.index(self.min_power_CD)]
+        self.min_power_velocity_CD = V[P_total_CD.index(self.min_power_CD)] # velocity of climb 1
 
         #second descent min power
         self.min_power_descent = min(P_total_descent)
         self.min_power_descent_watts = self.min_power_descent * 1000
-        self.min_power_velocity_descent = V[P_total_descent.index(self.min_power_descent)]
+        self.min_power_velocity_descent = V[P_total_descent.index(self.min_power_descent)] # second descent velocity
 
-        self.power_steep_descent = P_total_CD_steep[V.tolist().index(self.min_power_velocity_CD)]
+        self.power_steep_descent = P_total_CD_steep[V.tolist().index(self.min_power_velocity_CD)] # same velocity as climb 1
         self.power_steep_descent_watts = self.power_steep_descent * 1000
 
         #print(f"The velocity corresponding to the minimum climb power ({self.min_power_CD:.2f} kW) is {self.min_power_velocity_CD:.2f} m/s")
@@ -548,23 +549,27 @@ class SoundAnalysis:
 
 
 class EnergyAnalysis:
-    def __init__(self, V_roc=0.76, rho=1.225, eta_p=0.9, V_climb1=30, V_cruise=40, V_loiter=6, V_descent=35, V_climb2=32, Volts=840, motor_eta=0.85, climb_angle = 9, descent_angle = 5):
-        # Assigning the input parameters
-        self.Vroc = V_roc
-        self.eta_p = eta_p
-        self.rho = rho
-        self.Volts = Volts
-        self.V_climb1 = V_climb1
-        self.V_cruise = V_cruise
-        self.V_loiter = V_loiter
-        self.V_descent = V_descent
-        self.V_climb2 = V_climb2
-        self.motor_eta = motor_eta  # motor efficiency i think
-        self.gamma_1 = climb_angle  # deg
-        self.gamma_2 = descent_angle
+    def __init__(self, power = None, eta_p=0.9, Volts=840, motor_eta=0.85):
         
         # Initialize the Power object
-        self.power = Power()
+        #self.rotorsizing = rotorsizing if rotorsizing else RotorSizing()
+        self.power = power if power else PowerAnalysis(rotorsizing=None)
+
+        #self.power = PowerAnalysis(rotorsizing)
+
+        # Assigning the input parameters
+        self.Vroc = self.power.vertical_climb # vertical climb velocity
+        self.eta_p = eta_p # what is this
+        self.rho = self.power.rho
+        self.Volts = Volts # max volts of the system ig?
+        self.V_climb1 = self.power.min_power_velocity_CD # first climb velocity 
+        self.V_cruise = self.power.min_power_velocity # cruise velocity 
+        self.V_loiter = self.power.min_power_velocity # loiter velocity 
+        self.V_descent = self.power.min_power_velocity_descent #input descent velocity 
+        self.V_climb2 = self.power.min_power_velocity_CD  # second climb velocity, same as for climb 1
+        self.motor_eta = motor_eta  # motor efficiency i think
+        self.gamma_1 = self.power.gamma_CD  # climb angle 
+        self.gamma_2 = self.power.gamma_descent # descent angle
         
         # Create a dictionary to hold times, powers, energies, and amps
         self.mission_data = {
@@ -588,7 +593,7 @@ class EnergyAnalysis:
         times_dict = self.mission_data['times']
         
         # HIGE 1 time
-        times_dict['HIGE1'] = 15
+        times_dict['HIGE1'] = 15 
         
         # Vertical Climb time (T2)
         times_dict['V_climb'] = h1 / self.Vroc
@@ -597,6 +602,7 @@ class EnergyAnalysis:
         times_dict['HOGE1'] = 10
         
         # Steady Climb 1 time (T4)
+        #!!!!!!!is the climb velocity the horizontal velocity? if not, change this
         d_cl1 = delta_h2 / np.tan(np.radians(self.gamma_1))
         times_dict['Climb1'] = d_cl1 / self.V_climb1
         
