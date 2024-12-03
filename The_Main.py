@@ -347,10 +347,10 @@ class SoundAnalysis:
         self.R = self.rotorsizing.rotor_radius*self.m_to_f #Get rotor radius in [f]
         self.A = np.pi*(self.R**2) #Rotor area [ft^2]
         self.n = self.rotorsizing.omega #Rotor rotational speed [rad/s] 
-        self.V = self.rotorsizing.max_forward_velocity*self.m_to_f #Set to max speed for now [ft/s]
+        self.V = self.rotorsizing.V_max*self.m_to_f #Set to max speed for now [ft/s]
         self.c = self.rotorsizing.speed_of_sound*self.m_to_f #Speed of sound [ft/s]
         self.B = self.rotorsizing.n_blades
-        self.T = self.rotorsizing.T_forward_flight*self.N_to_lbs #Thrust [lbs]
+        self.T = self.rotorsizing.T_forward_flight*self.N_to_lbs/self.rotorsizing.N_rotors #Thrust [lbs]
 
         #Inputs for vortex noise
         self.D = 2*self.R #Rotor diameter [ft]
