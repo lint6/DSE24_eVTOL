@@ -30,7 +30,7 @@ def get_configuration():
             "MTOW": 718.89, 
             "n_blades": 4, 
             "n_rotor": 4, 
-            "DL": 32.4, # kg/m2
+            "DL": 34.2, # kg/m2
             "bank_angle": 30, #max bank angle
             "cto_fl": 0.12, #next 3 parameters defined depending on max advance ratio
             "cto_turn": 0.15, 
