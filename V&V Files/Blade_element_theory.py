@@ -167,12 +167,3 @@ class Blade_Element_Theory:
         return self.c_p
     
     
-    
-
-
-
-
-    
-    
-    
-     
