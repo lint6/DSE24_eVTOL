@@ -96,7 +96,8 @@ class Blade_Element_Theory:
         self.dT_r1 = 4 * np.pi * self.density * (self.V_c + self.v_r) * self.v_r * self.r * self.d_r
         return self.dT_r1
     
-    def calc_theta_r(self):
+    # Twist function !!!!!!!!!!!!!!!!!
+    def calc_theta_r_bar(self):
         self.theta_r_bar = self.theta_0 - self.theta_tot * self.r/self.R 
         return self.theta_r_bar
     
@@ -105,8 +106,11 @@ class Blade_Element_Theory:
         return self.V_t
     
     def calc_v_r_bar(self):
-        self.v_r_bar = self.V_t * (self.a * self.sigma)
+        self.v_r_bar = self.V_t * ((- (self.a * self.sigma / 16)) + np.sqrt((self.a * self.sigma / 16)**2 + self.a * self.sigma * (self.r/self.R)* self.theta_r_bar)/8)
+        return self.v_r_bar
     
+    
+
 
     
     
