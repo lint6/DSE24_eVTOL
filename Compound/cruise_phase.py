@@ -1,6 +1,7 @@
 # By Lintong
 import numpy as np
 import matplotlib.pyplot as plt 
+# from ducted_fan_momentum_UI import func_min_locator
 
 class WingedFlight:
     def __init__(self, vel, mass, chord, span, Cd0 = 0.05, power_a = None, wing_count=1, density = 1.225, g0 = 9.80665):
@@ -237,7 +238,7 @@ class Airfoil:
 TEST = True
 if TEST:
     #currently running B-29 root airfoil
-    vel = np.arange(10,60,0.1)
+    vel = np.arange(10,120,0.1)
     power_tot = []
     power_ind = []
     power_par = []
@@ -252,6 +253,9 @@ if TEST:
     power_tot = np.array(power_tot)/1000
     power_ind = np.array(power_ind)/1000
     power_par = np.array(power_par)/1000
+    
+    # print(func_min_locator(vel, power_tot))
+    
     plt.plot(vel, power_tot, "-", label="Total")
     plt.plot(vel, power_ind, "-", label="induced")
     plt.plot(vel, power_par, "-", label="parasitic")
