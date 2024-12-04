@@ -20,7 +20,7 @@ class MassBalance:
         self.m_fuselage = 100 #ESTIMATE OR INPUT NEW VALUE
         self.m_batteries = 84
         self.m_fuelcell = 165
-        self.m_h2tank = 114
+        self.m_h2tank = 73.6
         if self.aircraft_type == 1:
             # Define Ideal Total CG for Quadrotor
             self.cg_ideal_ac = 50
@@ -31,13 +31,13 @@ class MassBalance:
             self.fuselage_cg_min = 45
             self.fuselage_cg_max = 55
 
-            self.batteries_cg_min = (self.payload_cg_min )
+            self.batteries_cg_min = (self.payload_cg_min + 10)
             self.batteries_cg_max = 80
 
-            self.fuelcell_cg_min = (self.payload_cg_min )
+            self.fuelcell_cg_min = (self.payload_cg_min +10)
             self.fuelcell_cg_max = 80
             
-            self.h2tank_cg_min = (self.payload_cg_min )
+            self.h2tank_cg_min = (self.payload_cg_min +10)
             self.h2tank_cg_max = 80
             # Define rotor set parameters
             self.num_rotor_sets = 1
@@ -61,14 +61,19 @@ class MassBalance:
         elif self.aircraft_type == 2:
             # Define parameters for Coaxial Helicopter
             self.cg_ideal_ac = 39 
+            # Main Components CG bounds
             self.payload_cg_min = 11
             self.payload_cg_max = 21
+
             self.fuselage_cg_min = 30
             self.fuselage_cg_max = 45
+
             self.batteries_cg_min = 31
             self.batteries_cg_max = 56
+
             self.fuelcell_cg_min = 31
             self.fuelcell_cg_max = 56
+
             self.h2tank_cg_min = 31
             self.h2tank_cg_max = 56
             # Define rotor set parameters
@@ -92,7 +97,7 @@ class MassBalance:
             self.payload_cg_max = 20
 
             self.fuselage_cg_min = 45
-            self.fuselage_cg_max = 55
+            self.fuselage_cg_max = self.cg_ideal_ac
 
             self.batteries_cg_min = 30
             self.batteries_cg_max = 70
@@ -179,8 +184,28 @@ class MassBalance:
         self.cg_wing_1 = adjust_within_bounds(self.cg_wing_1, adjustment_factor, self.wing_1_cg_min, self.wing_1_cg_max)
         self.cg_wing_2 = adjust_within_bounds(self.cg_wing_2, adjustment_factor, self.wing_2_cg_min, self.wing_2_cg_max)
         self.rotor_cg_positions = [adjust_within_bounds(cg, adjustment_factor, self.rotor_1_cg_min, self.rotor_1_cg_max) if i == 0 else adjust_within_bounds(cg, adjustment_factor, self.rotor_2_cg_min, self.rotor_2_cg_max) for i, cg in enumerate(self.rotor_cg_positions)]
-
         self.balancing()
+        
+        # Ensure that h2tank, batteries, and fuelcell CGs are within 30% of each other to avoid having batteries,h2tank, and fuelcell too far apart
+        def enforce_component_cg_proximity(self):
+            cgs = [self.cg_h2tank, self.cg_batteries, self.cg_fuel_cell]
+            min_cg = min(cgs)
+            max_cg = max(cgs)
+            while (max_cg - min_cg) > 30:
+                # Adjust CGs towards their average, within bounds
+                avg_cg = sum(cgs) / 3
+                self.cg_h2tank = max(min(avg_cg, self.h2tank_cg_max), self.h2tank_cg_min)
+                self.cg_batteries = max(min(avg_cg, self.batteries_cg_max), self.batteries_cg_min)
+                self.cg_fuel_cell = max(min(avg_cg, self.fuelcell_cg_max), self.fuelcell_cg_min)
+                cgs = [self.cg_h2tank, self.cg_batteries, self.cg_fuel_cell]
+                min_cg = min(cgs)
+                max_cg = max(cgs)
+                if (max_cg - min_cg) <= 30:
+                    break
+                else:
+                    break
+                # Recalculate final CG
+            self.balancing()
         
         while abs(self.final_cg - self.cg_ideal_ac) > 0.01:
             self.adjust_cgs_for_ideal()
