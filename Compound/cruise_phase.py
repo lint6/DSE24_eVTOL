@@ -66,9 +66,118 @@ class WingedFlight:
     
     def calc_MassDistrib(self):
         return self.weight/self.wing_count
+
+class LoiterFlight:
+    def __init__(self):
+        pass
+
+class TransitionFlight:
+    def __init__(self, mass, span, chord, Cl = 1.5, Cd0=0.01, TWR = 1, dt=0.01, gain_tilt =1, g0 = 9.80665): #assuming constant Cl
+        self.g0 = g0
+        self.mass = mass
+        self.thrust_tot = self.mass * self.g0 * TWR
+        self.L_win = 0
+        self.D_win = 0
+        self.dt = dt
+        self.Cd0 = Cd0
+        self.x = 0
+        self.y = 30
+        self.V_hor = 0.1
+        self.V_ver = 0
+        self.acc_hor = 0
+        self.acc_ver = 0
+        self.rotor_tilt = self.calc_RotorTilt(k=gain_tilt)
+
+        
+        self.Cl = Cl
+        self.dyn_press = self.calc_DynPress()
+        self.wing = Wing(dyn_press=self.dyn_press, span=span, weight=self.mass*self.g0, chord=chord, Cl=self.Cl)
+        self.Cd = Cd0
+        
+        self.time = 0
+        self.fd_x = []
+        self.fd_y = []
+        self.fd_V_hor = []
+        self.fd_V_ver = []
+        self.fd_acc_hor = []
+        self.fd_acc_ver = []
+        self.fd_rot_tilt = []
+        self.fd_t = []
+        
+        
+        Run = True
+        while Run:
+            if self.L_win >= self.mass * self.g0:
+                Run = False
+                print('works')
+            if self.y <= 0:
+                Run = False
+                print('crashed')
+            #Updating Flight data
+            self.time += dt 
+            self.fd_x.append(self.x)
+            self.fd_y.append(self.y)
+            self.fd_V_hor.append(self.V_hor)
+            self.fd_V_ver.append(self.V_ver)
+            self.fd_acc_hor.append(self.acc_hor)
+            self.fd_acc_ver.append(self.acc_ver)
+            self.fd_rot_tilt.append(self.rotor_tilt)
+            self.fd_t.append(self.time)
+            #Finding Forces
+            L_rot, T_rot = self.calc_RotorForces()
+            self.L_win, self.D_win = self.calc_WingForces()
+            # print(f'L_rot {L_rot}')
+            # print(f'L_win {self.L_win}')
+            # print(f'rotor_tilt {self.rotor_tilt}')
+            #Updating Physics
+            self.acc_hor, self.acc_ver = self.calc_Acceleration(lift=(L_rot+self.L_win), thrust=T_rot, drag=self.D_win)
+            self.x, self.y, self.V_hor, self.V_ver = self.calc_UpdatePhysics(acc_hor=self.acc_hor, acc_ver=self.acc_ver)
+            self.dyn_press = self.calc_DynPress()
+            self.Cd = self.wing.calc_DragCoe(Cl=self.Cl)[0]
+            # print(f'V_hor {self.V_hor}')
+            # print(f'Cd {self.Cd}')
+            #Updating AC Config
+            self.rotor_tilt = self.calc_RotorTilt(k=gain_tilt)
+            # print('-----------------')
+
+        
+    def calc_RotorForces(self): #keep hover thrust for entire phase, assuming constant fuel mass through phase as mass_ac >> fuelflow
+        L_rotor = np.cos(self.rotor_tilt) * self.thrust_tot
+        T_rotor = np.sin(self.rotor_tilt) * self.thrust_tot
+        return L_rotor, T_rotor
+    
+    def calc_RotorTilt(self, k=1):
+        rotor_tilt = k * self.V_hor
+        if rotor_tilt > 90:
+            rotor_tilt = 90
+        rotor_tilt = rotor_tilt*(np.pi/180)
+        return rotor_tilt
+    
+    def calc_Acceleration(self, lift, thrust, drag):
+        force_forward_tot = thrust - drag
+        acc_hor = force_forward_tot / self.mass
+        force_upward_tot = lift - (self.mass * self.g0)
+        acc_ver = force_upward_tot / self.mass
+        return acc_hor, acc_ver
+    
+    def calc_UpdatePhysics(self, acc_hor, acc_ver):
+        x_1 = self.x + self.V_hor * self.dt
+        y_1 = self.y + self.V_ver * self.dt
+        V_hor_1 = self.V_hor + acc_hor * self.dt
+        V_ver_1 = self.V_ver + acc_ver * self.dt
+        return x_1, y_1, V_hor_1, V_ver_1
+    
+    def calc_WingForces(self):
+        L = self.Cl * self.dyn_press * self.wing.area
+        D = self.Cd * self.dyn_press * self.wing.area
+        return L, D
+    
+    def calc_DynPress(self):
+        dyn_press = 0.5 * 1.225 * self.V_hor**2
+        return dyn_press
     
 class Wing:
-    def __init__(self, dyn_press, span, weight, chord, oswald_factor = 0.81, Cd0 = 0.008):
+    def __init__(self, dyn_press, span, weight, chord, Cl = 0, oswald_factor = 0.81, Cd0 = 0.008):
         self.span = span
 
         self.weight = weight
@@ -84,7 +193,7 @@ class Wing:
         self.aspect_ratio = None
         self.taper = None
         self.area = None
-        self.Cl = None
+        self.Cl = Cl
         self.Cd_tot = None
         self.Cd_ind = None
         
@@ -93,9 +202,10 @@ class Wing:
         self.taper = Planform[1]
         self.area = Planform[2]
         
-        self.Cl = self.calc_LiftCoe()
+        if Cl == 0:
+            self.Cl = self.calc_LiftCoe()
         
-        drag_coe = self.calc_DragCoe()
+        drag_coe = self.calc_DragCoe(Cl=self.Cl)
         self.Cd_tot = drag_coe[0]
         self.Cd_ind = drag_coe[1]
         
@@ -107,19 +217,23 @@ class Wing:
         return aspect_ratio, taper, area
     
     def calc_LiftCoe(self):
-        Cl = self.weight / (self.dyn_press*self.area)
-        return Cl
+        if self.dyn_press != 0:
+            Cl = self.weight / (self.dyn_press*self.area)
+            return Cl
     
-    def calc_DragCoe(self): #Coefficient of drag
-        Cd_ind = self.Cl**2 / (np.pi*self.aspect_ratio*self.oswald_factor)
+    def calc_DragCoe(self, Cl): #Coefficient of drag
+        Cd_ind = Cl**2 / (np.pi*self.aspect_ratio*self.oswald_factor)
         Cd_tot = self.Cd0 + Cd_ind
         return Cd_tot, Cd_ind
     
 class Airfoil:
-    def __init__(self, CL_max, Cd0):
+    def __init__(self, CL_max, Cd0,Cl0,Cl0_des,Cd0_des):
         self.CL_max=CL_max
         self.Cd0=Cd0
-        
+        self.Cl0=Cl0
+        self.Cl0_des=Cl0_des
+        self.Cd0_des=Cd0_des
+
 TEST = True
 if TEST:
     #currently running B-29 root airfoil
@@ -148,4 +262,10 @@ if TEST:
     
     plt.plot(vel, np.array(Cl), "-", label="Cl")
     plt.grid(True)
+    plt.show()
+    
+    
+    tr = TransitionFlight(mass=718, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=3)
+    #gain = 3 for minimum alt change
+    plt.plot(tr.fd_t, tr.fd_y, "-", label="Total")
     plt.show()
