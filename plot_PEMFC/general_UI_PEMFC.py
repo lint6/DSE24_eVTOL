@@ -117,6 +117,7 @@ def main():
     # Step 4: Plot power components
     power.plot_power_components()
     power.final_power()
+    #print(power.final_power())
     power.get_highest_power()
     print('----------------------------------------')
     #power.print_all_powers()
@@ -162,7 +163,11 @@ def main():
     max_amps = amps['max']
     print(f'Max amps = {max_amps:.2f} [A]')
 
-
+    # plot the PEMFC power vs mission phase/time
+    powers = power.final_power()
+    print(f'Mission Phase Times {times}')
+    print(f'Mission Phase Powers {powers}')
+    energy_analysis.visual_PEMFC()
     
 if __name__ == '__main__':
     main()
