@@ -728,3 +728,13 @@ class EnergyAnalysis:
         self.mission_data['amps'] = amps_dict
 
         return self.mission_data['amps']
+    
+    def visual_PEMFC(self):
+        self.PA = PowerAnalysis(rotorsizing=None)
+        self.power_per_phase = self.PA.P
+        print(self.power_per_phase)
+
+
+if __name__ == '__main__':
+    e = EnergyAnalysis()
+    e.visual_PEMFC()
