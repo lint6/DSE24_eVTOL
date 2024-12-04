@@ -56,8 +56,8 @@ class RotorSizing:
         self.rotor_radius = np.sqrt((self.MTOW / self.N_rotors) / (np.pi * self.disc_loading))    # m 
         self.rotor_diameter = 2 * self.rotor_radius                                 # m
         # marilena statistics for helicopters. quad assumed 550 ft/s (NASA paper), to be discussed
-        #self.tip_speed = 140 * (self.rotor_diameter)**0.171                         # m / s, coaxial
-        self.tip_speed = 550 * self.ft_to_m                                        # quad rotor
+        #self.tip_speed = 140 * (self.rotor_diameter)**0.171                         # m / s
+        self.tip_speed = 550 * self.ft_to_m
 
         #self.RPM = 2673 / ((self.rotor_diameter)**0.892)                            # rpm
         #self.omega = self.RPM_to_rad * self.RPM                                     # rad / s
@@ -103,7 +103,7 @@ class RotorSizing:
         print(f"Rotor Diameter: {self.rotor_diameter:.2f} m")
         print(f"Tip Speed: {self.tip_speed:.2f} m/s")
         print(f"RPM: {self.RPM:.2f}")
-        print(f'Maximum Solidity: {self.maximum_solidity:.2f}')
+        print(f"Maximum Solidity: {self.maximum_solidity:.3f}")
         print(f"Blade Chord: {self.chord:.3f} m")
         print(f"Aspect Ratio: {self.aspect_ratio:.2f}")
 
@@ -287,17 +287,17 @@ class PowerAnalysis:
         ## hover power; what is this?? changed it to momentum theory (james wang adn stepiniewski)
         #self.P_hoge = self.k_int * self.k * self.T * self.v_i_hov + self.P_p_hov
 
-        self.P_hoge = self.k_int * self.k * self.v_i_hov * self.T + self.P_p_hov
+        self.P_hoge = ((self.MTOW * self.g) ** (3/2)) / (np.sqrt(2 * self.rho *(self.pi*(self.rotor_radius**2)) * self.rotorsizing.N_rotors) * self.FM)
 
         #self.P_vertical_climb =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_climb / 2) + np.sqrt((self.vertical_climb / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2)))) 
-        self.P_vertical_climb = self.P_hoge + (self.MTOW_N * self.vertical_climb)/2 
+        self.P_vertical_climb = self.P_hoge + self.MTOW_N * self.vertical_climb
         #self.P_vertical_descent =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_descent / 2) + np.sqrt((self.vertical_descent / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2))))
-        self.P_vertical_descent = self.P_hoge + (self.MTOW_N * self.vertical_descent)/2
+        self.P_vertical_descent = self.P_hoge + self.MTOW_N * self.vertical_descent
         #print(f'P_req for vertical climb = {self.P_vertical_climb / 1000:.2f}kW')
         #print(f'P_req for vertical descent = {self.P_vertical_descent / 1000:.2f}kW')
 
         ## vertical climb/descent power
-        #self.P_VCD = self.P_hoge + self.ROC_VCD*self.MTOW_N
+        self.P_VCD = self.P_hoge + self.ROC_VCD*self.MTOW_N
 
 
     def iterate_design(self, new_MTOW_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None, new_rho=None, new_ROC_VCD=None, new_min_power_velocity_CD = None, new_min_power_velocity = None, new_min_power_velocity_descent = None, new_gamma_descent = None):
@@ -450,7 +450,7 @@ class PowerAnalysis:
             'HOGE1': self.P_hoge,
             'Climb1': self.min_power_CD_watts, # 9deg climb
             'Cruise1': self.min_power_watts,
-            'Descent1': self.power_steep_descent_watts, # steep descent, 0 for compound
+            'Descent1': self.power_steep_descent_watts, # steep descent
             'HOGE2': self.P_hoge,
             'Loiter': self.min_power_watts,
             'Climb2': self.min_power_CD_watts, # second climb 
@@ -728,3 +728,52 @@ class EnergyAnalysis:
         self.mission_data['amps'] = amps_dict
 
         return self.mission_data['amps']
+
+    def visual_PEMFC(self):
+        ### one thing left: figure out how to find the final POWER and TIME values after correct code running order (should be in UI???)
+        power_per_phase = {}
+        time_per_phase = {}
+
+        phases = list(power_per_phase.keys())
+        power_values = list(power_per_phase.values())
+        time_values = list(time_per_phase.values())
+        
+        # Remove 'total' entry if it's present
+        if 'total' in phases:
+            total_index = phases.index('total')
+            phases.pop(total_index)
+            power_values.pop(total_index)
+            time_values.pop(total_index)
+
+        # Calculate bar positions and widths
+        bar_positions = []
+        widths = []
+        start_time = 0
+        for time in time_values:
+            bar_positions.append(start_time)
+            widths.append(time)
+            start_time += time
+
+        # Generate unique colors for each phase
+        colors = ['skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+                'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+                'skyblue', 'skyblue', 'skyblue', 'skyblue']
+
+        # Create bar plot
+        plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.7)
+        
+        # Add labels and title
+        plt.xlabel('Time (s)', fontsize=12)
+        plt.ylabel('Power (W)', fontsize=12)
+        plt.title('Power vs Time for Mission Phases', fontsize=14)
+
+        # Add legend with phase names and their colors
+        for i, phase in enumerate(phases):
+            plt.bar(0, 0, color=colors[i], label=phase)  # Dummy bars for legend
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1), fontsize=10, title="Phases")
+
+        # Adjust layout for better spacing
+        plt.tight_layout()
+        
+        # Show the plot
+        plt.show()
