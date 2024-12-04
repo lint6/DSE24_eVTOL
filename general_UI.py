@@ -86,6 +86,7 @@ def main():
         cto_fl=config["cto_fl"], 
         cto_turn=config["cto_turn"], 
         cto_turb=config["cto_turb"], 
+        co_ax=config["co_ax"],
         d_fact=config["d_fact"], 
         max_v=config["max_v"],
         k_int=config["k_int"],
