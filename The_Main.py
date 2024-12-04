@@ -728,3 +728,92 @@ class EnergyAnalysis:
         self.mission_data['amps'] = amps_dict
 
         return self.mission_data['amps']
+
+    def visual_PEMFC_power(self):
+        self.power.final_power()
+        power_per_phase = self.power.P
+        time_per_phase = self.calculate_missionphase_time()
+
+        phases = list(power_per_phase.keys())
+        power_values = list(power_per_phase.values())
+        time_values = [int(time) for time in time_per_phase.values()]
+        
+        # remove 'total' in time_values
+        time_values = time_values[:-1]
+
+        # calculate bar positions and widths
+        bar_positions = []
+        widths = []
+        start_time = 0
+        for time in time_values:
+            bar_positions.append(start_time)
+            widths.append(time)
+            start_time += time
+
+        # define average and peak power
+        average_power = sum(power_values) / len(power_values)
+        peak_power = max(power_values)
+
+        colors = ['black', 'lightgreen', 'black', 'lightcoral', 'skyblue', 
+                'silver', 'black', 'skyblue', 'lightcoral', 'skyblue', 
+                'purple', 'black', 'pink', 'black']
+
+        # create bar plot
+        plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.9)
+
+        # average and peak power lines
+        plt.axhline(average_power, color='red', linestyle='--', label=f'Average Power ({average_power:.2f} W)')
+        plt.axhline(peak_power, color='blue', linestyle='--', label=f'Peak Power ({peak_power:.2f} W)')
+
+        # labels and title
+        plt.xlabel('Time (s)', fontsize=12)
+        plt.ylabel('Power (W)', fontsize=12)
+        plt.title('Power vs Time for Mission Phases', fontsize=14)
+
+        # legend
+        for i, phase in enumerate(phases):
+            plt.bar(0, 0, color=colors[i], label=phase)  # Dummy bars for legend
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1), fontsize=10, title="Phases")
+    
+        # show the plot
+        plt.tight_layout()
+        plt.show()
+
+    def visual_PEMFC_energy(self):
+        self.power.final_power()
+        energy_per_phase = self.calculate_energy_required()
+
+        # phase and energy values
+        phases = list(energy_per_phase.keys())
+        energy_values = list(energy_per_phase.values())
+
+        # remove 'total' in phases and energy values
+        phases = phases[:-1]
+        energy_values = energy_values[:-1]
+
+        print(f'Phases: {phases}')
+        print(f'Phases length: {len(phases)}')
+        print(f'Energy Values length: {len(energy_values)}')
+
+        # sizing the bars
+        bar_positions = range(len(phases)) 
+        bar_width = 0.8
+
+        colors = [
+            'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+            'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+            'skyblue', 'skyblue', 'skyblue', 'skyblue'
+        ]
+
+        # bar plot
+        plt.bar(bar_positions, energy_values, width=bar_width, color=colors, edgecolor='black', alpha=0.9)
+        
+        # labels and title
+        plt.xlabel('Mission Phase', fontsize=12)
+        plt.ylabel('Energy (Wh)', fontsize=12)
+        plt.title('Energy vs Mission Phase', fontsize=14)
+        plt.xticks(bar_positions, phases, rotation=45, ha='right', fontsize=10)
+
+        # show the plot
+        plt.tight_layout()
+        plt.show()
