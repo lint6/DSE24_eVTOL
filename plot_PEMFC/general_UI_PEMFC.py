@@ -1,5 +1,5 @@
 # Importing classes
-from The_Main_copy import RotorSizing, PowerAnalysis, SoundAnalysis, EnergyAnalysis
+from The_Main_PEMFC import RotorSizing, PowerAnalysis, SoundAnalysis, EnergyAnalysis
 
 def get_configuration():
 #user chosen configuration
@@ -162,11 +162,7 @@ def main():
     max_amps = amps['max']
     print(f'Max amps = {max_amps:.2f} [A]')
 
-    # plot the PEMFC vs mission phase / time
-    print('Running PEMFC plot code...')
-    energy_analysis.visualise_PEMFC()
 
     
 if __name__ == '__main__':
     main()
-

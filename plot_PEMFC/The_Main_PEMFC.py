@@ -139,6 +139,7 @@ class RotorSizing:
         plt.show()
 
 
+
 class PowerAnalysis:
 
     def __init__(self, rotorsizing, climb_angle = 9, descent_angle = -5, vertical_climb = 0.76, vertical_descent = -0.5):
@@ -246,7 +247,7 @@ class PowerAnalysis:
         array[3] = 0
         array[4] = -1
         self.roots = np.roots(array)[3]
-        self.v_i_bar = np.real(self.roots) # assumption
+        self.v_i_bar = np.real(self.roots) #aanname
         self.v_i = self.v_i_bar*self.v_i_hov
 
         #compute induced power
@@ -727,58 +728,3 @@ class EnergyAnalysis:
         self.mission_data['amps'] = amps_dict
 
         return self.mission_data['amps']
-    
-    def visualise_PEMFC(self):
-        self.PA = PowerAnalysis(rotorsizing=None)
-        self.calculate_missionphase_time()
-        self.time_per_phase = self.mission_data['times']
-        self.power_per_phase = self.PA.final_power()
-        
-        phases = list(self.power_per_phase.keys())
-        power_values = list(self.power_per_phase.values())
-        time_values = list(self.time_per_phase.values())
-        print(time_values)
-        print(power_values)
-        print(phases)
-
-        # remove the 'total' value from the dictionary
-        if 'total' in phases:
-            total_index = phases.index('total')
-            phases.pop(total_index)
-            power_values.pop(total_index)
-            time_values.pop(total_index)
-
-        # determine bar positions and widths
-        bar_positions = []
-        widths = []
-        start_time = 0
-        for time in time_values:
-            bar_positions.append(start_time)
-            widths.append(time)
-            start_time += time
-
-        # colors for each phase (in order of mission profile)
-        colors = ['skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
-                'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
-                'skyblue', 'skyblue', 'skyblue', 'skyblue']
-
-        # bar plot
-        plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.7)
-        
-        # labels and title
-        plt.xlabel('Time (s)', fontsize=12)
-        plt.ylabel('Power (W)', fontsize=12)
-        plt.title('Power vs Time for Mission Phases', fontsize=14)
-
-        # legend with phase names and colors
-        for i, phase in enumerate(phases):
-            plt.bar(0, 0, color=colors[i], label=phase)  # Dummy bars for legend
-        plt.legend(loc='upper left', bbox_to_anchor=(1, 1), fontsize=10, title="Phases")
-
-        # showing the plot
-        plt.tight_layout()
-        plt.show()
-
-if __name__ == '__main__':
-    e = EnergyAnalysis()
-    e.visualise_PEMFC()
