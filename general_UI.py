@@ -13,7 +13,7 @@ def get_configuration():
     if config == 1:
         return {
             "MTOW": 718.89, 
-            "n_blades": 4, 
+            "n_blades": 2, 
             "n_rotor": 1, 
             "DL": 2.28 * ((718.89)**(1/3) - 2.34), #kg/m2
             "bank_angle": 30, #max bank angle
@@ -24,7 +24,7 @@ def get_configuration():
             "d_fact": 0.04, 
             "max_v": 50,  #m/s
             "k_int": 1.28, #some coaxial thing
-            "A_eq": 0.75, #equivalent flat plate area
+            "A_eq": 0.524, #equivalent flat plate area, assumed clean helicopter config
             "FM": 0.7 #figure of merit
         }
     
@@ -32,9 +32,9 @@ def get_configuration():
     elif config == 2:
         return {
             "MTOW": 718.89, 
-            "n_blades": 4, 
+            "n_blades": 3, 
             "n_rotor": 4, 
-            "DL": 34.2, # kg/m2
+            "DL": 14, # kg/m2
             "bank_angle": 30, #max bank angle
             "cto_fl": 0.11, #next 3 parameters defined depending on max advance ratio
             "cto_turn": 0.14, 
@@ -43,26 +43,26 @@ def get_configuration():
             "d_fact": 0.05, 
             "max_v": 50,  #m/s
             "k_int": 1,
-            "A_eq": 0.48, #equivalent flat plate area
-            "FM": 0.75 #figure of merit
+            "A_eq": 0.75, #equivalent flat plate area, assumed between clean and utility helicopter config
+            "FM": 0.65 #figure of merit, low for multirotors
         }
     
     #conf 3 is compound
     elif config == 3:
         return {
             "MTOW": 718.89, 
-            "n_blades": 4, 
-            "n_rotor": 6, 
-            "DL": 100, #kg/m2
+            "n_blades": 5, 
+            "n_rotor": 4, 
+            "DL": 245.32, #kg/m2
             "bank_angle": 30, #max bank angle
             "cto_fl": 0.11, #next 3 parameters defined depending on max advance ratio
             "cto_turn": 0.14, 
             "cto_turb": 0.17, 
             "co_ax": 1, # 1 if not coaxial, 2if coaxial 
-            "d_fact": 0.06, 
-            "max_v": 50,  #m/s
+            "d_fact": 0.06, #assumption
+            "max_v": 57,  #m/s
             "k_int": 1,
-            "A_eq": 0.5, #equivalent flat plate area
+            "A_eq": 0.92, #equivalent flat plate area, utility helicopter assumed
             "FM": 0.6 #figure of merit
         }
     else:
@@ -99,7 +99,7 @@ def main():
     rotor.display_parameters()
 
     # uncomment to plot blades vs aspect ratio graph
-    #rotor.visual_blade_vs_aspect_ratio()
+    rotor.visual_blade_vs_aspect_ratio()
 
     # Step 3: Initialize PowerAnalysis with the configured RotorSizing object
     power = PowerAnalysis(rotorsizing=rotor)  # Pass the rotor object directly to PowerAnalysis
@@ -119,14 +119,14 @@ def main():
     power.final_power()
     power.get_highest_power()
     print('----------------------------------------')
-    #power.print_all_powers()
-    #print('----------------------------------------')
+    power.print_all_powers()
+    print('----------------------------------------')
     # Print the noise outputs
-    #sound = SoundAnalysis()
-    #print('----------Rotational noise----------')
-    #sound.display_parameters_rotor()
-    #print('----------Vortex noise----------')
-    #sound.display_paramenters_vortex()
+    sound = SoundAnalysis()
+    print('----------Rotational noise----------')
+    sound.display_parameters_rotor()
+    print('----------Vortex noise----------')
+    sound.display_paramenters_vortex()
 
 
     # Instantiate the EnergyAnalysis class
@@ -142,12 +142,12 @@ def main():
     amps = energy_analysis.calculate_amps()
 
     print("Mission Phase Times:")
-    #print(times)
+    print(times)
     total_time = times['total']/60
     print(f'Total Mission time = {total_time:.2f} [min]')
 
     print("\nMission Energies (Wh):")
-    #print(energies)
+    print(energies)
     total_energy = energies['total']
     loiter_energy = energies['Loiter']
     loiter_time = times['Loiter']/60

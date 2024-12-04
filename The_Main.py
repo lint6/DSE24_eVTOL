@@ -56,8 +56,8 @@ class RotorSizing:
         self.rotor_radius = np.sqrt((self.MTOW / self.N_rotors) / (np.pi * self.disc_loading))    # m 
         self.rotor_diameter = 2 * self.rotor_radius                                 # m
         # marilena statistics for helicopters. quad assumed 550 ft/s (NASA paper), to be discussed
-        #self.tip_speed = 140 * (self.rotor_diameter)**0.171                         # m / s
-        self.tip_speed = 550 * self.ft_to_m
+        #self.tip_speed = 140 * (self.rotor_diameter)**0.171                         # m / s, coaxial
+        self.tip_speed = 550 * self.ft_to_m                                        # quad rotor
 
         #self.RPM = 2673 / ((self.rotor_diameter)**0.892)                            # rpm
         #self.omega = self.RPM_to_rad * self.RPM                                     # rad / s
@@ -103,7 +103,7 @@ class RotorSizing:
         print(f"Rotor Diameter: {self.rotor_diameter:.2f} m")
         print(f"Tip Speed: {self.tip_speed:.2f} m/s")
         print(f"RPM: {self.RPM:.2f}")
-        print(f"Maximum Solidity: {self.maximum_solidity:.3f}")
+        print(f'Maximum Solidity: {self.maximum_solidity:.2f}')
         print(f"Blade Chord: {self.chord:.3f} m")
         print(f"Aspect Ratio: {self.aspect_ratio:.2f}")
 
@@ -290,7 +290,7 @@ class PowerAnalysis:
         self.P_hoge = ((self.MTOW * self.g) ** (3/2)) / (np.sqrt(2 * self.rho *(self.pi*(self.rotor_radius**2)) * self.rotorsizing.N_rotors) * self.FM)
 
         #self.P_vertical_climb =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_climb / 2) + np.sqrt((self.vertical_climb / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2)))) 
-        self.P_vertical_climb = self.P_hoge + self.MTOW_N * self.vertical_climb
+        self.P_vertical_climb = self.P_hoge + self.MTOW_N * self.vertical_climb 
         #self.P_vertical_descent =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_descent / 2) + np.sqrt((self.vertical_descent / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2))))
         self.P_vertical_descent = self.P_hoge + self.MTOW_N * self.vertical_descent
         #print(f'P_req for vertical climb = {self.P_vertical_climb / 1000:.2f}kW')
@@ -450,7 +450,7 @@ class PowerAnalysis:
             'HOGE1': self.P_hoge,
             'Climb1': self.min_power_CD_watts, # 9deg climb
             'Cruise1': self.min_power_watts,
-            'Descent1': self.power_steep_descent_watts, # steep descent
+            'Descent1': self.power_steep_descent_watts, # steep descent, 0 for compound
             'HOGE2': self.P_hoge,
             'Loiter': self.min_power_watts,
             'Climb2': self.min_power_CD_watts, # second climb 
