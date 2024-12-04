@@ -164,10 +164,11 @@ def main():
     print(f'Max amps = {max_amps:.2f} [A]')
 
     # plot the PEMFC power vs mission phase/time
-    powers = power.final_power()
-    print(f'Mission Phase Times {times}')
-    print(f'Mission Phase Powers {powers}')
-    energy_analysis.visual_PEMFC()
+    #powers = power.final_power()
+    #print(f'Mission Phase Times {times}')
+    #print(f'Mission Phase Powers {powers}')
+    energy_analysis.visual_PEMFC_power()
+    energy_analysis.visual_PEMFC_energy()
     
 if __name__ == '__main__':
     main()

@@ -729,21 +729,17 @@ class EnergyAnalysis:
 
         return self.mission_data['amps']
 
-    def visual_PEMFC(self):
-        ### one thing left: figure out how to find the final POWER and TIME values after correct code running order (should be in UI???)
-        power_per_phase = {}
-        time_per_phase = {}
+    def visual_PEMFC_power(self):
+        self.power.final_power()
+        power_per_phase = self.power.P
+        time_per_phase = self.calculate_missionphase_time()
 
         phases = list(power_per_phase.keys())
         power_values = list(power_per_phase.values())
-        time_values = list(time_per_phase.values())
+        time_values = [int(time) for time in time_per_phase.values()]
         
-        # Remove 'total' entry if it's present
-        if 'total' in phases:
-            total_index = phases.index('total')
-            phases.pop(total_index)
-            power_values.pop(total_index)
-            time_values.pop(total_index)
+        # Remove 'total' entry in time_values
+        time_values = time_values[:-1]
 
         # Calculate bar positions and widths
         bar_positions = []
@@ -755,12 +751,12 @@ class EnergyAnalysis:
             start_time += time
 
         # Generate unique colors for each phase
-        colors = ['skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
-                'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
-                'skyblue', 'skyblue', 'skyblue', 'skyblue']
+        colors = ['black', 'lightgreen', 'black', 'lightcoral', 'skyblue', 
+                'silver', 'black', 'skyblue', 'lightcoral', 'skyblue', 
+                'purple', 'black', 'pink', 'black']
 
         # Create bar plot
-        plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.7)
+        plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.9)
         
         # Add labels and title
         plt.xlabel('Time (s)', fontsize=12)
@@ -771,6 +767,55 @@ class EnergyAnalysis:
         for i, phase in enumerate(phases):
             plt.bar(0, 0, color=colors[i], label=phase)  # Dummy bars for legend
         plt.legend(loc='upper left', bbox_to_anchor=(1, 1), fontsize=10, title="Phases")
+
+        # Adjust layout for better spacing
+        plt.tight_layout()
+        
+        # Show the plot
+        plt.show()
+
+    def visual_PEMFC_energy(self):
+        self.power.final_power()
+        energy_per_phase = self.calculate_energy_required()
+
+        # Get the phases and energy values
+        phases = list(energy_per_phase.keys())
+        energy_values = list(energy_per_phase.values())
+
+        # Remove 'total' entry in phases and energy values
+        phases = phases[:-1]
+        energy_values = energy_values[:-1]
+
+        print(f'Phases: {phases}')
+        print(f'Phases length: {len(phases)}')
+        print(f'Energy Values length: {len(energy_values)}')
+
+        # Set bar positions as indices of phases
+        bar_positions = range(len(phases))  # Integers 0, 1, 2, ...
+
+        # Use a fixed bar width for all phases
+        bar_width = 0.8
+
+        # Generate unique colors for each phase
+        colors = [
+            'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+            'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+            'skyblue', 'skyblue', 'skyblue', 'skyblue'
+        ]
+
+        # Trim or extend the colors to match the number of phases
+        colors = colors[:len(phases)]
+
+        # Create bar plot
+        plt.bar(bar_positions, energy_values, width=bar_width, color=colors, edgecolor='black', alpha=0.9)
+        
+        # Add labels and title
+        plt.xlabel('Mission Phase', fontsize=12)
+        plt.ylabel('Energy (Wh)', fontsize=12)
+        plt.title('Energy vs Mission Phase', fontsize=14)
+
+        # Customize x-axis ticks to show phase names
+        plt.xticks(bar_positions, phases, rotation=45, ha='right', fontsize=10)
 
         # Adjust layout for better spacing
         plt.tight_layout()
