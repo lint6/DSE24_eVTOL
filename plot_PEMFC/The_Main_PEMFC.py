@@ -728,3 +728,52 @@ class EnergyAnalysis:
         self.mission_data['amps'] = amps_dict
 
         return self.mission_data['amps']
+
+    def visual_PEMFC(self):
+        ### one thing left: figure out how to find the final POWER and TIME values after correct code running order (should be in UI???)
+        power_per_phase = {}
+        time_per_phase = {}
+
+        phases = list(power_per_phase.keys())
+        power_values = list(power_per_phase.values())
+        time_values = list(time_per_phase.values())
+        
+        # Remove 'total' entry if it's present
+        if 'total' in phases:
+            total_index = phases.index('total')
+            phases.pop(total_index)
+            power_values.pop(total_index)
+            time_values.pop(total_index)
+
+        # Calculate bar positions and widths
+        bar_positions = []
+        widths = []
+        start_time = 0
+        for time in time_values:
+            bar_positions.append(start_time)
+            widths.append(time)
+            start_time += time
+
+        # Generate unique colors for each phase
+        colors = ['skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+                'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+                'skyblue', 'skyblue', 'skyblue', 'skyblue']
+
+        # Create bar plot
+        plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.7)
+        
+        # Add labels and title
+        plt.xlabel('Time (s)', fontsize=12)
+        plt.ylabel('Power (W)', fontsize=12)
+        plt.title('Power vs Time for Mission Phases', fontsize=14)
+
+        # Add legend with phase names and their colors
+        for i, phase in enumerate(phases):
+            plt.bar(0, 0, color=colors[i], label=phase)  # Dummy bars for legend
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1), fontsize=10, title="Phases")
+
+        # Adjust layout for better spacing
+        plt.tight_layout()
+        
+        # Show the plot
+        plt.show()
