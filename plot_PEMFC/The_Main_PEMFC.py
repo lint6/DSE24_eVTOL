@@ -751,6 +751,7 @@ class EnergyAnalysis:
             start_time += time
 
         average_power = sum(power_values) / len(power_values)
+        peak_power = max(power_values)
 
         # Generate unique colors for each phase
         colors = ['black', 'lightgreen', 'black', 'lightcoral', 'skyblue', 
@@ -760,9 +761,10 @@ class EnergyAnalysis:
         # Create bar plot
         plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.9)
 
-        # Horizontal Average Power Line
+        # Horizontal Average and Peal Power Line
         plt.axhline(average_power, color='red', linestyle='--', label=f'Average Power ({average_power:.2f} W)')
-        
+        plt.axhline(peak_power, color='blue', linestyle='--', label=f'Peak Power ({peak_power:.2f} W)')
+
         # Add labels and title
         plt.xlabel('Time (s)', fontsize=12)
         plt.ylabel('Power (W)', fontsize=12)
