@@ -287,17 +287,17 @@ class PowerAnalysis:
         ## hover power; what is this?? changed it to momentum theory (james wang adn stepiniewski)
         #self.P_hoge = self.k_int * self.k * self.T * self.v_i_hov + self.P_p_hov
 
-        self.P_hoge = ((self.MTOW * self.g) ** (3/2)) / (np.sqrt(2 * self.rho *(self.pi*(self.rotor_radius**2)) * self.rotorsizing.N_rotors) * self.FM)
+        self.P_hoge = self.k_int * self.k * self.v_i_hov * self.T + self.P_p_hov
 
         #self.P_vertical_climb =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_climb / 2) + np.sqrt((self.vertical_climb / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2)))) 
-        self.P_vertical_climb = self.P_hoge + self.MTOW_N * self.vertical_climb 
+        self.P_vertical_climb = self.P_hoge + (self.MTOW_N * self.vertical_climb)/2 
         #self.P_vertical_descent =  (self.MTOW_N / self.rotorsizing.N_rotors)*((self.vertical_descent / 2) + np.sqrt((self.vertical_descent / 2)**2 + ((self.MTOW_N / self.rotorsizing.N_rotors)) / (2 * self.rho * self.pi*(self.rotor_radius**2))))
-        self.P_vertical_descent = self.P_hoge + self.MTOW_N * self.vertical_descent
+        self.P_vertical_descent = self.P_hoge + (self.MTOW_N * self.vertical_descent)/2
         #print(f'P_req for vertical climb = {self.P_vertical_climb / 1000:.2f}kW')
         #print(f'P_req for vertical descent = {self.P_vertical_descent / 1000:.2f}kW')
 
         ## vertical climb/descent power
-        self.P_VCD = self.P_hoge + self.ROC_VCD*self.MTOW_N
+        #self.P_VCD = self.P_hoge + self.ROC_VCD*self.MTOW_N
 
 
     def iterate_design(self, new_MTOW_N=None, new_V_point=None, new_solidity=None, new_gamma_CD=None, new_rho=None, new_ROC_VCD=None, new_min_power_velocity_CD = None, new_min_power_velocity = None, new_min_power_velocity_descent = None, new_gamma_descent = None):
