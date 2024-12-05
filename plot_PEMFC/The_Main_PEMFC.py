@@ -752,10 +752,12 @@ class EnergyAnalysis:
         self.FC_power = peak_power*(1-DoH)                   # plot this as a line as well
         self.BS_power = peak_power - self.FC_power                # NOT TOO SURE ABOUT THIS!!!!!!!!!!!\
 
-        FC_Wfraq = 482                                  # W/kg    from florens excel
-        BS_Wfraq = 162                                  # Wh/kg   from florens excel
+        # FC_Wfraq = 482                                  # W/kg    from florens excel
+        # BS_Wfraq = 162                                  # Wh/kg   from florens excel
+        # self.FC_W = self.FC_power/FC_Wfraq
 
-        self.FC_W = self.FC_power/FC_Wfraq
+        coefficient_FC = [4.21,6.95]
+        self.FC_W = coefficient_FC[0]*self.FC_power + coefficient_FC[1]
 
         delta_p = []
         delta_E = []
@@ -769,9 +771,8 @@ class EnergyAnalysis:
             if power_values[x] > self.FC_power:
                 self.excess.append(delta_E[x])
 
-
-        
-        self.BS_W = sum(delta_E[0:4])/BS_Wfraq                    #Weight of the battery for the section where the most capacity of the battery is used.
+        coefficient_BS = [0.739,132]
+        self.BS_W = coefficient_BS[0]*sum(delta_E[0:4]) + coefficient_BS[1]                  #Weight of the battery for the section where the most capacity of the battery is used.
         Power_mass = self.FC_W + self.BS_W
 
 
