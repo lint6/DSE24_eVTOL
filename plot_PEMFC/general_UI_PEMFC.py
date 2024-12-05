@@ -168,6 +168,7 @@ def main():
     #print(f'Mission Phase Times {times}')
     #print(f'Mission Phase Powers {powers}')
     energy_analysis.calculate_FCBS()
+    
     #energy_analysis.calculate_optimal_DoH()
 
     energy_analysis.visual_PEMFC_power()

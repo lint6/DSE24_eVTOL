@@ -596,7 +596,8 @@ class EnergyAnalysis:
         self.BS_power = None
         self.FC_W = None
         self.BS_W = None
-
+        self.excess = None
+        self.delta_E = None
 
         # Create a dictionary to hold times, powers, energies, and amps
         self.mission_data = {
@@ -734,8 +735,8 @@ class EnergyAnalysis:
 
         return self.mission_data['amps']
     
-    def calculate_FCBS(self, DoH = 0.20):                        #DoH is fraction of battery to max required -> iteration
-                 
+    def calculate_FCBS(self, DoH = 1-0.7510987653768099, chargefrac = 0.6):                        #DoH is fraction of battery to max required -> iteration
+        chargefrac = chargefrac                                         #from 20% to 80% charging for longevity
         power_dict = self.power.final_power()
         time_per_phase = self.calculate_missionphase_time()
         time_values = [int(time) for time in time_per_phase.values()]
@@ -752,30 +753,37 @@ class EnergyAnalysis:
         self.FC_power = peak_power*(1-DoH)                   # plot this as a line as well
         self.BS_power = peak_power - self.FC_power                # NOT TOO SURE ABOUT THIS!!!!!!!!!!!\
 
-        FC_Wfraq = 482                                  # W/kg    from florens excel
-        BS_Wfraq = 162                                  # Wh/kg   from florens excel
+        #FC_Wfraq = 482                                  # W/kg    from florens excel
+        #BS_Wfraq = 162                                  # Wh/kg   from florens excel
 
-        self.FC_W = self.FC_power/FC_Wfraq
+        #self.FC_W = self.FC_power/FC_Wfraq
+
+        coefficient_FC = [0.739/1000,132]
+        self.FC_W = coefficient_FC[0]*self.FC_power + coefficient_FC[1]
 
         delta_p = []
-        delta_E = []
+        self.delta_E = []
         self.excess = []
 
         for i in range(len(power_values)):
             delta_p.append(power_values[i] - self.FC_power)
         for j in range(len(power_values)):
-            delta_E.append(delta_p[j]*time_values[j]/3600)
+            self.delta_E.append(delta_p[j]*time_values[j]/3600)
         for x in range(len(power_values)):
             if power_values[x] > self.FC_power:
-                self.excess.append(delta_E[x])
+                self.excess.append(self.delta_E[x])
 
+        for r in range(len(self.delta_E)):                              #implementing the 20% - 80% charge cycle for battery longevity
+            self.delta_E[r] = self.delta_E[r]/chargefrac
 
-        
-        self.BS_W = sum(delta_E[0:4])/BS_Wfraq                    #Weight of the battery for the section where the most capacity of the battery is used.
+        coefficient_BS = [4.21/1000,6.95]
+        self.BS_W = coefficient_BS[0]*sum(self.delta_E[0:4]) + coefficient_BS[1]
+
+        #self.BS_W = sum(self.delta_E[0:4])/BS_Wfraq                    #Weight of the battery for the section where the most capacity of the battery is used.
         Power_mass = self.FC_W + self.BS_W
 
-
-        print("Max Energy Output For BS:", sum(delta_E[0:4]), "[Wh]")
+        print(peak_power)
+        print("Max Energy Output For BS:", sum(self.delta_E[0:4]), "[Wh]")
         print("Max Power Output For BS:", self.BS_power, "[W]")
         print("Max Power Output For FC:", self.FC_power, "[W]")
         #print("Battery Energy Output per Flight Phase:", delta_E, "Wh")
@@ -784,19 +792,18 @@ class EnergyAnalysis:
         #print("power difference:", delta_p/1000,"[kW]")
         print("FC Mass:", self.FC_W, "[kg]")
         print("FCBS Mass:", Power_mass, "[kg]")
-
+        #print(self.delta_E)
         #print(average_power, peak_power)
         
          
     def calculate_optimal_DoH(self):
         equi_list =[]
-        for i in np.arange(0,1.001,0.001):
+        for i in np.arange(0,1.0001,0.0001):
+
             self.calculate_FCBS(DoH = i)
-
-
-            Power_mass = self.FC_W + self.BS_W
-            equi_list.append(Power_mass)
-        print(equi_list)
+            if sum(self.delta_E) == 0: 
+                equi_list.append(i)
+        print("DoH for Equilibrium:", equi_list)
              
 
 
@@ -829,6 +836,39 @@ class EnergyAnalysis:
         colors = ['black', 'lightgreen', 'black', 'lightcoral', 'skyblue', 
                 'silver', 'black', 'skyblue', 'lightcoral', 'skyblue', 
                 'purple', 'black', 'pink', 'black']
+
+
+        def areas(power_values, widths ,y_line):
+                above_area = sum(max(0, height - y_line)*width for height,width in zip(power_values,widths))
+                below_area = sum(max(0,y_line-height)*width for height,width in zip(power_values,widths))
+                return above_area, below_area
+        
+        def find_balancing_line(power_values, tolerance=1e-3, max_iterations=100):
+    
+            low, high = 0, max(power_values)
+            for _ in range(max_iterations):
+                mid = (low + high) / 2
+                above_area, below_area = areas(power_values,widths, mid)
+                if abs(above_area - below_area) <= tolerance:
+                    return mid
+                elif above_area > below_area:
+                    low = mid
+                else:
+                    high = mid
+            return (low + high) / 2
+        
+
+
+        # create bar plot
+        def plot_bar(power_values,y_line):
+            plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.9)
+            plt.axhline(y=y_line, color='orange', linestyle='--', label=f'y = {y_line:.2f}')
+
+        y_line = find_balancing_line(power_values)
+        plot_bar(power_values,y_line)
+        print(f"The DOH {y_line/peak_power} ")
+
+
 
         # Create bar plot
         plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.9)
