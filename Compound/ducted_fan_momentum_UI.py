@@ -57,7 +57,7 @@ plt.show()
 plt.clf
 
 '''Vertical Flight'''
-max_rate = 60
+max_rate = 3
 vertical_rate = np.arange(-max_rate,max_rate, max_rate/250)
 vertical_rate = np.sort(np.append(vertical_rate, 0))
 vertical_power = []
@@ -68,7 +68,7 @@ vertical_power = np.array(vertical_power)/int(1000)
 
 plt.plot(vertical_rate, vertical_power, "-", label="Power Required")
 plt.plot(0, vertical_power[list(vertical_rate).index(0)], '.', label=f'Hover Power P = {vertical_power[list(vertical_rate).index(0)]:.2f}kW')
-plt.plot((fan_1.v_h*-2, fan_1.v_h*-2), (min(vertical_power),max(vertical_power)), "--", label=f"V_c/v_h < -2\nV_c = {fan_1.v_h*-2:.2f}m/s")
+# plt.plot((fan_1.v_h*-2, fan_1.v_h*-2), (min(vertical_power),max(vertical_power)), "--", label=f"V_c/v_h < -2\nV_c = {fan_1.v_h*-2:.2f}m/s")
 plt.title('Power Required for vertical rate')
 plt.xlabel('Vertical Rate [m/s]')
 plt.ylabel('Power Required [kW]')

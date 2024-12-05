@@ -73,7 +73,7 @@ class LoiterFlight:
         pass
 
 class TransitionFlight:
-    def __init__(self, mass, span, chord, Cl = 1.5, Cd0=0.01, TWR = 1, dt=0.01, gain_tilt =1, g0 = 9.80665): #assuming constant Cl
+    def __init__(self, mass, span, chord, Cl = 1.5, Cd0=0.01, TWR = 1, dt=0.001, gain_tilt =1, g0 = 9.80665): #assuming constant Cl
         self.g0 = g0
         self.mass = mass
         self.thrust_tot = self.mass * self.g0 * TWR
@@ -235,10 +235,16 @@ class Airfoil:
         self.Cl0_des=Cl0_des
         self.Cd0_des=Cd0_des
 
+
+def func_min_locator(list1, list2): #find the minimum and its index in list2 and locate the item at the same index in list1
+    min_list2 = np.min(list2)
+    min_list2_index = list(list2).index(min_list2)
+    return list1[min_list2_index], min_list2
+
 TEST = True
 if TEST:
     #currently running B-29 root airfoil
-    vel = np.arange(10,120,0.1)
+    vel = np.arange(10,30,0.01)
     power_tot = []
     power_ind = []
     power_par = []
@@ -257,18 +263,26 @@ if TEST:
     # print(func_min_locator(vel, power_tot))
     
     plt.plot(vel, power_tot, "-", label="Total")
-    plt.plot(vel, power_ind, "-", label="induced")
-    plt.plot(vel, power_par, "-", label="parasitic")
-    plt.legend()               
+    plt.plot(vel, power_ind, "--", label="induced")
+    plt.plot(vel, power_par, "--", label="parasitic")
+    
+    vel_power_min, power_min = func_min_locator(vel, power_tot)
+    plt.plot(vel_power_min, power_min, '.', label=f'Min. Power \nV = {vel_power_min:.1f}m/s \nP = {power_min:.2f}kW')
+    
+    plt.title('Compound Fixed-wing Mode')
+    plt.xlabel('Velocity [m/s]')
+    plt.ylabel('Power Required [kW]')
+    plt.legend()
     plt.grid(True)
     plt.show()
     plt.clf
     
-    plt.plot(vel, np.array(Cl), "-", label="Cl")
-    plt.grid(True)
-    plt.show()
+    # plt.plot(vel, np.array(Cl), "-", label="Cl")
+    # plt.grid(True)
+    # plt.show()
+    # plt.clf
     
-    
+    #Transition Flight
     tr = TransitionFlight(mass=718, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=3)
     #gain = 3 for minimum alt change
     plt.plot(tr.fd_t, tr.fd_y, "-", label="Total")
