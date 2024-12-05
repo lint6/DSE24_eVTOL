@@ -592,7 +592,12 @@ class EnergyAnalysis:
         self.motor_eta = motor_eta  # motor efficiency i think
         self.gamma_1 = self.power.gamma_CD  # climb angle 
         self.gamma_2 = self.power.gamma_descent # descent angle
-        
+        self.FC_power = None
+        self.BS_power = None
+        self.FC_W = None
+        self.BS_W = None
+
+
         # Create a dictionary to hold times, powers, energies, and amps
         self.mission_data = {
             'times': { 'HIGE1': None, 'V_climb': None, 'HOGE1': None, 'Climb1': None, 'Cruise1': None, 'Descent1': None, 'HOGE2': None, 
@@ -728,6 +733,68 @@ class EnergyAnalysis:
         self.mission_data['amps'] = amps_dict
 
         return self.mission_data['amps']
+    
+    def calculate_FCBS(self, DoH = 0.20):                        #DoH is fraction of battery to max required -> iteration
+                 
+        power_dict = self.power.final_power()
+        time_per_phase = self.calculate_missionphase_time()
+        time_values = [int(time) for time in time_per_phase.values()]
+        time_values = time_values[:-1]                                  # phase durations without total time
+
+        power_values = list(power_dict.values())
+        average_power = sum(power_values) / len(power_values)
+        peak_power = max(power_values)      
+        
+        delta_pipi = peak_power - average_power         # not really needed
+
+        self.FC_power = peak_power*(1-DoH)                   # plot this as a line as well
+        self.BS_power = peak_power - self.FC_power                # NOT TOO SURE ABOUT THIS!!!!!!!!!!!\
+
+        FC_Wfraq = 482                                  # W/kg    from florens excel
+        BS_Wfraq = 162                                  # Wh/kg   from florens excel
+
+        self.FC_W = self.FC_power/FC_Wfraq
+
+        delta_p = []
+        delta_E = []
+        excess = []
+
+        for i in range(len(power_values)):
+            delta_p.append(power_values[i] - self.FC_power)
+        for j in range(len(power_values)):
+            delta_E.append(delta_p[j]*time_values[j]/3600)
+        for x in range(len(power_values)):
+            if power_values[x] > self.FC_power:
+                excess.append(delta_E[x])
+
+
+        
+        self.BS_W = sum(delta_E[0:4])/BS_Wfraq                    #Weight of the battery for the section where the most capacity of the battery is used.
+        Power_mass = self.FC_W + self.BS_W
+
+
+        print("Max Energy Output For BS:", sum(delta_E[0:4]), "[Wh]")
+        print("Max Power Output For BS:", self.BS_power, "[W]")
+        print("Max Power Output For FC:", self.FC_power, "[W]")
+        #print("Battery Energy Output per Flight Phase:", delta_E, "Wh")
+        print("BS Mass:", self.BS_W, "[kg]")
+        #print("Peak Power:", peak_power/1000, "[kW]")
+        #print("power difference:", delta_p/1000,"[kW]")
+        print("FC Mass:", self.FC_W, "[kg]")
+        print("FCBS Mass:", Power_mass, "[kg]")
+
+        #print(average_power, peak_power)
+        
+         
+    def calculate_optimal_DoH(self):
+        power_list =[]
+        for i in np.arange(0,1.001,0.001):
+            self.calculate_FCBS(DoH = i)
+            Power_mass = self.FC_W + self.BS_W
+            power_list.append(Power_mass)
+        print(power_list)
+             
+
 
     def visual_PEMFC_power(self):
         self.power.final_power()
@@ -762,7 +829,8 @@ class EnergyAnalysis:
         plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.9)
 
         # Horizontal Average and Peal Power Line
-        plt.axhline(average_power, color='red', linestyle='--', label=f'Average Power ({average_power:.2f} W)')
+        plt.axhline(self.FC_power, color='green', linestyle='--', label=f'Fuel Cell Power ({self.FC_power:.2f} W)')
+        #plt.axhline(average_power, color='red', linestyle='--', label=f'Average Power ({average_power:.2f} W)')
         plt.axhline(peak_power, color='blue', linestyle='--', label=f'Peak Power ({peak_power:.2f} W)')
 
         # Add labels and title
@@ -780,6 +848,7 @@ class EnergyAnalysis:
         
         # Show the plot
         plt.show()
+
 
     def visual_PEMFC_energy(self):
         self.power.final_power()
