@@ -742,6 +742,8 @@ class EnergyAnalysis:
         time_values = time_values[:-1]                                  # phase durations without total time
 
         power_values = list(power_dict.values())
+        for t in range(len(power_values)):
+            power_values[t] = power_values[t]*1.27                    #Umar safety factor
         average_power = sum(power_values) / len(power_values)
         peak_power = max(power_values)      
         
@@ -757,7 +759,7 @@ class EnergyAnalysis:
 
         delta_p = []
         delta_E = []
-        excess = []
+        self.excess = []
 
         for i in range(len(power_values)):
             delta_p.append(power_values[i] - self.FC_power)
@@ -765,7 +767,7 @@ class EnergyAnalysis:
             delta_E.append(delta_p[j]*time_values[j]/3600)
         for x in range(len(power_values)):
             if power_values[x] > self.FC_power:
-                excess.append(delta_E[x])
+                self.excess.append(delta_E[x])
 
 
         
@@ -787,12 +789,14 @@ class EnergyAnalysis:
         
          
     def calculate_optimal_DoH(self):
-        power_list =[]
+        equi_list =[]
         for i in np.arange(0,1.001,0.001):
             self.calculate_FCBS(DoH = i)
+
+
             Power_mass = self.FC_W + self.BS_W
-            power_list.append(Power_mass)
-        print(power_list)
+            equi_list.append(Power_mass)
+        print(equi_list)
              
 
 
@@ -804,7 +808,8 @@ class EnergyAnalysis:
         phases = list(power_per_phase.keys())
         power_values = list(power_per_phase.values())
         time_values = [int(time) for time in time_per_phase.values()]
-        
+        for t in range(len(power_values)):
+            power_values[t] = power_values[t]*1.27                    #Umar safety factor
         # Remove 'total' entry in time_values
         time_values = time_values[:-1]
 
