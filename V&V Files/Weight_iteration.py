@@ -30,7 +30,7 @@ class weight_iteration:
         self.reg_coef_battery = 0.00421
         self.battery_offset = 6.95
         self.reg_coef_tank_700 = 13.4
-        self.tank_700_offset = 11
+        self.tank_700_offset = 13.3
         self.ref_coef_tank_350 = 9.99
         self.tank_350_offset = 16.6
         
