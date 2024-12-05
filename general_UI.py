@@ -123,7 +123,7 @@ def main():
     power.print_all_powers()
     print('----------------------------------------')
     # Print the noise outputs
-    sound = SoundAnalysis()
+    sound = SoundAnalysis(rotorsizing=rotor)
     print('----------Rotational noise----------')
     sound.display_parameters_rotor()
     print('----------Vortex noise----------')
