@@ -290,7 +290,7 @@ if TEST:
     plt.clf
     
     #Transition Flight
-    tr = TransitionFlight(mass=718, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=3.2)
+    tr = TransitionFlight(mass=1069.137, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=2.6)
     #gain = 3 for minimum alt change
     plt.plot(tr.fd_t, tr.fd_L_rot, "-", label = 'Lift from rotor')
     plt.plot(tr.fd_t, tr.fd_L_win, "-", label = 'Lift from wing')
@@ -300,11 +300,13 @@ if TEST:
     plt.grid(True)
     plt.xlabel('Time [s]')
     plt.ylabel('Lift [s]')
+    plt.show()
+    plt.clf
 
-    # plt.plot(tr.fd_t, tr.fd_rot_tilt, "-")
-    # plt.title('Flight Trtrajectory')
-    # plt.xlabel('Downrange [m]')
-    # plt.ylabel('Height [m]')
+    plt.plot(tr.fd_t, tr.fd_rot_tilt, "-")
+    plt.title('Flight Trtrajectory')
+    plt.xlabel('Downrange [m]')
+    plt.ylabel('Height [m]')
     
     plt.show()
-    # plt.clf
+    plt.clf
