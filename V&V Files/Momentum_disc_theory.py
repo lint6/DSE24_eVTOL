@@ -295,7 +295,7 @@ class Ducted_Fan_3: #angled climb
         self.V_c_fast = V_c_fast
         return V_c_fast
 
-fan_1 = Ducted_Fan_1(mass=float(718/4))
+fan_1 = Ducted_Fan_1(mass=float(718/4), radius= 0.7)
 fan_2 = Ducted_Fan_2(mass=float(718/4), Cd0=0.05, V= 3, related_fan=fan_1)
 fan_3 = Ducted_Fan_3(mass=float(718/4), gamma=0, related_fan1=fan_1, related_fan2 = fan_2 )
 
