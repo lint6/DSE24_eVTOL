@@ -7,7 +7,7 @@ def func_min_locator(list1, list2): #find the minimum and its index in list2 and
     min_list2_index = list(list2).index(min_list2)
     return list1[min_list2_index], min_list2
 
-fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(718/4),radius=0.9652/2, P_a=42000)
+fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(1069.137/4),radius=0.9652/2, P_a=42000)
 
 # Calculate hover induced velocity
 print(f"Hover Induced Velocity: {fan_1.calc_v_h():.2f}")
@@ -33,7 +33,7 @@ print(f"Power_loading: {(fan_1.calc_mass()[0]/(fan_1.calc_power_ideal_hover()/10
 vel = np.arange(0,100,0.01)
 power = []
 for i in vel :
-    fan_2 = ducted_fan_calc.Ducted_Fan_2(mass=float(718/4), Cd0=0.05, V=i, related_fan=fan_1, radius = 0.625)
+    fan_2 = ducted_fan_calc.Ducted_Fan_2(mass=float(1069.137/4), Cd0=0.05, V=i, related_fan=fan_1, radius = 0.625)
     power.append(fan_2.calc_p_idf())
 power = np.array(power)/int(1000)
 
@@ -62,7 +62,7 @@ vertical_rate = np.arange(-max_rate,max_rate, max_rate/250)
 vertical_rate = np.sort(np.append(vertical_rate, 0))
 vertical_power = []
 for i in vertical_rate :
-    fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(718/4),radius=0.9652/2, V_c=i)
+    fan_1 = ducted_fan_calc.Ducted_Fan_1(mass=float(1069.137/4),radius=0.9652/2, V_c=i)
     vertical_power.append(fan_1.calc_P_kappa())
 vertical_power = np.array(vertical_power)/int(1000)
 
@@ -77,6 +77,6 @@ plt.grid(True)
 plt.show()
 
 
-# fan_3 = ducted_fan_calc.Ducted_Fan_3(mtow=float(718/4), gamma=2, related_fan1=fan_1, related_fan2 = fan_2 )
+# fan_3 = ducted_fan_calc.Ducted_Fan_3(mtow=float(1069.137/4), gamma=2, related_fan1=fan_1, related_fan2 = fan_2 )
 # print(f"V_c_slow: {fan_3.calc_V_c_slow()}")
 # print(f"V_c_fast: {fan_3.calc_V_c_fast()}")
