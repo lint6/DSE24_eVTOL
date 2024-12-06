@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 # from ducted_fan_momentum_UI import func_min_locator
 
 class WingedFlight:
-    def __init__(self, vel, mass, chord, span, Cd0 = 0.05, power_a = None, wing_count=1, density = 1.225, g0 = 9.80665):
+    def __init__(self, vel, mass, chord, span, Cd0 = 0.022, power_a = None, wing_count=1, density = 1.225, g0 = 9.80665): #Torenbeek twin-engine piston 0.022 cd0
         self.power_a = power_a #power available
         self.wing_count = wing_count    #amount of wing on aircraft
         self.vel = vel  #airspeed of aircraft
@@ -104,6 +104,8 @@ class TransitionFlight:
         self.fd_acc_ver = []
         self.fd_rot_tilt = []
         self.fd_t = []
+        self.fd_L_rot = []
+        self.fd_L_win = []
         
         
         Run = True
@@ -127,6 +129,8 @@ class TransitionFlight:
             #Finding Forces
             L_rot, T_rot = self.calc_RotorForces()
             self.L_win, self.D_win = self.calc_WingForces()
+            self.fd_L_rot.append(L_rot)
+            self.fd_L_win.append(self.L_win)
             # print(f'L_rot {L_rot}')
             # print(f'L_win {self.L_win}')
             # print(f'rotor_tilt {self.rotor_tilt}')
@@ -178,7 +182,7 @@ class TransitionFlight:
         return dyn_press
     
 class Wing:
-    def __init__(self, dyn_press, span, weight, chord, Cl = 0, oswald_factor = 0.81, Cd0 = 0.008):
+    def __init__(self, dyn_press, span, weight, chord, Cl = 0, oswald_factor = 0.85, Cd0 = 0.008): #Torenbeek twin-engine piston 0.85 e 
         self.span = span
 
         self.weight = weight
@@ -244,13 +248,13 @@ def func_min_locator(list1, list2): #find the minimum and its index in list2 and
 TEST = True
 if TEST:
     #currently running B-29 root airfoil
-    vel = np.arange(10,30,0.01)
+    vel = np.arange(20,40,0.01)
     power_tot = []
     power_ind = []
     power_par = []
     Cl = []
     for i in vel:
-        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=1, mass= 718, span=10, chord=[1])
+        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 1069.137, span=10, chord=[1]) #eq wing
         power_tot.append(flight_point.power_tot)
         power_ind.append(flight_point.power_ind)
         power_par.append(flight_point.power_par)
@@ -269,7 +273,6 @@ if TEST:
     vel_power_min, power_min = func_min_locator(vel, power_tot)
     plt.plot(vel_power_min, power_min, '.', label=f'Min. Power \nV = {vel_power_min:.1f}m/s \nP = {power_min:.2f}kW')
     
-    plt.title('Compound Fixed-wing Mode')
     plt.xlabel('Velocity [m/s]')
     plt.ylabel('Power Required [kW]')
     plt.legend()
@@ -278,8 +281,7 @@ if TEST:
     plt.clf
     
     plt.plot(vel, np.array(Cl), "-", label="Cl")
-    plt.axhspan(1.6, 6, color='red', alpha=0.5)
-    plt.title('C_l required')
+    plt.axhspan(1.5, max(np.array(Cl)), color='red', alpha=0.5)
     plt.xlabel('Velocity [m/s]')
     plt.ylabel('C_l Required [-]')
     plt.legend()
@@ -288,7 +290,21 @@ if TEST:
     plt.clf
     
     #Transition Flight
-    tr = TransitionFlight(mass=718, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=3)
+    tr = TransitionFlight(mass=718, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=3.2)
     #gain = 3 for minimum alt change
-    plt.plot(tr.fd_t, tr.fd_y, "-", label="Total")
+    plt.plot(tr.fd_t, tr.fd_L_rot, "-", label = 'Lift from rotor')
+    plt.plot(tr.fd_t, tr.fd_L_win, "-", label = 'Lift from wing')
+    plt.plot(tr.fd_t, np.array(tr.fd_L_win)+np.array(tr.fd_L_rot), "-", label = 'Total Lift')
+    # plt.title('')
+    plt.legend()
+    plt.grid(True)
+    plt.xlabel('Time [s]')
+    plt.ylabel('Lift [s]')
+
+    # plt.plot(tr.fd_t, tr.fd_rot_tilt, "-")
+    # plt.title('Flight Trtrajectory')
+    # plt.xlabel('Downrange [m]')
+    # plt.ylabel('Height [m]')
+    
     plt.show()
+    # plt.clf
