@@ -117,8 +117,8 @@ def main():
     # Step 4: Plot power components
     power.plot_power_components()
     power.final_power()
-    #print(power.final_power())
-    power.get_highest_power()
+    print(power.final_power())
+    #power.get_highest_power()
     print('----------------------------------------')
     #power.print_all_powers()
     #print('----------------------------------------')
@@ -167,6 +167,10 @@ def main():
     #powers = power.final_power()
     #print(f'Mission Phase Times {times}')
     #print(f'Mission Phase Powers {powers}')
+    energy_analysis.calculate_FCBS()
+    
+    #energy_analysis.calculate_optimal_DoH()
+
     energy_analysis.visual_PEMFC_power()
     energy_analysis.visual_PEMFC_energy()
     

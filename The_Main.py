@@ -484,13 +484,13 @@ class PowerAnalysis:
     
 
 class SoundAnalysis:
-    def __init__(self):
+    def __init__(self, rotorsizing):
         #Conversions
         self.m_to_f = 1/0.3048 #Conversion factor from meter to feet
         self.N_to_lbs = (1/9.80665)*2.20462
 
         #Input
-        self.rotorsizing = RotorSizing()
+        self.rotorsizing = rotorsizing if rotorsizing else RotorSizing()
 
         #Observer position relative to rotor
         self.x = 0 #np.linspace(0,100,1000) #Measured in direction of motion of helicopter [ft]
@@ -512,6 +512,9 @@ class SoundAnalysis:
         self.V_07 = 0.7*((self.n*np.pi*self.D)/60) #Linear speed of 0.7 radius section
         self.chord = self.rotorsizing.chord*self.m_to_f #Chord [ft]
         self.A_b = self.B*self.R*self.chord #Total blade area [ft^2]
+
+        #Input for noise conversion/addition
+        self.n_rotors = self.rotorsizing.N_rotors*self.rotorsizing.coaxial
 
         #Initialize
         self.rotational_noise()
@@ -543,6 +546,15 @@ class SoundAnalysis:
         #Apply SPL correction
         self.rotational_SPL = self.rotational_SPL_uncorrected + 11 + 10*np.log10((self.T/(self.r**2))*(self.T/self.A))
 
+        #Convert to sound intensity
+        self.one_rotor_intensity = (10e-12) * 10**(self.rotational_SPL/10)
+        
+        #Add sound intensities
+        self.all_rotor_intensity = self.one_rotor_intensity * self.n_rotors
+
+        #Convert back to dB
+        self.rotational_SPL_total = 10*np.log10(self.all_rotor_intensity/(10e-12))
+
         #Calculate fundamental frequency
         self.f_rotational = (self.n*self.B)/(2*np.pi*(1-self.M_f*np.cos(self.theta)))
 
@@ -553,20 +565,30 @@ class SoundAnalysis:
         #Correct for distance (500 ft)
         self.vortex_SPL = self.vortex_SPL_uncorrected - 20*np.log10(self.z/300)
 
+        #Convert to sound intensity
+        self.one_rotor_intensity_vortex = (10e-12) * 10**(self.vortex_SPL/10)
+        
+        #Add sound intensities
+        self.all_rotor_intensity_vortex = self.one_rotor_intensity_vortex * self.n_rotors
+
+        #Convert back to dB
+        self.vortex_SPL_total = 10*np.log10(self.all_rotor_intensity_vortex/(10e-12))
+
         #Calculate frequency
         self.thickness = 0.12*self.chord #NACA0012 airfoil thickness to chord
         self.f_vortex = (self.V_07*0.28)/self.thickness  #Only valid for small AoA
 
     def display_parameters_rotor(self):
+        print(f"This configuration has {self.n_rotors} rotors")
         print(f"Equivalent M: {self.M_E :.4f}")
-        print(f"Uncorrected SPL: {self.rotational_SPL_uncorrected:.4f} dB")
-        print(f"Correction factor: {self.rotational_SPL-self.rotational_SPL_uncorrected:.4f} dB")
-        print(f"Corrected SPL: {self.rotational_SPL:.4f} dB")
+        print(f"Single rotor SPL: {self.rotational_SPL:.4f} dB")
+        #print(f"Correction factor: {self.rotational_SPL-self.rotational_SPL_uncorrected:.4f} dB")
+        print(f"All rotor SPL: {self.rotational_SPL_total:.4f} dB")
         print(f"Fundamental frequency: {self.f_rotational:.4f} Hz")
         
     def display_paramenters_vortex(self):
-        print(f"Uncorrected SPL: {self.vortex_SPL_uncorrected:.4f} dB")
-        print(f"Corrected SPL: {self.vortex_SPL:.4f} dB")
+        print(f"Single rotor SPL: {self.vortex_SPL:.4f} dB")
+        print(f"All rotor SPL: {self.vortex_SPL_total:.4f} dB")
         print(f"Vortex frequency: {self.f_vortex:.4f} Hz")
 
 
@@ -728,3 +750,92 @@ class EnergyAnalysis:
         self.mission_data['amps'] = amps_dict
 
         return self.mission_data['amps']
+
+    def visual_PEMFC_power(self):
+        self.power.final_power()
+        power_per_phase = self.power.P
+        time_per_phase = self.calculate_missionphase_time()
+
+        phases = list(power_per_phase.keys())
+        power_values = list(power_per_phase.values())
+        time_values = [int(time) for time in time_per_phase.values()]
+        
+        # remove 'total' in time_values
+        time_values = time_values[:-1]
+
+        # calculate bar positions and widths
+        bar_positions = []
+        widths = []
+        start_time = 0
+        for time in time_values:
+            bar_positions.append(start_time)
+            widths.append(time)
+            start_time += time
+
+        # define average and peak power
+        average_power = sum(power_values) / len(power_values)
+        peak_power = max(power_values)
+
+        colors = ['black', 'lightgreen', 'black', 'lightcoral', 'skyblue', 
+                'silver', 'black', 'skyblue', 'lightcoral', 'skyblue', 
+                'purple', 'black', 'pink', 'black']
+
+        # create bar plot
+        plt.bar(bar_positions, power_values, width=widths, align='edge', color=colors, edgecolor='black', alpha=0.9)
+
+        # average and peak power lines
+        plt.axhline(average_power, color='red', linestyle='--', label=f'Average Power ({average_power:.2f} W)')
+        plt.axhline(peak_power, color='blue', linestyle='--', label=f'Peak Power ({peak_power:.2f} W)')
+
+        # labels and title
+        plt.xlabel('Time (s)', fontsize=12)
+        plt.ylabel('Power (W)', fontsize=12)
+        plt.title('Power vs Time for Mission Phases', fontsize=14)
+
+        # legend
+        for i, phase in enumerate(phases):
+            plt.bar(0, 0, color=colors[i], label=phase)  # Dummy bars for legend
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1), fontsize=10, title="Phases")
+    
+        # show the plot
+        plt.tight_layout()
+        plt.show()
+
+    def visual_PEMFC_energy(self):
+        self.power.final_power()
+        energy_per_phase = self.calculate_energy_required()
+
+        # phase and energy values
+        phases = list(energy_per_phase.keys())
+        energy_values = list(energy_per_phase.values())
+
+        # remove 'total' in phases and energy values
+        phases = phases[:-1]
+        energy_values = energy_values[:-1]
+
+        print(f'Phases: {phases}')
+        print(f'Phases length: {len(phases)}')
+        print(f'Energy Values length: {len(energy_values)}')
+
+        # sizing the bars
+        bar_positions = range(len(phases)) 
+        bar_width = 0.8
+
+        colors = [
+            'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+            'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 
+            'skyblue', 'skyblue', 'skyblue', 'skyblue'
+        ]
+
+        # bar plot
+        plt.bar(bar_positions, energy_values, width=bar_width, color=colors, edgecolor='black', alpha=0.9)
+        
+        # labels and title
+        plt.xlabel('Mission Phase', fontsize=12)
+        plt.ylabel('Energy (Wh)', fontsize=12)
+        plt.title('Energy vs Mission Phase', fontsize=14)
+        plt.xticks(bar_positions, phases, rotation=45, ha='right', fontsize=10)
+
+        # show the plot
+        plt.tight_layout()
+        plt.show()
