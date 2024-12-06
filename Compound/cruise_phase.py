@@ -250,7 +250,7 @@ if TEST:
     power_par = []
     Cl = []
     for i in vel:
-        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 718, span=10, chord=[1])
+        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=1, mass= 718, span=10, chord=[1])
         power_tot.append(flight_point.power_tot)
         power_ind.append(flight_point.power_ind)
         power_par.append(flight_point.power_par)
@@ -277,10 +277,15 @@ if TEST:
     plt.show()
     plt.clf
     
-    # plt.plot(vel, np.array(Cl), "-", label="Cl")
-    # plt.grid(True)
-    # plt.show()
-    # plt.clf
+    plt.plot(vel, np.array(Cl), "-", label="Cl")
+    plt.axhspan(1.6, 6, color='red', alpha=0.5)
+    plt.title('C_l required')
+    plt.xlabel('Velocity [m/s]')
+    plt.ylabel('C_l Required [-]')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    plt.clf
     
     #Transition Flight
     tr = TransitionFlight(mass=718, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=3)
