@@ -44,8 +44,8 @@ class WingedFlight:
     def calc_DragCoe(self): #Coefficient of drag
         Cd0_sum = np.sum(self.Cd0_nw)
         Cd_ind_sum = 0
-        Cd0_sum += self.wing.Cd0 * self.wing_count
-        Cd_ind_sum += self.wing.Cd_ind * self.wing_count
+        Cd0_sum += self.wing.Cd0
+        Cd_ind_sum += self.wing.Cd_ind
         Cd_tot = Cd0_sum + Cd_ind_sum
         return Cd_tot, Cd0_sum, Cd_ind_sum
     
@@ -68,12 +68,53 @@ class WingedFlight:
     def calc_MassDistrib(self):
         return self.weight/self.wing_count
 
-class LoiterFlight:
-    def __init__(self):
-        pass
-
+class SteadyTransitionFlight:
+    def __init__(self, V, mass, span, chord, radius, wing_count = 1, Cd0=0.022, Cl = 1.5):
+        self.mass = mass
+        self.g0 = 9.80665
+        self.weight = self.mass * self.g0
+        self.V = V
+        self.wing = Wing(dyn_press=0, span=span, weight=self.weight, chord=chord, Cl=Cl)
+        self.Cd0_fus = Cd0
+        self.radius = radius
+        self.wing_count = wing_count
+        self.dyn_press = self.calc_DynPress()
+        
+        self.WingForce = self.calc_WingForces() #0 is lift, 1 is drag
+        
+        self.T_hor = self.WingForce[1]
+        self.T_ver = self.weight - self.WingForce[0]
+        
+        self.rotor = self.calc_RotorCon() #0 is angle, 1 is thrust
+        self.power = self.calc_Power() #0 is total, 1 is vertical, 2 is horizontal
+        
+    def calc_DynPress(self):
+        dyn_press = 0.5 * 1.225 * self.V**2
+        return dyn_press
+    
+    def calc_WingForces(self): #from transition flight code
+        Lift = self.wing.Cl * self.dyn_press * self.wing.area * self.wing_count
+        Drag = (self.wing.Cd_tot + self.Cd0_fus) * self.dyn_press * self.wing.area
+        return Lift, Drag
+    
+    def calc_RotorCon(self):
+        if self.T_hor:
+            angle = np.arctan(self.T_ver / self.T_hor)
+        else:
+            angle = np.pi/2
+        thrust = (self.T_ver**2 + self.T_hor**2)**(1/2)
+        return angle, thrust
+    
+    def calc_Power(self, density = 1.225):
+        power_ver = self.T_ver * np.sqrt(self.T_ver/(2* np.pi * self.radius**2 * density*4))
+        power_hor = self.T_hor * self.V
+        power_tot = power_hor + power_ver
+        return power_tot, power_ver, power_hor
+        
+    
+    
 class TransitionFlight:
-    def __init__(self, mass, span, chord, Cl = 1.5, Cd0=0.01, TWR = 1, dt=0.001, gain_tilt =1, g0 = 9.80665): #assuming constant Cl
+    def __init__(self, mass, span, chord, Cl = 1.5, Cd0=0.01, TWR = 1, dt=0.001, gain_tilt =1, g0 = 9.80665, Run = True): #assuming constant Cl
         self.g0 = g0
         self.mass = mass
         self.thrust_tot = self.mass * self.g0 * TWR
@@ -107,8 +148,7 @@ class TransitionFlight:
         self.fd_L_rot = []
         self.fd_L_win = []
         
-        
-        Run = True
+        Run = Run
         while Run:
             if self.L_win >= self.mass * self.g0:
                 Run = False
@@ -247,14 +287,19 @@ def func_min_locator(list1, list2): #find the minimum and its index in list2 and
 
 TEST = True
 if TEST:
-    #currently running B-29 root airfoil
-    vel = np.arange(20,40,0.01)
+    chord = [1]
+    span = 10
+    mass = 1069.137
+    rotor_r = 0.9652/2
+    wing_num = 2 #doubles the lift, doesnt use equivalent wing 
+    # currently running B-29 root airfoil
+    vel = np.arange(20,100,0.01)
     power_tot = []
     power_ind = []
     power_par = []
     Cl = []
     for i in vel:
-        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 1069.137, span=10, chord=[1]) #eq wing
+        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=1, mass= 1156.661, span=11, chord=[1.472])
         power_tot.append(flight_point.power_tot)
         power_ind.append(flight_point.power_ind)
         power_par.append(flight_point.power_par)
@@ -284,29 +329,77 @@ if TEST:
     plt.axhspan(1.5, max(np.array(Cl)), color='red', alpha=0.5)
     plt.xlabel('Velocity [m/s]')
     plt.ylabel('C_l Required [-]')
+    plt.margins(0)
     plt.legend()
     plt.grid(True)
     plt.show()
     plt.clf
     
-    #Transition Flight
-    tr = TransitionFlight(mass=1069.137, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=2.7)
-    #gain = 3 for minimum alt change
-    plt.plot(tr.fd_t, np.array(tr.fd_L_rot)/1000, "-", label = 'Lift from rotor')
-    plt.plot(tr.fd_t, np.array(tr.fd_L_win)/1000, "-", label = 'Lift from wing')
-    plt.plot(tr.fd_t, (np.array(tr.fd_L_win)+np.array(tr.fd_L_rot))/1000, "-", label = 'Total Lift')
-    # plt.title('')
-    plt.legend()
-    plt.grid(True)
-    plt.xlabel('Time [s]')
-    plt.ylabel('Lift [kN]')
-    plt.show()
-    plt.clf
+    # #Transition Flight
+    # tr = TransitionFlight(mass=mass, span=span, Cl=1.5, chord=chord, TWR=1.0, gain_tilt=2.7)
+    # #gain = 3 for minimum alt change
+    # plt.plot(tr.fd_t, np.array(tr.fd_L_rot)/1000, "-", label = 'Lift from rotor')
+    # plt.plot(tr.fd_t, np.array(tr.fd_L_win)/1000, "-", label = 'Lift from wing')
+    # plt.plot(tr.fd_t, (np.array(tr.fd_L_win)+np.array(tr.fd_L_rot))/1000, "-", label = 'Total Lift')
+    # # plt.title('')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.xlabel('Time [s]')
+    # plt.ylabel('Lift [kN]')
+    # plt.show()
+    # plt.clf
 
-    plt.plot(tr.fd_t, tr.fd_rot_tilt, "-")
-    # plt.title('Flight Trtrajectory')
-    plt.xlabel('Downrange [m]')
-    plt.ylabel('Height [m]')
+    # plt.plot(tr.fd_t, tr.fd_rot_tilt, "-")
+    # # plt.title('Flight Trtrajectory')
+    # plt.xlabel('Downrange [m]')
+    # plt.ylabel('Height [m]')
     
+    # plt.show()
+    # plt.clf
+    
+    vel1 = np.arange(0,60,0.01)
+    thrust = []
+    angle = []
+    thrust_ver = []
+    thrust_hor = []
+    power_tr = []
+    power_tr_v = []
+    power_tr_h = []
+    for i in vel1:
+        plane = SteadyTransitionFlight(V=i, mass=mass, span=span, chord=chord, radius=rotor_r, wing_count=wing_num, Cl = 1.5)
+        if plane.power[1] > 0:
+            thrust.append(plane.rotor[1])
+            angle.append(plane.rotor[0])
+            thrust_ver.append(plane.T_ver)
+            thrust_hor.append(plane.T_hor)
+            power_tr.append(plane.power[0])
+            power_tr_v.append(plane.power[1])
+            power_tr_h.append(plane.power[2])
+        
+    vel1 = list(vel1)[:len(thrust)]
+    vel2 = np.arange(vel1[-1],60,0.01)
+    power_tot = []
+    power_ind = []
+    power_par = []
+    Cl = []
+    for i in vel2:
+        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=wing_num, mass= mass, span=span, chord=chord) #eq wing
+        power_tot.append(flight_point.power_tot)
+        power_ind.append(flight_point.power_ind)
+        power_par.append(flight_point.power_par)
+        Cl.append(flight_point.wing.Cl)
+        
+    # power_tot = np.array(power_tot)/1000
+    # power_ind = np.array(power_ind)/1000
+    # power_par = np.array(power_par)/1000
+
+    plt.plot(vel1, np.array(power_tr)/1000)
+    plt.plot(vel1, np.array(power_tr_h)/1000)
+    plt.plot(vel1, np.array(power_tr_v)/1000)
+    plt.plot(vel2, np.array(power_tot)/1000)
+    plt.plot(vel2, np.array(power_ind)/1000)
+    plt.plot(vel2, np.array(power_par)/1000)
+    plt.margins(0.01)
+
     plt.show()
-    plt.clf
+    
