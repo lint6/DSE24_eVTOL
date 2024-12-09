@@ -18,7 +18,7 @@ class MassBalance:
         self.MTOW = 718.89
         self.m_payload = 185
         self.m_fuselage = 100 #ESTIMATE OR INPUT NEW VALUE
-        self.m_batteries = 84
+        self.m_batteries = 15
         self.m_fuelcell = 165
         self.m_h2tank = 73.6
         if self.aircraft_type == 1:
@@ -62,8 +62,8 @@ class MassBalance:
             # Define parameters for Coaxial Helicopter
             self.cg_ideal_ac = 39 
             # Main Components CG bounds
-            self.payload_cg_min = 11
-            self.payload_cg_max = 21
+            self.payload_cg_min = 20
+            self.payload_cg_max = 30
 
             self.fuselage_cg_min = 30
             self.fuselage_cg_max = 45
@@ -92,9 +92,10 @@ class MassBalance:
             pass
         elif self.aircraft_type == 3:
             # Define parameters for Compound Aircraft
-            self.cg_ideal_ac = 50 #ASK COMPOUND GROUP, lintong said it should be between both ducts but that messes up the code
-            self.payload_cg_min = 10
-            self.payload_cg_max = 20
+            self.cg_ideal_ac = 47 #ASK COMPOUND GROUP, lintong said it should be between both ducts but that messes up the code
+            
+            self.payload_cg_min = 20
+            self.payload_cg_max = 30
 
             self.fuselage_cg_min = 45
             self.fuselage_cg_max = self.cg_ideal_ac
@@ -110,8 +111,8 @@ class MassBalance:
             # Wing parameters
             self.wing_1_cg_min = (self.payload_cg_min +10)
             self.wing_1_cg_max = (self.payload_cg_max +10)
-            self.wing_2_cg_max = (65)
             self.wing_2_cg_min = (75)
+            self.wing_2_cg_max = (95)
             self.wing_1_m = 50 #TO BE CHANGED
             self.wing_2_m = 50 #TO BE CHANGED
              # Define rotor set parameters
@@ -122,6 +123,8 @@ class MassBalance:
             self.rotor_2_cg_min = (self.wing_2_cg_min)
             self.rotor_2_cg_max = (self.wing_2_cg_max)
             self.rotor_cg_positions = [self.rotor_1_cg_min, self.rotor_2_cg_max]
+
+            
             pass
         else:
             raise ValueError("Invalid aircraft type. Choose 1 for Quadrotor, 2 for Coaxial Helicopter, or 3 for Compound Aircraft.")
