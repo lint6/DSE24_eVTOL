@@ -705,7 +705,7 @@ class EnergyAnalysis:
         times_dict['HOGE2'] = 30
         
         # Loiter time
-        times_dict['Loiter'] = 600 # Dependent on max endurance
+        times_dict['Loiter'] = 1800 # Dependent on max endurance
         
         # Steady Climb 2 time (T9)
         d_cl2 = delta_h3 / np.tan(np.radians(self.gamma_1))
