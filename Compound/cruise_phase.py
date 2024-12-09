@@ -290,21 +290,21 @@ if TEST:
     plt.clf
     
     #Transition Flight
-    tr = TransitionFlight(mass=1069.137, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=2.6)
+    tr = TransitionFlight(mass=1069.137, span=10, Cl=1.5, chord=[1], TWR=1.0, gain_tilt=2.7)
     #gain = 3 for minimum alt change
-    plt.plot(tr.fd_t, tr.fd_L_rot, "-", label = 'Lift from rotor')
-    plt.plot(tr.fd_t, tr.fd_L_win, "-", label = 'Lift from wing')
-    plt.plot(tr.fd_t, np.array(tr.fd_L_win)+np.array(tr.fd_L_rot), "-", label = 'Total Lift')
+    plt.plot(tr.fd_t, np.array(tr.fd_L_rot)/1000, "-", label = 'Lift from rotor')
+    plt.plot(tr.fd_t, np.array(tr.fd_L_win)/1000, "-", label = 'Lift from wing')
+    plt.plot(tr.fd_t, (np.array(tr.fd_L_win)+np.array(tr.fd_L_rot))/1000, "-", label = 'Total Lift')
     # plt.title('')
     plt.legend()
     plt.grid(True)
     plt.xlabel('Time [s]')
-    plt.ylabel('Lift [s]')
+    plt.ylabel('Lift [kN]')
     plt.show()
     plt.clf
 
     plt.plot(tr.fd_t, tr.fd_rot_tilt, "-")
-    plt.title('Flight Trtrajectory')
+    # plt.title('Flight Trtrajectory')
     plt.xlabel('Downrange [m]')
     plt.ylabel('Height [m]')
     
