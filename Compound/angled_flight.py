@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import sys
 # cl limit +12 to - 15 
 # airfoil cd0 is 0.008 
+# 
 
 def find_roots(coefficients):
     if len(coefficients) != 5:

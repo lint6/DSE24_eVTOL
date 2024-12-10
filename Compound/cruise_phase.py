@@ -285,6 +285,12 @@ def func_min_locator(list1, list2): #find the minimum and its index in list2 and
     min_list2_index = list(list2).index(min_list2)
     return list1[min_list2_index], min_list2
 
+
+#This is the graph to add the tnagent line
+#here
+#here
+#here
+#here 
 TEST = True
 if TEST:
     chord = [1]
@@ -299,12 +305,25 @@ if TEST:
     power_par = []
     Cl = []
     for i in vel:
-        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=1, mass= 1156.661, span=11, chord=[1.472])
+        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 1069.137, span=10, chord=[1])
         power_tot.append(flight_point.power_tot)
         power_ind.append(flight_point.power_ind)
         power_par.append(flight_point.power_par)
         Cl.append(flight_point.wing.Cl)
         
+    #Hereee
+    tolerance = 1e-2
+    tangent = np.gradient(power_tot,vel)
+    intersection_point = None
+    for x, y, slope in zip(vel, power_tot, tangent):
+        if x != 0:
+            slope_from_origin = y/x
+            if abs(slope-slope_from_origin) <= tolerance:
+                intersection_point = (x,y)
+                break
+
+    # to here 
+
     power_tot = np.array(power_tot)/1000
     power_ind = np.array(power_ind)/1000
     power_par = np.array(power_par)/1000
@@ -317,6 +336,14 @@ if TEST:
     
     vel_power_min, power_min = func_min_locator(vel, power_tot)
     plt.plot(vel_power_min, power_min, '.', label=f'Min. Power \nV = {vel_power_min:.1f}m/s \nP = {power_min:.2f}kW')
+
+    if intersection_point:
+        x_tangent, y_tangent = intersection_point
+        tangent_slope = y_tangent / x_tangent
+        tangent_x = np.linspace(0, max(vel), 100)
+        tangent_y = tangent_slope * tangent_x
+        plt.scatter([x_tangent], [y_tangent], color = "orange", label = "max range")
+        plt.plot(tangent_x, tangent_y, linestyle = "dotted", linewidth = 1, label = f"Max Range Speed", color = "black")
     
     plt.xlabel('Velocity [m/s]')
     plt.ylabel('Power Required [kW]')
@@ -392,13 +419,17 @@ if TEST:
         power_par.append(flight_point.power_par)
         Cl.append(flight_point.wing.Cl)
 
-    plt.plot(vel1, np.array(power_tr)/1000)
-    plt.plot(vel1, np.array(power_tr_h)/1000)
-    plt.plot(vel1, np.array(power_tr_v)/1000)
-    plt.plot(vel2, np.array(power_tot)/1000)
-    plt.plot(vel2, np.array(power_ind)/1000)
-    plt.plot(vel2, np.array(power_par)/1000)
+
+    plt.plot(vel1, np.array(power_tr)/1000, "-", label = "Transition Power")
+    plt.plot(vel1, np.array(power_tr_h)/1000, "--", label = "Transition Horizontal Power")
+    plt.plot(vel1, np.array(power_tr_v)/1000, "--", label = "Transition Vertical Power")
+    plt.plot(vel2, np.array(power_tot)/1000, "-", label = "Total Power")
+    plt.plot(vel2, np.array(power_ind)/1000, "--", label = "Induced power")
+    plt.plot(vel2, np.array(power_par)/1000, "--", label = "Parasite Power")
     
+
+    plt.xlabel('Velocity [m/s]')
+    plt.ylabel('Power Required [kW]')
     plt.legend()
     plt.grid(True)
     plt.margins(0.01)
@@ -407,3 +438,31 @@ if TEST:
     
     plt.plot(vel1, np.array(angle)/np.pi*180)
     plt.show()
+
+    """
+       plt.plot(vel, power_tot, "-", label="Total")
+    plt.plot(vel, power_ind, "--", label="induced")
+    plt.plot(vel, power_par, "--", label="parasitic")
+    
+    vel_power_min, power_min = func_min_locator(vel, power_tot)
+    plt.plot(vel_power_min, power_min, '.', label=f'Min. Power \nV = {vel_power_min:.1f}m/s \nP = {power_min:.2f}kW')
+    
+    plt.xlabel('Velocity [m/s]')
+    plt.ylabel('Power Required [kW]')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    plt.clf
+    """
+
+    """
+    tolerance = 1e-2
+    tangent = np.gradient(power_tot,vel1)
+    intersection_point = None
+    for x, y, slope in zip(vel1, power_tot, tangent):
+        if x != 0:
+            slope_from_origin = y/x
+            if abs(slope-slope_from_origin) <= tolerance:
+                intersection_point = (x,y)
+                break
+"""
