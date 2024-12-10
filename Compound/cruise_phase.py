@@ -299,7 +299,7 @@ if TEST:
     rotor_r = 0.9652/2
     wing_num = 2 #doubles the lift, doesnt use equivalent wing 
     # currently running B-29 root airfoil
-    vel = np.arange(20,100,0.01)
+    vel = np.arange(20,100,0.001)
     power_tot = []
     power_ind = []
     power_par = []
@@ -311,10 +311,14 @@ if TEST:
         power_par.append(flight_point.power_par)
         Cl.append(flight_point.wing.Cl)
         
-    #Hereee
-    tolerance = 1e-2
+    power_tot = np.array(power_tot)/1000
+    power_ind = np.array(power_ind)/1000
+    power_par = np.array(power_par)/1000
+    
+    tolerance = 0.001
     tangent = np.gradient(power_tot,vel)
     intersection_point = None
+
     for x, y, slope in zip(vel, power_tot, tangent):
         if x != 0:
             slope_from_origin = y/x
@@ -322,20 +326,16 @@ if TEST:
                 intersection_point = (x,y)
                 break
 
-    # to here 
-
-    power_tot = np.array(power_tot)/1000
-    power_ind = np.array(power_ind)/1000
-    power_par = np.array(power_par)/1000
-    
     # print(func_min_locator(vel, power_tot))
     
-    plt.plot(vel, power_tot, "-", label="Total")
-    plt.plot(vel, power_ind, "--", label="induced")
-    plt.plot(vel, power_par, "--", label="parasitic")
+    plt.plot(vel, power_tot, label="Total Power", color = "red", linewidth = 2)
+    plt.plot(vel, power_ind, label="Induced Power", color = "green")
+    plt.plot(vel, power_par, label="Parasitic Power", color = "black")
     
     vel_power_min, power_min = func_min_locator(vel, power_tot)
     plt.plot(vel_power_min, power_min, '.', label=f'Min. Power \nV = {vel_power_min:.1f}m/s \nP = {power_min:.2f}kW')
+
+    print(intersection_point)
 
     if intersection_point:
         x_tangent, y_tangent = intersection_point
