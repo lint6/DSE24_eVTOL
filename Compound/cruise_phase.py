@@ -299,7 +299,7 @@ if TEST:
     rotor_r = 0.9652/2
     wing_num = 2 #doubles the lift, doesnt use equivalent wing 
     # currently running B-29 root airfoil
-    vel = np.arange(20,100,0.001)
+    vel = np.arange(20,60,0.001)
     power_tot = []
     power_ind = []
     power_par = []
@@ -343,7 +343,7 @@ if TEST:
         tangent_x = np.linspace(0, max(vel), 100)
         tangent_y = tangent_slope * tangent_x
         plt.scatter([x_tangent], [y_tangent], color = "orange", label = "max range")
-        plt.plot(tangent_x, tangent_y, linestyle = "dotted", linewidth = 1, label = f"Max Range Speed", color = "black")
+        plt.plot(tangent_x, tangent_y, linestyle = "dotted", linewidth = 1, color = "black")
     
     plt.xlabel('Velocity [m/s]')
     plt.ylabel('Power Required [kW]')
