@@ -242,8 +242,8 @@ class Ducted_Fan_2: #pure horizontal
         self.calc_rotor_alpha()
         self.calc_v_f()
         
-        power_induced = self.T * self.v_f_root
-        power_parasitic = self.V_hor * self.D_h0
+        power_induced = self.T * self.v_f_root # from speed, rotor 
+        power_parasitic = self.V_hor * self.D_h0 # CD.0 
         self.p_idf = power_induced + power_parasitic
         # print("v_horis ", self.V_hor)
         # print("drag is", self.D_h0)
