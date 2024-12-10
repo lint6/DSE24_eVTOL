@@ -86,7 +86,10 @@ class Ducted_Fan: #angled flight
         return self.V_nd
     
     def calc_D(self):
-        self.D = (0.5) * self.density * (self.V **2) * self.Cd0 * (self.radius**2 * np.pi)
+        self.D = (0.5) * self.density * (self.V **2) * self.Cd0 * (self.radius**2 * np.pi) # body parasite drag
+        # iunduced drag
+        #paraise drage
+        
         self.D_h0 = self.D * np.cos(self.gamma)
         return self.D, self.D_h0
 
