@@ -3,7 +3,8 @@ from math import *
 import scipy 
 import matplotlib.pyplot as plt 
 import sys
-
+# cl limit +12 to - 15 
+# airfoil cd0 is 0.008 
 
 def find_roots(coefficients):
     if len(coefficients) != 5:
@@ -23,7 +24,7 @@ class Ducted_Fan: #angled flight
         self.mass = mass  # Maximum takeoff weight
         self.radius = radius  # Fan radius (m)
         self.g0 = g0
-        self.Cd0 = Cd0
+        self.Cd0 = Cd0 # 0.022 assumed airplane fuselage drag coeff
         self.gamma = gamma 
         self.V = V 
         self.k_v_f = k_v_f
@@ -89,7 +90,7 @@ class Ducted_Fan: #angled flight
         self.D = (0.5) * self.density * (self.V **2) * self.Cd0 * (self.radius**2 * np.pi) # body parasite drag
         # iunduced drag
         #paraise drage
-        
+
         self.D_h0 = self.D * np.cos(self.gamma)
         return self.D, self.D_h0
 
