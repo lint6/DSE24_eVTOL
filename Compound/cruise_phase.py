@@ -97,7 +97,7 @@ class SteadyTransitionFlight:
         Drag = (self.wing.Cd_tot + self.Cd0_fus) * self.dyn_press * self.wing.area
         return Lift, Drag
     
-    def calc_RotorCon(self):
+    def calc_RotorCon(self): #Rotor condition, angle of rotor and thrust produced
         if self.T_hor:
             angle = np.arctan(self.T_ver / self.T_hor)
         else:
@@ -357,6 +357,7 @@ if TEST:
     # plt.show()
     # plt.clf
     
+    '''Transition Flight'''
     vel1 = np.arange(0,60,0.01)
     thrust = []
     angle = []
@@ -377,7 +378,9 @@ if TEST:
             power_tr_h.append(plane.power[2])
         
     vel1 = list(vel1)[:len(thrust)]
-    vel2 = np.arange(vel1[-1],60,0.01)
+    
+    '''Winged flight'''
+    vel2 = np.arange(vel1[-1],130,0.01)
     power_tot = []
     power_ind = []
     power_par = []
@@ -388,10 +391,6 @@ if TEST:
         power_ind.append(flight_point.power_ind)
         power_par.append(flight_point.power_par)
         Cl.append(flight_point.wing.Cl)
-        
-    # power_tot = np.array(power_tot)/1000
-    # power_ind = np.array(power_ind)/1000
-    # power_par = np.array(power_par)/1000
 
     plt.plot(vel1, np.array(power_tr)/1000)
     plt.plot(vel1, np.array(power_tr_h)/1000)
@@ -399,7 +398,12 @@ if TEST:
     plt.plot(vel2, np.array(power_tot)/1000)
     plt.plot(vel2, np.array(power_ind)/1000)
     plt.plot(vel2, np.array(power_par)/1000)
-    plt.margins(0.01)
-
-    plt.show()
     
+    plt.legend()
+    plt.grid(True)
+    plt.margins(0.01)
+    plt.show()
+    plt.clf
+    
+    plt.plot(vel1, np.array(angle)/np.pi*180)
+    plt.show()
