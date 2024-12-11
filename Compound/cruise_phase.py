@@ -295,17 +295,17 @@ TEST = True
 if TEST:
     chord = [1]
     span = 10
-    mass = 1069.137
+    mass = 718.89
     rotor_r = 0.9652/2
     wing_num = 2 #doubles the lift, doesnt use equivalent wing 
     # currently running B-29 root airfoil
-    vel = np.arange(20,60,0.001)
+    vel = np.arange(20,170,0.001)
     power_tot = []
     power_ind = []
     power_par = []
     Cl = []
     for i in vel:
-        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 1069.137, span=10, chord=[1])
+        flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 718.89, span=10, chord=[1])
         power_tot.append(flight_point.power_tot)
         power_ind.append(flight_point.power_ind)
         power_par.append(flight_point.power_par)
