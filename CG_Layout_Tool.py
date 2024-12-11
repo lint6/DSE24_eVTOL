@@ -18,15 +18,15 @@ class MassBalance:
         self.MTOW = 718.89
         self.m_payload = 185
         self.m_fuselage = 100 #ESTIMATE OR INPUT NEW VALUE
-        self.m_batteries = 84
-        self.m_fuelcell = 165
+        self.m_batteries = 379.591
+        self.m_fuelcell = 147.28
         self.m_h2tank = 73.6
         if self.aircraft_type == 1:
             # Define Ideal Total CG for Quadrotor
             self.cg_ideal_ac = 50
             # Define ideal min/max CG positions for each component
-            self.payload_cg_min = 10
-            self.payload_cg_max = 20
+            self.payload_cg_min = 20
+            self.payload_cg_max = 55
 
             self.fuselage_cg_min = 45
             self.fuselage_cg_max = 55
@@ -62,8 +62,8 @@ class MassBalance:
             # Define parameters for Coaxial Helicopter
             self.cg_ideal_ac = 39 
             # Main Components CG bounds
-            self.payload_cg_min = 11
-            self.payload_cg_max = 21
+            self.payload_cg_min = 10
+            self.payload_cg_max = 15
 
             self.fuselage_cg_min = 30
             self.fuselage_cg_max = 45
@@ -92,9 +92,9 @@ class MassBalance:
             pass
         elif self.aircraft_type == 3:
             # Define parameters for Compound Aircraft
-            self.cg_ideal_ac = 50 #ASK COMPOUND GROUP, lintong said it should be between both ducts but that messes up the code
+            self.cg_ideal_ac = 38 #ASK COMPOUND GROUP, lintong said it should be between both ducts but that messes up the code
             self.payload_cg_min = 10
-            self.payload_cg_max = 20
+            self.payload_cg_max = 15
 
             self.fuselage_cg_min = 45
             self.fuselage_cg_max = self.cg_ideal_ac
@@ -108,10 +108,10 @@ class MassBalance:
             self.h2tank_cg_min = 35
             self.h2tank_cg_max = 70
             # Wing parameters
-            self.wing_1_cg_min = (self.payload_cg_min +10)
-            self.wing_1_cg_max = (self.payload_cg_max +10)
-            self.wing_2_cg_max = (65)
-            self.wing_2_cg_min = (75)
+            self.wing_1_cg_min = (5)
+            self.wing_1_cg_max = (5)
+            self.wing_2_cg_min = (95)
+            self.wing_2_cg_max = (95)
             self.wing_1_m = 50 #TO BE CHANGED
             self.wing_2_m = 50 #TO BE CHANGED
              # Define rotor set parameters
