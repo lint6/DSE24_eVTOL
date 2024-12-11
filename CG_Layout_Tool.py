@@ -18,8 +18,8 @@ class MassBalance:
         self.MTOW = 718.89
         self.m_payload = 185
         self.m_fuselage = 100 #ESTIMATE OR INPUT NEW VALUE
-        self.m_batteries = 379.591
-        self.m_fuelcell = 147.28
+        self.m_batteries = 98.187
+        self.m_fuelcell = 196.39
         self.m_h2tank = 73.6
         if self.aircraft_type == 1:
             # Define Ideal Total CG for Quadrotor
@@ -60,7 +60,7 @@ class MassBalance:
             self.rotor_cg_positions = [self.rotor_1_cg_min]
         elif self.aircraft_type == 2:
             # Define parameters for Coaxial Helicopter
-            self.cg_ideal_ac = 39 
+            self.cg_ideal_ac = 33 
             # Main Components CG bounds
             self.payload_cg_min = 10
             self.payload_cg_max = 15
