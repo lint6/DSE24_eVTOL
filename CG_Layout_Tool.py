@@ -25,8 +25,8 @@ class MassBalance:
             # Define Ideal Total CG for Quadrotor
             self.cg_ideal_ac = 50
             # Define ideal min/max CG positions for each component
-            self.payload_cg_min = 20
-            self.payload_cg_max = 55
+            self.payload_cg_min = 10
+            self.payload_cg_max = 20
 
             self.fuselage_cg_min = 45
             self.fuselage_cg_max = 55
@@ -310,3 +310,4 @@ if __name__ == '__main__':
 
     MB.visual_cg_bar()
     MB.visual_cg_line()
+
