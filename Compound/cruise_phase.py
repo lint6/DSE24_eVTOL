@@ -363,19 +363,19 @@ if TEST:
     power_tot = np.array(power_tot)/1000
     plt.plot(vel, power_tot, label="Climb Power @ 9deg", linestyle = '--')
     
-    power_tot = []
-    for i in vel:
-        flight_point = WingedFlight(vel=i, flight_angle = np.arcsin(-7.6/i), wing_count=wing_num, mass= mass, span=span, chord=chord)
-        power_tot.append(flight_point.power_tot)
-    power_tot = np.array(power_tot)/1000
-    plt.plot(vel, power_tot, label="Steep Descent Power", linestyle = '--')
+    # power_tot = []
+    # for i in vel:
+    #     flight_point = WingedFlight(vel=i, flight_angle = np.arcsin(-7.6/i), wing_count=wing_num, mass= mass, span=span, chord=chord)
+    #     power_tot.append(flight_point.power_tot)
+    # power_tot = np.array(power_tot)/1000
+    # plt.plot(vel, power_tot, label="Steep Descent Power", linestyle = '--')
     
-    power_tot = []
-    for i in vel:
-        flight_point = WingedFlight(vel=i, flight_angle = descent2_ang, wing_count=wing_num, mass= mass, span=span, chord=chord)
-        power_tot.append(flight_point.power_tot)
-    power_tot = np.array(power_tot)/1000
-    plt.plot(vel, power_tot, label="Descent Power @ -5deg", linestyle = '--')
+    # power_tot = []
+    # for i in vel:
+    #     flight_point = WingedFlight(vel=i, flight_angle = descent2_ang, wing_count=wing_num, mass= mass, span=span, chord=chord)
+    #     power_tot.append(flight_point.power_tot)
+    # power_tot = np.array(power_tot)/1000
+    # plt.plot(vel, power_tot, label="Descent Power @ -5deg", linestyle = '--')
     
     plt.xlabel('Velocity [m/s]')
     plt.ylabel('Power [kW]')
