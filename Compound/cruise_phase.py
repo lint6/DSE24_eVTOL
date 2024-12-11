@@ -4,16 +4,17 @@ import matplotlib.pyplot as plt
 # from ducted_fan_momentum_UI import func_min_locator
 
 class WingedFlight:
-    def __init__(self, vel, mass, chord, span, Cd0 = 0.022, power_a = None, wing_count=1, density = 1.225, g0 = 9.80665): #Torenbeek twin-engine piston 0.022 cd0
+    def __init__(self, vel, mass, chord, span, flight_angle = 0, Cd0 = 0.022, power_a = None, wing_count=1, density = 1.225, g0 = 9.80665): #Torenbeek twin-engine piston 0.022 cd0
         self.power_a = power_a #power available
         self.wing_count = wing_count    #amount of wing on aircraft
         self.vel = vel  #airspeed of aircraft
         self.mass = mass    #mass of aircraft
-        self.weight = self.mass*g0  #weight of aircraft
+        self.weight = self.mass*g0*np.cos(flight_angle)  #weight of aircraft
         self.density = density  #density of env
         self.Cd0_nw = Cd0   #list of Cd0 of non-wing parts
         self.chord = chord  #chord of wings
         self.span = span    #span of wings
+        self.extra_drag = self.mass*g0*np.sin(flight_angle)
         
         self.weight_div = self.calc_MassDistrib() #Distribution of lift generation between wings
         self.dyn_press = self.calc_DynPress()
@@ -53,7 +54,8 @@ class WingedFlight:
         drag_force = self.Cd * self.dyn_press * self.wing.area
         drag_force_ind = self.Cd_ind * self.dyn_press * self.wing.area
         drag_force_par = self.Cd0 * self.dyn_press * self.wing.area
-        return drag_force, drag_force_ind, drag_force_par
+        drag_force_tot = drag_force + self.extra_drag
+        return drag_force_tot, drag_force_ind, drag_force_par
     
     def calc_ClimbRate(self):
         pass
@@ -300,17 +302,19 @@ if TEST:
     wing_num = 2 #doubles the lift, doesnt use equivalent wing 
     # currently running B-29 root airfoil
     vel = np.arange(20,170,0.001)
+    vel = np.arange(20,60,0.1)
     power_tot = []
     power_ind = []
     power_par = []
     Cl = []
     for i in vel:
         flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 718.89, span=10, chord=[1])
+        flight_point = WingedFlight(vel=i, wing_count=2, mass= 1069.137, span=10, chord=[1])
         power_tot.append(flight_point.power_tot)
         power_ind.append(flight_point.power_ind)
         power_par.append(flight_point.power_par)
         Cl.append(flight_point.wing.Cl)
-        
+    
     power_tot = np.array(power_tot)/1000
     power_ind = np.array(power_ind)/1000
     power_par = np.array(power_par)/1000
@@ -327,10 +331,10 @@ if TEST:
                 break
 
     # print(func_min_locator(vel, power_tot))
-    
+
     plt.plot(vel, power_tot, label="Total Power", color = "red", linewidth = 2)
-    plt.plot(vel, power_ind, label="Induced Power", color = "green")
-    plt.plot(vel, power_par, label="Parasitic Power", color = "black")
+    # plt.plot(vel, power_ind, label="Induced Power", color = "green")
+    # plt.plot(vel, power_par, label="Parasitic Power", color = "black")
     
     vel_power_min, power_min = func_min_locator(vel, power_tot)
     plt.plot(vel_power_min, power_min, '.', label=f'Min. Power \nV = {vel_power_min:.1f}m/s \nP = {power_min:.2f}kW')
@@ -345,8 +349,36 @@ if TEST:
         plt.scatter([x_tangent], [y_tangent], color = "orange", label = "max range")
         plt.plot(tangent_x, tangent_y, linestyle = "dotted", linewidth = 1, color = "black")
     
+    
+        '''climb and descent'''
+    climb1_ang = np.radians(9) #deg
+    descent1_ang = np.arcsin(-7.6/vel)
+    descent2_ang = np.radians(-5)
+    weight = mass * 9.80665
+    
+    power_tot = []
+    for i in vel:
+        flight_point = WingedFlight(vel=i, flight_angle = climb1_ang, wing_count=wing_num, mass= mass, span=span, chord=chord)
+        power_tot.append(flight_point.power_tot)
+    power_tot = np.array(power_tot)/1000
+    plt.plot(vel, power_tot, label="Climb Power @ 9deg", linestyle = '--')
+    
+    power_tot = []
+    for i in vel:
+        flight_point = WingedFlight(vel=i, flight_angle = np.arcsin(-7.6/i), wing_count=wing_num, mass= mass, span=span, chord=chord)
+        power_tot.append(flight_point.power_tot)
+    power_tot = np.array(power_tot)/1000
+    plt.plot(vel, power_tot, label="Steep Descent Power", linestyle = '--')
+    
+    power_tot = []
+    for i in vel:
+        flight_point = WingedFlight(vel=i, flight_angle = descent2_ang, wing_count=wing_num, mass= mass, span=span, chord=chord)
+        power_tot.append(flight_point.power_tot)
+    power_tot = np.array(power_tot)/1000
+    plt.plot(vel, power_tot, label="Descent Power @ -5deg", linestyle = '--')
+    
     plt.xlabel('Velocity [m/s]')
-    plt.ylabel('Power Required [kW]')
+    plt.ylabel('Power [kW]')
     plt.legend()
     plt.grid(True)
     plt.show()
