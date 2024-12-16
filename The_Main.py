@@ -63,7 +63,7 @@ class RotorSizing:
         #self.omega = self.RPM_to_rad * self.RPM                                     # rad / s
 
         self.omega = self.tip_speed / self.rotor_radius # rad/s
-        self.RPM = self.omega * (60/2*np.pi) # rpm
+        self.RPM = self.omega / self.RPM_to_rad # rpm
 
         # flight performance 
         self.max_forward_velocity = (self.max_tip_mach * self.speed_of_sound) - self.tip_speed  # m / s; choose max mach, calculate max velocity
@@ -102,7 +102,8 @@ class RotorSizing:
         print(f"Rotor Radius: {self.rotor_radius:.2f} m")
         print(f"Rotor Diameter: {self.rotor_diameter:.2f} m")
         print(f"Tip Speed: {self.tip_speed:.2f} m/s")
-        print(f"RPM: {self.RPM:.2f}")
+        print(f"Rad/s: {self.omega:.2f}")
+        print(f"RPMs: {self.RPM:.2f}")
         print(f'Maximum Solidity: {self.maximum_solidity:.2f}')
         print(f"Blade Chord: {self.chord:.3f} m")
         print(f"Aspect Ratio: {self.aspect_ratio:.2f}")
