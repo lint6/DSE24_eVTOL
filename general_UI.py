@@ -117,6 +117,7 @@ def main():
 
     # Step 4: Plot power components
     power.plot_power_components()
+    power.plot_power_bucket()
     power.final_power()
     power.get_highest_power()
     print('----------------------------------------')

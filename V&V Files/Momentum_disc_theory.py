@@ -61,7 +61,7 @@ class Ducted_Fan_1: #vertical flight
         self.V_d_kappa_d = None  #vertical Descnet rate from kappa RATE
 
 
-        
+        # 1069.137
 
     def calc_mass(self):
         new_mass = -sys.maxsize
@@ -127,10 +127,12 @@ class Ducted_Fan_1: #vertical flight
     
     def calc_V_c_nd(self): #Find V_c_nd if calc_V_c_kappa() is not used
         self.calc_v_h()
+        self.calc_V_c_kappa()
         self.V_c_nd = self.V_c / self.v_h
         return self.V_c_nd
     
     def calc_P_kappa(self): #Axial power required given kappa
+        self.calc_V_c_nd()
         self.calc_kappa_Vc()
         self.calc_v_h()
         self.calc_mass()
@@ -202,6 +204,8 @@ class Ducted_Fan_2: #pure horizontal
         return self.V_hor
     
     def calc_V_nd(self):
+        #print(self.V)
+        #print(self.related_fan.v_h)
         self.V_nd = self.V / self.related_fan.v_h
         return self.V_nd
     
@@ -254,7 +258,7 @@ class Ducted_Fan_2: #pure horizontal
         # print(f'power_induced: {power_induced}')
         # print(f'power_parasitic: {power_parasitic}')
         # print('----------------------------------')
-        return self.p_idf, power_induced, power_parasitic
+        return self.p_idf, power_induced #power_parasitic
   
 
 
@@ -295,8 +299,7 @@ class Ducted_Fan_3: #angled climb
         self.V_c_fast = V_c_fast
         return V_c_fast
 
-fan_1 = Ducted_Fan_1(mass=float(718/4))
-fan_2 = Ducted_Fan_2(mass=float(718/4), Cd0=0.05, V= 3, related_fan=fan_1)
-fan_3 = Ducted_Fan_3(mass=float(718/4), gamma=0, related_fan1=fan_1, related_fan2 = fan_2 )
-
+fan_1 = Ducted_Fan_1(mass=float(1069.137/4), radius= 0.4826)
+print("new power ideal hover is:", fan_1.calc_power_ideal_hover())
+print("New power ideal climb is:", fan_1.calc_P_kappa())
 

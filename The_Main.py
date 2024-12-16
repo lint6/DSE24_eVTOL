@@ -444,6 +444,49 @@ class PowerAnalysis:
         plt.ylabel("Power [kW]")
         plt.show()
 
+    def plot_power_bucket(self): # co-axial by default?
+        max_speed_constraint = self.rotorsizing.max_forward_velocity
+        max_speed_mu_constraint = 0.4 * self.rotorsizing.tip_speed
+        limiting_velocity = min(max_speed_constraint, max_speed_mu_constraint)
+
+        V = np.linspace(0.01, 100, 1000)
+        P_profile = []
+        P_induced = []
+        P_parasitic = []
+        P_total = []
+
+        for velocity in V:
+            self.iterate_design(new_V_point=velocity)
+            P_profile.append(self.P_p / 1000)
+            P_induced.append(self.P_i / 1000)
+            P_parasitic.append(self.P_par / 1000)
+            # add climb power maybe
+            P_total.append(self.P_total_level / 1000)
+            
+        self.min_power = min(P_total)
+        self.min_power_velocity = V[P_total.index(self.min_power)]
+        
+        plt.figure(figsize=(10, 6))
+        plt.plot(V, P_profile, label='Profile Power', color='blue')
+        plt.plot(V, P_induced, label='Induced Power', color='green')
+        plt.plot(V, P_parasitic, label='Parasitic Power', color='black')
+        plt.plot(V, P_total, label='Total Power', color='red', linewidth=2)
+
+        plt.scatter(self.min_power_velocity, self.min_power, color='black', label='Min Power', zorder=5)
+        plt.axhline(y=self.min_power, color='black', linestyle='--', linewidth=1, label=f'Min Power = {self.min_power:2f} kW')
+        plt.axvline(x=self.min_power_velocity, color='black', linestyle='--', linewidth=1, label=f'Min Velocity = {self.min_power_velocity:.2f} m/s')
+        plt.axvline(x=limiting_velocity, color='gray', linestyle='--', linewidth=1, label=f'Max Speed = {limiting_velocity} m/s')
+
+        plt.xlabel('Velocity [m/s]', fontsize=12)
+        plt.ylabel('Power [kW]', fontsize=12)
+        plt.title('Power vs Velocity', fontsize = 16)
+        plt.legend(fontsize=10)
+        plt.grid(True)
+
+        plt.tight_layout()
+        plt.show()
+
+
     def final_power(self):
         self.P = {
             'HIGE1': self.P_hoge * self.hige_factor,
@@ -663,7 +706,7 @@ class EnergyAnalysis:
         times_dict['HOGE2'] = 30
         
         # Loiter time
-        times_dict['Loiter'] = 600 # Dependent on max endurance
+        times_dict['Loiter'] = 1800 # Dependent on max endurance
         
         # Steady Climb 2 time (T9)
         d_cl2 = delta_h3 / np.tan(np.radians(self.gamma_1))
