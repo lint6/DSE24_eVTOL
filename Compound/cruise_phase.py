@@ -111,9 +111,7 @@ class SteadyTransitionFlight:
         power_ver = self.T_ver * np.sqrt(self.T_ver/(2* np.pi * self.radius**2 * density*4))
         power_hor = self.T_hor * self.V
         power_tot = power_hor + power_ver
-        return power_tot, power_ver, power_hor
-        
-    
+        return power_tot, power_ver, power_hor    
     
 class TransitionFlight:
     def __init__(self, mass, span, chord, Cl = 1.5, Cd0=0.01, TWR = 1, dt=0.001, gain_tilt =1, g0 = 9.80665, Run = True): #assuming constant Cl
@@ -281,18 +279,11 @@ class Airfoil:
         self.Cl0_des=Cl0_des
         self.Cd0_des=Cd0_des
 
-
 def func_min_locator(list1, list2): #find the minimum and its index in list2 and locate the item at the same index in list1
     min_list2 = np.min(list2)
     min_list2_index = list(list2).index(min_list2)
     return list1[min_list2_index], min_list2
 
-
-#This is the graph to add the tnagent line
-#here
-#here
-#here
-#here 
 TEST = True
 if TEST:
     chord = [1]
@@ -365,11 +356,11 @@ if TEST:
     
     power_tot = []
     span = np.arange(10, 2, -2)
-    area = 10
-    print(span)
+    constant = 10 #area or aspect ratio
+    # print(span)
     for i in span:
-        chord = [area/i]
-        print(chord)
+        chord = [constant/i]
+        # print(chord)
         for j in vel:
             flight_point = WingedFlight(vel=j, wing_count=wing_num, mass= mass, span=i, chord=chord)
             power_tot.append(flight_point.power_tot)
