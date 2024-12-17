@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 # from ducted_fan_momentum_UI import func_min_locator
 
 class WingedFlight:
-    def __init__(self, vel, mass, chord, span, flight_angle = 0, Cd0 = 0.022, power_a = None, wing_count=1, density = 0.5, g0 = 9.80665, os_fact=0.85): #Torenbeek twin-engine piston 0.022 cd0
+    def __init__(self, vel, mass, chord, span, flight_angle = 0, Cd0 = 0.022, power_a = None, wing_count=1, density = 1.225, g0 = 9.80665, os_fact=0.85): #Torenbeek twin-engine piston 0.022 cd0
         self.power_a = power_a #power available
         self.wing_count = wing_count    #amount of wing on aircraft
         self.vel = vel  #airspeed of aircraft
@@ -298,54 +298,35 @@ if TEST:
     power_ind = []
     power_par = []
     Cl = []
-    for i in vel:
-        # flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 718.89, span=10, chord=[1])
-        flight_point = WingedFlight(vel=i, wing_count=wing_num, mass=mass, span=span, chord=chord)
-        power_tot.append(flight_point.power_tot)
-        # power_ind.append(flight_point.power_ind)
-        # power_par.append(flight_point.power_par)
-        Cl.append(flight_point.wing.Cl)
+    # for i in vel:
+    #     # flight_point = WingedFlight(vel=i, power_a=10000, wing_count=2, mass= 718.89, span=10, chord=[1])
+    #     flight_point = WingedFlight(vel=i, wing_count=wing_num, mass=mass, span=span, chord=chord)
+    #     power_tot.append(flight_point.power_tot)
+    #     # power_ind.append(flight_point.power_ind)
+    #     # power_par.append(flight_point.power_par)
+    #     Cl.append(flight_point.wing.Cl)
     
-    power_tot = np.array(power_tot)/1000
-    power_ind = np.array(power_ind)/1000
-    power_par = np.array(power_par)/1000
+    # power_tot = np.array(power_tot)/1000
+    # power_ind = np.array(power_ind)/1000
+    # power_par = np.array(power_par)/1000
     
-    tolerance = 0.001
-    tangent = np.gradient(power_tot,vel)
-    intersection_point = None
+    # tolerance = 0.001
+    # tangent = np.gradient(power_tot,vel)
+    # intersection_point = None
 
-    for x, y, slope in zip(vel, power_tot, tangent):
-        if x != 0:
-            slope_from_origin = y/x
-            if abs(slope-slope_from_origin) <= tolerance:
-                intersection_point = (x,y)
-                break
-
-    # print(func_min_locator(vel, power_tot))
-
-    # plt.plot(vel, power_tot, label="Total Power")
-    # plt.plot(vel, power_ind, label="Induced Power", color = "green")
-    # plt.plot(vel, power_par, label="Parasitic Power", color = "black")
-    
-    # vel_power_min, power_min = func_min_locator(vel, power_tot)
-    # plt.plot(vel_power_min, power_min, '.', label=f'Min. Power \nV = {vel_power_min:.1f}m/s \nP = {power_min:.2f}kW')
-
-    # print(intersection_point)
-
-    # if intersection_point:
-    #     x_tangent, y_tangent = intersection_point
-    #     tangent_slope = y_tangent / x_tangent
-    #     tangent_x = np.linspace(0, max(vel), 100)
-    #     tangent_y = tangent_slope * tangent_x
-    #     plt.scatter([x_tangent], [y_tangent], color = "orange", label = "max range")
-    #     plt.plot(tangent_x, tangent_y, linestyle = "dotted", linewidth = 1, color = "black")
+    # for x, y, slope in zip(vel, power_tot, tangent):
+    #     if x != 0:
+    #         slope_from_origin = y/x
+    #         if abs(slope-slope_from_origin) <= tolerance:
+    #             intersection_point = (x,y)
+    #             break
     
     
     '''climb and descent'''
-    climb1_ang = np.radians(9) #deg
-    descent1_ang = np.arcsin(-7.6/vel)
-    descent2_ang = np.radians(-5)
-    weight = mass * 9.80665
+    # climb1_ang = np.radians(9) #deg
+    # descent1_ang = np.arcsin(-7.6/vel)
+    # descent2_ang = np.radians(-5)
+    # weight = mass * 9.80665
     
     # power_tot = []
     # for i in vel:
@@ -354,47 +335,40 @@ if TEST:
     # power_tot = np.array(power_tot)/1000
     # plt.plot(vel, power_tot, label="Climb Power @ 9deg", linestyle = '--')
     
-    power_tot = []
-    span = np.arange(10, 2, -2)
-    constant = 10 #area or aspect ratio
-    # print(span)
-    for i in span:
-        chord = [constant/i]
-        # print(chord)
-        for j in vel:
-            flight_point = WingedFlight(vel=j, wing_count=wing_num, mass= mass, span=i, chord=chord)
-            power_tot.append(flight_point.power_tot)
-
-        power_tot = np.array(power_tot)/1000
-        plt.plot(vel, power_tot, label=f"{float( i**2/area ): .2f} Aspect Ratio")
-        vel_power_min, power_min = func_min_locator(vel, power_tot)
-        plt.plot(vel_power_min, power_min, '.', markersize = 15, color = "b")
-        power_tot = []
-    
     # power_tot = []
-    # for i in vel:
-    #     flight_point = WingedFlight(vel=i, flight_angle = descent2_ang, wing_count=wing_num, mass= mass, span=span, chord=chord)
-    #     power_tot.append(flight_point.power_tot)
-    # power_tot = np.array(power_tot)/1000
-    # plt.plot(vel, power_tot, label="Descent Power @ -5deg", linestyle = '--')
+    # span = np.arange(10, 2, -2)
+    # constant = 10 #area or aspect ratio
+    # # print(span)
+    # for i in span:
+    #     chord = [constant/i]
+    #     # print(chord)
+    #     for j in vel:
+    #         flight_point = WingedFlight(vel=j, wing_count=wing_num, mass= mass, span=i, chord=chord)
+    #         power_tot.append(flight_point.power_tot)
+
+    #     power_tot = np.array(power_tot)/1000
+    #     plt.plot(vel, power_tot, label=f"{float( i**2/constant ): .2f} Aspect Ratio")
+    #     vel_power_min, power_min = func_min_locator(vel, power_tot)
+    #     plt.plot(vel_power_min, power_min, '.', markersize = 15, color = "b")
+    #     power_tot = []
     
-    plt.xlabel('Velocity [m/s]')
-    plt.ylabel('Power [kW]')
-    plt.legend()
-    plt.grid(True)
-    plt.ylim(0, 300)
-    plt.show()
-    plt.clf
+    # plt.xlabel('Velocity [m/s]')
+    # plt.ylabel('Power [kW]')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.ylim(0, 300)
+    # plt.show()
+    # plt.clf
     
-    plt.plot(vel, np.array(Cl), "-", label="Cl")
-    plt.axhspan(1.5, max(np.array(Cl)), color='red', alpha=0.5)
-    plt.xlabel('Velocity [m/s]')
-    plt.ylabel('C_l Required [-]')
-    plt.margins(0)
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-    plt.clf
+    # plt.plot(vel, np.array(Cl), "-", label="Cl")
+    # plt.axhspan(1.5, max(np.array(Cl)), color='red', alpha=0.5)
+    # plt.xlabel('Velocity [m/s]')
+    # plt.ylabel('C_l Required [-]')
+    # plt.margins(0)
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
+    # plt.clf
     
     # #Transition Flight
     # tr = TransitionFlight(mass=mass, span=span, Cl=1.5, chord=chord, TWR=1.0, gain_tilt=2.7)
